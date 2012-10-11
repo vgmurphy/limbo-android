@@ -1,0 +1,121 @@
+ "And so, I captured this fancy, where all that we see, or seem, 
+ is but a dream within a dream."   -- Edgar Allan Poe
+<br><br>
+ =============== LICENSE ===============
+<br> <br>
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 2 of the License, or
+    (at your option) any later version.
+<br><br>
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+<br><br>
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <<a href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>>.
+<br> <br>
+ =============== DESCRIPTION ===============
+ <br><br>
+ <font color="red">=> How does it work? </font><br>
+ Limbo is a software emulator for Android devices. Currently it emulates 
+ Inter 32bit and 64bit architectures for a variety of CPUs and peripheral devices.
+ <br><br>
+ <font color="red">=> Compatibility </font><br>
+ You'll probably find Limbo compatible with many Linux Distributions. Currently
+ it's tested with: DSL Linux, TTY Linux, Trinux, and many other OSes. Emulation speed varies depending
+ on your Android device, scroll down for more details and links.
+ <br><br>
+ <font color="red">=> Recommended </font><br>
+ To fully take advantage of Limbo you'll need to install a QWERTY keyboard for your Android device:
+ like the popular Hacker's keyboard:<br> <a href="https://play.google.com/store/apps/details?id=org.pocketworkstation.pckeyboard"> 
+ https://play.google.com/store/apps/details?id=org.pocketworkstation.pckeyboard</a> 
+ <br><br>
+
+ 
+=============== CHANGELOG ===============
+<br><br>
+Limbo v0.9.2 (Oct 10, 2012)<br>
+<br>
+- Fixed issue with booting HDD images, removed TSC features for now<br>
+- Fixed dlfree issue for ICS devices, removed optimization (-O3) for gmem.c<br>
+- Fixed issue with browsing CD ROM and Floppy images while VM is running<br>
+- Fixed timing issue while getting status<br>
+- Enabled Mouse Double click with "Double tap" <br>
+- Enabled Mouse Right click with "2-Finger Long Press"<br>
+- Removed resolv.conf, DNS server is now configurable within Limbo UI<br>
+- Some minor UI enhancements<br>
+- Enabled Graphics Hardware Acceleration for Android 3.0+ devices<br>
+- Enabled Large Heap for Better Performance<br>
+<br>
+
+<br><br>
+Limbo v0.9.1b-2 (Sep 15, 2012)<br>
+<br>
+- Fixed Issue with app hanging at "Connecting to VM Console" - SIGUSR1 is blocked by Dalvik VM.<br>
+- Fixed issue while resizing VNC screen<br>
+- Added global /sdcard/limbo/etc/resolv.conf - Default is Google DNS servers<br>
+- Removed n120x network device - wrong device name<br>
+- Added missing keyboard mappings - F1-F12, ESC<br>
+- Some minor UI enhancements<br>
+- Changed optimization for glib compilation (-O3)<br>
+<br>
+
+<br><br>
+Limbo v0.9.1b (Aug 13, 2012)<br>
+<br>
+- CPU Emulation: i386/x86_64 - (486/PI,PII,PIII,Athlon,Atom n270,Dual Core,Phenom)<br>
+- CDROM Emulation: .img raw images read/write/bootable<br>
+- Floppy Emulation: .iso images read/bootable<br>
+- IDE Hard Disk Emulation: raw, qcow2 images are detected and bootable but unreliable)<br>
+- VGA Display Emulation: standard, cirrus, VMWare<br>
+- Network Emulation: User/NAT mode<br>
+- Peripheral Devices Emulation: Mouse (Touchpad), Keyboard (PS/2,USB) <br>
+- VNC External connections (so you can control the VM remotely from a PC).<br>
+  VNC is unencrypted so make sure you use this option in Private Networks only!<br>
+- Save/Load VM Snapshot/State.<br>
+- QEMU Monitor<br>
+- UI Configurable parameters for device management<br>
+<br><br>
+
+=============== COMPATIBILITY ===============
+ <br><br>
+ <font color="red">=> DSL Linux</font><br>
+ Download:  <a href="http://www.damnsmalllinux.org">http://www.damnsmalllinux.org</a><br>
+ <br>
+    1. For faster boot times use following boot options:<br>
+      dsl vga=785 base norestore noscsi nousb nopcmcia noapm noapic dma xsetup<br>
+    2. For CLI only mode (Level 2) use in combination with above:<br>
+      dsl 2<br>
+    3. You can download additional DSL packages ie (apt-get, gcc, ruby, etc...) from:<br>
+       <a href="http://distro.ibiblio.org/pub/linux/distributions/damnsmall/mydsl/system/">http://distro.ibiblio.org/pub/linux/distributions/damnsmall/mydsl/system/</a><br>
+       To install a package: cd /; sudo tar -zxvf /home/dsl/xxxx.dsl <br>
+ <br>
+        
+ <font color="red">=> Trinux </font><br>
+ Download: <a href="http://sourceforge.net/projects/trinux/files/trinux-iso/0.890/trinux-0.890.iso/download">http://sourceforge.net/projects/trinux/files/trinux-iso/0.890/trinux-0.890.iso/download</a><br>
+ <font color="red">=> Download only 0.890 version! </font><br>
+ <br>
+ 
+ <font color="red">=> TTY Linux </font><br>
+ Download:  <a href="http://ttylinux.net/">http://ttylinux.net</a><br>
+ <br>
+ 
+=============== THANKS ===============
+ <br><br>
+ Limbo is a PC Emulator based on QEMU Software:
+ <br><br>
+<font color="red"> A Big Thanks To:</font><br>
+    Fabrice Bellard <a href="http://bellard.org">http://bellard.org</a><br>
+     and the QEMU team: <a href="http://wiki.qemu.org/Main_Page">http://wiki.qemu.org/Main_Page</a><br>
+    Glib team: <a href="http://developer.gnome.org/glib">http://developer.gnome.org/glib</a><br>
+    Iconv team: <a href="http://www.gnu.org/software/libiconv">http://www.gnu.org/software/libiconv</a><br>
+    Zlib team: <a href="http://zlib.net">http://zlib.net</a><br>
+    Android-vnc-viewer: team <a href="http://code.google.com/p/android-vnc-viewer">http://code.google.com/p/android-vnc-viewer</a><br>
+    and my good friend Lazlo!
+ <br>
+ =============== SOURCE CODE ===============
+<br>
+ Source Code, Wiki, and Other information can be found at:<br>
+ <a href="https://code.google.com/p/limbo-android/">https://code.google.com/p/limbo-android/</a><br>

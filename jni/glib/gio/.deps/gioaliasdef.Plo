@@ -1,0 +1,45 @@
+gioaliasdef.lo: gioaliasdef.c ../glibconfig.h ../glib/gmacros.h \
+ /usr/lib/gcc/i486-linux-gnu/4.4.3/include/stddef.h \
+ /usr/lib/gcc/i486-linux-gnu/4.4.3/include-fixed/limits.h \
+ /usr/lib/gcc/i486-linux-gnu/4.4.3/include-fixed/syslimits.h \
+ /usr/include/limits.h /usr/include/features.h \
+ /usr/include/bits/predefs.h /usr/include/sys/cdefs.h \
+ /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h \
+ /usr/include/gnu/stubs-32.h /usr/include/bits/posix1_lim.h \
+ /usr/include/bits/local_lim.h /usr/include/linux/limits.h \
+ /usr/include/bits/posix2_lim.h \
+ /usr/lib/gcc/i486-linux-gnu/4.4.3/include/float.h
+
+../glibconfig.h:
+
+../glib/gmacros.h:
+
+/usr/lib/gcc/i486-linux-gnu/4.4.3/include/stddef.h:
+
+/usr/lib/gcc/i486-linux-gnu/4.4.3/include-fixed/limits.h:
+
+/usr/lib/gcc/i486-linux-gnu/4.4.3/include-fixed/syslimits.h:
+
+/usr/include/limits.h:
+
+/usr/include/features.h:
+
+/usr/include/bits/predefs.h:
+
+/usr/include/sys/cdefs.h:
+
+/usr/include/bits/wordsize.h:
+
+/usr/include/gnu/stubs.h:
+
+/usr/include/gnu/stubs-32.h:
+
+/usr/include/bits/posix1_lim.h:
+
+/usr/include/bits/local_lim.h:
+
+/usr/include/linux/limits.h:
+
+/usr/include/bits/posix2_lim.h:
+
+/usr/lib/gcc/i486-linux-gnu/4.4.3/include/float.h:

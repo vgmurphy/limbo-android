@@ -1,0 +1,8 @@
+all:
+	cd qemu && $(MAKE) all V=1 && $(MAKE) qemu-img.so
+
+clean:
+	cd qemu && $(MAKE) clean V=1
+
+veryclean:
+	-find . -name *.o -exec rm -rf {} \;
