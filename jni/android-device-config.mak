@@ -25,4 +25,9 @@
 # include android-device-config/android-ndkr8-p8_2.2-armv5te-softfp-o3.mak
 
 #for devices with older cpus (compatible) - WORKING stable
-include android-device-config/android-armv5te-softfp.mak
+ifeq ($(TARGET_ARCH),arm)
+    include $(LIMBO_JNI_ROOT)/android-device-config/android-armv5te-softfp.mak
+else
+    include $(LIMBO_JNI_ROOT)/android-device-config/android-ndkr8-x86.mak
+endif
+

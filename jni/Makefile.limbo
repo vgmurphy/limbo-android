@@ -1,9 +1,11 @@
 # COMMON VARS
+include android-toolchain.mak
+include android-device-config.mak
 
-LIMBO_SRC_FILES =\
-./limbo/vm-executor-jni.c \
-/home/dev/tools/android-ndk-r8b/sources/android/cpufeatures/cpu-features.c \
-./limbo/image-creator-jni.c
+LIMBO_SRC_FILES = \
+		  ./limbo/vm-executor-jni.c \
+		  ./limbo/cpu-features.c \
+		  ./limbo/image-creator-jni.c
 
 QEMU_NEED_CPU_DEF = \
         -DNEED_CPU_H
@@ -28,7 +30,7 @@ LOCAL_QEMU_CUSTOM_CFLAGS    := \
 	-I$(LOCAL_PATH)/..	-I$(LOCAL_PATH)/qemu/target-i386 \
 	-DNEED_CPU_H	-pthread	-I$(LOCAL_PATH)/glib	\
 	-I$(LOCAL_PATH)/glib/glib \
-	-I/media/data/home/tools/android-ndk-r6b/sources/android/cpufeatures \
+	-I$(NDK_ROOT)/sources/android/cpufeatures \
 	-pthread	-I$(LOCAL_PATH)/glib	-I$(LOCAL_PATH)/glib/glib \
         -pthread	-I$(LOCAL_PATH)/zlib \
         -lm 
@@ -89,6 +91,11 @@ all: $(OBJS) \
 # Target specific variable to use different flags
 $(LIMBO_OBJS): EXTRA_FLAGS:= $(LOCAL_QEMU_CUSTOM_CFLAGS) $(LOCAL_LIMBO_CFLAGS)
 
+limbo/cpu-features.o: $(NDK_ROOT)/sources/android/cpufeatures/cpu-features.c
+	@echo "\n[Compiling] " $<
+	$(CC) $(CFLAGS) $(EXTRA_DEFS) $(ARCH_CFLAGS) $(LOCAL_CFLAGS) $(EXTRA_FLAGS) \
+	$(ANDROID_CFLAGS) $(CUSTOM_ANDROID_CFLAGS) -o $@ -c $(NDK_ROOT)/sources/android/cpufeatures/cpu-features.c 
+
 %.o: %.c
 	@echo "\n[Compiling] " $<
 	$(CC) $(CFLAGS) $(EXTRA_DEFS) $(ARCH_CFLAGS) $(LOCAL_CFLAGS) $(EXTRA_FLAGS) \
@@ -114,8 +121,9 @@ liblimbo:
 	-o ./$(LIBLIMBO)
 
 install: liblimbo
-	cp $(LIBLIMBO) ./../libs/armeabi
-	$(STRIP) --strip-unneeded ./..//libs/armeabi/$(LIBLIMBO)
-	ls -l ./../libs/armeabi/$(LIBLIMBO)
+	mkdir -p ../libs/$(TARGET_ARCH_ABI)
+	cp $(LIBLIMBO) ./../libs/$(TARGET_ARCH_ABI)
+	$(STRIP) --strip-unneeded ../libs/$(TARGET_ARCH_ABI)/$(LIBLIMBO)
+	ls -l ../libs/$(TARGET_ARCH_ABI)/$(LIBLIMBO)
 	
 ### end of qemu

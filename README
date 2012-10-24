@@ -38,14 +38,9 @@ https://code.google.com/p/limbo-android/
 3. Setup
 
     Configure variables for toolchain and NDK directories for your device
-     in files: android-toolchain.mak and android-device-config/*.mak
+     in jni/android-toolchain.mak.
      
-    Caveats (ugly fixes): 
-    1. If you're having compile errors in memory.h comment temporarily the //#include "memory.h" 
-    line in android NDK header stdlib.h.
-    2. If you're having errors during run time about LOGD_TMR and other logging 
-    functions you'll want to add temporarily '#include "logutils.h"' at the end 
-    of stdio.h in android NDK and recompile.
+    Caveats: what's that?
 
 ===============================================================================
 4. Build

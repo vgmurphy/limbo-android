@@ -50,8 +50,6 @@ extern int set_dns_addr_str(const char *dns_addr_str1);
 static int started = 0;
 void * handle;
 
-#include <machine/cpu-features.h>
-
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *pvt) {
     printf("* JNI_OnLoad called\n");
     int cpufamily = android_getCpuFamily();

@@ -23,6 +23,8 @@
 extern "C" {
 #endif
 
+#include <stdio.h>
+
     //Define DEBUG before we include stdio.h
 //    #define DEBUG_ANDROID_AIO 1
 //    #define DEBUG_ANDROID_AIO_COMPAT 1

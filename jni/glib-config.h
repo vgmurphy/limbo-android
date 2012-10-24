@@ -19,18 +19,8 @@
 #ifndef _GLIB_CONFIG_H
 #define	_GLIB_CONFIG_H
 
-//#include "./../glib-config.h"
-
 #ifdef	__cplusplus
 extern "C" {
-#endif
-
-#ifdef G_ATOMIC_I486
-#undef G_ATOMIC_I486
-#endif
-
-#ifndef G_ATOMIC_ARM
-#define G_ATOMIC_ARM
 #endif
 
 #undef ENABLE_NLS

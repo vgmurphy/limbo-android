@@ -13,8 +13,8 @@ ifneq ($(HWDIR),)
 include $(HWDIR)/config.mak
 endif
 
-include ../../android-device-config.mak
 include ../../android-toolchain.mak
+include ../../android-device-config.mak
 	
 TARGET_PATH=$(SRC_PATH)/target-$(TARGET_BASE_ARCH)
 $(call set-vpath, $(SRC_PATH):$(TARGET_PATH):$(SRC_PATH)/hw)
@@ -441,8 +441,9 @@ $(QEMU_PROG): $(obj-y) $(obj-$(TARGET_BASE_ARCH)-y)
     $(P_THREAD) \
 	-o ./lib$(QEMU_PROG).so
 	cp lib$(QEMU_PROG).so ../../	
-	cp lib$(QEMU_PROG).so ../../../libs/armeabi/
-	$(STRIP) --strip-unneeded ../../../libs/armeabi/lib$(QEMU_PROG).so
+	mkdir -p ../../../libs/$(TARGET_ARCH_ABI)
+	cp lib$(QEMU_PROG).so ../../../libs/$(TARGET_ARCH_ABI)/
+	$(STRIP) --strip-unneeded ../../../libs/$(TARGET_ARCH_ABI)/lib$(QEMU_PROG).so
 
 endif
 

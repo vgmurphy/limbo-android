@@ -240,6 +240,12 @@ LOCAL_SRC_FILES :=
 include android-toolchain.mak
 include android-device-config.mak
 
+ifeq ($(TARGET_ARCH), arm)
+    LOCAL_CFLAGS = -DG_ATOMIC_ARM
+else
+    LOCAL_CFLAGS = -DG_ATOMIC_I486
+endif
+
 # ORIGINAL CFLAGS FROM ANDROID NDK
 #-D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__  \
 #-march=armv5te -mtune=xscale -msoft-float -mthumb \

@@ -1,42 +1,70 @@
+# Base definitions for Android toolchain.
+# This is the only part of the file you need to change before when compiling.
+
+TARGET_ARCH = x86
+
+NDK_ROOT = /home/yair/Desktop/android-ndk-r8b
+
+################ No modifications below this line are necessary #####################
+
+NDK_PLATFORM = platforms/android-14
+
+ifeq ($(TARGET_ARCH),arm)
+    EABI = arm-linux-androideabi
+    TARGET_ARCH_ABI = armeabi
+    TOOLCHAIN_PREFIX = arm-linux-androideabi-
+else
+    EABI = x86
+    TARGET_ARCH_ABI = x86
+    TOOLCHAIN_PREFIX = i686-linux-android-
+endif
+
+TOOLCHAIN_DIR = $(NDK_ROOT)/toolchains/$(EABI)-4.4.3/prebuilt/linux-x86
+TOOLCHAIN_PREFIX := $(TOOLCHAIN_DIR)/bin/$(TOOLCHAIN_PREFIX)
+
+LIMBO_JNI_ROOT := $(lastword $(MAKEFILE_LIST))
+LIMBO_JNI_ROOT := $(strip $(LIMBO_JNI_ROOT:%android-toolchain.mak=%))
+ifeq ($(LIMBO_JNI_ROOT),)
+    LIMBO_JNI_ROOT := .
+else
+    # get rid of trailing slash
+    LIMBO_JNI_ROOT := $(LIMBO_JNI_ROOT:%/=%)
+endif
+
+
 # ANDROID NDK TOOLCHAIN, doesn't support hard float so it's slow
 
-NDK_BASE=/home/dev/tools/android-ndk-r8b
-NDK_PLATFORM=platforms/android-14
-TOOLCHAIN_DIR=/home/dev/tools/android-ndk-r8b/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86
-CC = $(TOOLCHAIN_DIR)/bin/arm-linux-androideabi-gcc
-AR = $(TOOLCHAIN_DIR)/bin/arm-linux-androideabi-ar
-LNK = $(TOOLCHAIN_DIR)/bin/arm-linux-androideabi-g++
-STRIP = $(TOOLCHAIN_DIR)/bin/arm-linux-androideabi-strip
+
+CC = $(TOOLCHAIN_PREFIX)gcc
+AR = $(TOOLCHAIN_PREFIX)ar
+LNK = $(TOOLCHAIN_PREFIX)g++
+STRIP = $(TOOLCHAIN_PREFIX)strip
 AR_FLAGS = crs
-SYS_ROOT = --sysroot=$(NDK_BASE)/$(NDK_PLATFORM)/arch-arm
-NDK_INCLUDE=arch-arm/usr/include
-#GCC_STATIC = \
-	$(TOOLCHAIN_DIR)/lib/gcc/arm-linux-androideabi/4.6.3/armv7-a/thumb/libgcc.a 
+SYS_ROOT = --sysroot=$(NDK_ROOT)/$(NDK_PLATFORM)/arch-$(TARGET_ARCH)
+NDK_INCLUDE = $(NDK_ROOT)/$(NDK_PLATFORM)/arch-$(TARGET_ARCH)/usr/include
 
-#	$(TOOLCHAIN_DIR)/lib/gcc/arm-eabi/4.6.3/fpu/libgcc.a
+# INCLUDE_FIXED contains overrides for include files found under the toolchain's /usr/include.
+# Hoping to get rid of those one day, when newer NDK versions are released.
+INCLUDE_FIXED = $(LIMBO_JNI_ROOT)/include-fixed
 
-#$(TOOLCHAIN_DIR)/lib/gcc/arm-eabi/4.6.3/fpu/libgcc.a
-#$(TOOLCHAIN_DIR)/lib/gcc/arm-linux-androideabi/4.6.3/libgcc.a
-#$(TOOLCHAIN_DIR)/lib/gcc/arm-linux-androideabi/4.6.3/armv7-a/libgcc.a
-#$(TOOLCHAIN_DIR)/lib/gcc/arm-linux-androideabi/4.6.3/armv7-a/thumb/libgcc.a
-#$(NDK_BASE)/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86/lib/gcc/arm-linux-androideabi/4.4.3/armv7-a/thumb/libgcc.a
+# The logutils header is injected into all compiled files in order to redirect
+# output to the Android console, and provide debugging macros.
+LOGUTILS = $(LIMBO_JNI_ROOT)/logutils.h
 
 USR_LIB = \
--L$(TOOLCHAIN_DIR)/arm-linux-androideabi/lib
+-L$(TOOLCHAIN_DIR)//lib
 
-#-L$(NDK_BASE)/$(NDK_PLATFORM)/arch-arm/usr/lib
-
+# INCLUDE_FIXED
 SYSTEM_INCLUDE = \
+    -I$(INCLUDE_FIXED) \
     -I./qemu/linux-headers \
-    -I$(TOOLCHAIN_DIR)/arm-linux-androideabi/include \
-    -I$(NDK_BASE)/$(NDK_PLATFORM)/arch-arm/usr/include 
-    
-    #-I$(NDK_BASE)/$(NDK_PLATFORM)/arch-arm/usr/include/linux
-     #-I$(TOOLCHAIN_DIR)/arm-linux-androideabi/include 
+    -I$(TOOLCHAIN_DIR)/$(EABI)/include \
+    -I$(NDK_INCLUDE) \
+    -include $(LIMBO_JNI_ROOT)/logutils.h
 
 ANDROID_DEBUG_FLAGS = -g
 
-ANDROID_CFLAGS = $(ANDROID_DEBUG_FLAGS)
+ANDROID_CFLAGS = 
 
 ANDROID_CFLAGS += -O3
 

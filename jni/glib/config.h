@@ -61,7 +61,7 @@
 /* #undef G_ATOMIC_ARM */
 
 /* i486 atomic implementation */
-#define G_ATOMIC_I486 1
+/* #undef G_ATOMIC_I486 */
 
 /* ia64 atomic implementation */
 /* #undef G_ATOMIC_IA64 */

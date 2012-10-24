@@ -4,6 +4,9 @@ all:
 	$(MAKE) -f Makefile.qemu all V=1
 	$(MAKE) -f Makefile.limbo all V=1
 
+config:
+	$(MAKE) -f Makefile.config V=1
+
 clean:
 	$(MAKE) -f Makefile.zlib clean V=1
 	$(MAKE) -f Makefile.glib clean V=1
