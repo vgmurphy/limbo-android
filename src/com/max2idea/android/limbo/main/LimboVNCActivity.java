@@ -58,6 +58,7 @@ public class LimboVNCActivity extends android.androidVNC.VncCanvasActivity {
         Toast toast = Toast.makeText(activity, "2-Finger Long Press for Right Click", Toast.LENGTH_LONG);
         toast.setGravity(Gravity.TOP|Gravity.CENTER, 0, 0);
         toast.show();
+        this.vncCanvas.setFocusableInTouchMode(true);
 //        fullScreen();
     }
 
@@ -173,6 +174,7 @@ public class LimboVNCActivity extends android.androidVNC.VncCanvasActivity {
                 return true;
             }
         }
+        this.vncCanvas.requestFocus();
         return true;
     }
 
