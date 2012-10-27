@@ -16,9 +16,13 @@ QEMU_DGFLAGS += -MMD -MP -MT $@ -MF $(*D)/$(*F).d
 
 ## TK: cpu-exec.c doesn't like optimization probably gcc compiler is optimizing out 
 # some needed piece of code
-QEMU_NO_OPTIMIZATION=$(filter-out -O%,$(QEMU_CFLAGS) )
-cpu-exec.o: cpu-exec.c
-	$(call quiet-command,$(CC) $(QEMU_INCLUDES) $(QEMU_NO_OPTIMIZATION) $(CFLAGS) -c -o cpu-exec.o ../cpu-exec.c,"  CC    $(TARGET_DIR)$@")
+#QEMU_NO_OPTIMIZATION=$(filter-out -O%,$(QEMU_CFLAGS) )
+#cpu-exec.o: cpu-exec.c
+#	$(call quiet-command,$(CC) $(QEMU_INCLUDES) $(QEMU_NO_OPTIMIZATION) $(CFLAGS) -c -o cpu-exec.o ../cpu-exec.c,"  CC    $(TARGET_DIR)$@")
+
+#posix-aio-compat.o: posix-aio-compat.c
+#	$(call quiet-command,$(CC) $(QEMU_INCLUDES) $(QEMU_NO_OPTIMIZATION) $(CFLAGS) -c -o posix-aio-compat.o posix-aio-compat.c,"  CC    $(TARGET_DIR)$@")
+
 
 %.o: %.c
 	$(call quiet-command,$(CC) $(QEMU_INCLUDES) $(QEMU_CFLAGS) $(QEMU_DGFLAGS) $(CFLAGS) -c -o $@ $<,"  CC    $(TARGET_DIR)$@")
