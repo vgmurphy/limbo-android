@@ -32,7 +32,6 @@ LOCAL_QEMU_CUSTOM_CFLAGS    := \
 	-I$(LOCAL_PATH)/glib/glib \
 	-I$(NDK_ROOT)/sources/android/cpufeatures \
 	-pthread	-I$(LOCAL_PATH)/glib	-I$(LOCAL_PATH)/glib/glib \
-        -pthread	-I$(LOCAL_PATH)/zlib \
         -lm 
 
 

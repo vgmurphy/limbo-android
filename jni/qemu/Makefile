@@ -172,9 +172,8 @@ qemu-img.so: qemu-img.o $(tools-obj-y) $(block-obj-y)
 	$(sort $(tools-obj-y) $(block-obj-y)) \
 	../libglib.a \
 	../libiconv.a \
-	../libzlib.a \
 	$(USR_LIB) \
-	-llog -lm \
+	-llog -lm -lz \
 	$(P_THREAD) \
 	-o ./libqemu-img.so
 	cp libqemu-img.so ../	

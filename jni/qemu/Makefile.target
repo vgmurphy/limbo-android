@@ -435,9 +435,8 @@ $(QEMU_PROG): $(obj-y) $(obj-$(TARGET_BASE_ARCH)-y)
 	$(GCC_STATIC) \
 	../../libglib.a \
 	../../libiconv.a \
-	../../libzlib.a \
 	$(USR_LIB) \
-	-llog -lm \
+	-llog -lm -lz \
     $(P_THREAD) \
 	-o ./lib$(QEMU_PROG).so
 	cp lib$(QEMU_PROG).so ../../	
