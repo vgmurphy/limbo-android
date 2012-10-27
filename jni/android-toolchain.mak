@@ -1,7 +1,7 @@
 # Base definitions for Android toolchain.
 # This is the only part of the file you need to change before when compiling.
 
-TARGET_ARCH = x86
+TARGET_ARCH ?= arm
 
 NDK_ROOT = /home/yair/Desktop/android-ndk-r8b
 

@@ -7,6 +7,17 @@ all:
 config:
 	$(MAKE) -f Makefile.config V=1
 
+release:
+	$(MAKE) ultraclean
+
+	$(MAKE) veryclean
+	$(MAKE) config TARGET_ARCH=arm
+	$(MAKE) all TARGET_ARCH=arm
+
+	$(MAKE) veryclean
+	$(MAKE) config TARGET_ARCH=x86
+	$(MAKE) all TARGET_ARCH=x86
+
 clean:
 	$(MAKE) -f Makefile.zlib clean V=1
 	$(MAKE) -f Makefile.glib clean V=1
