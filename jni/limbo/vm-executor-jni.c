@@ -43,12 +43,16 @@ extern void change_dev(const char * device, const char *target);
 
 extern int set_dns_addr_str(const char *dns_addr_str1);
 
+extern void setAIOMaxThreads(int threads);
+
 
 /* JNI interface: constructs arguments and calls main function
  */
 
 static int started = 0;
 void * handle;
+
+#include <machine/cpu-features.h>
 
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *pvt) {
     printf("* JNI_OnLoad called\n");
@@ -191,6 +195,7 @@ JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_changed
 
     return (*env)->NewStringUTF(env, res_msg);
 }
+
 
 JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_getsavestate(
         JNIEnv* env, jobject thiz) {
@@ -384,6 +389,9 @@ JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_start(
     jstring base_dir = (*env)->GetObjectField(env, thiz, fid);
     const char *base_dir_str = (*env)->GetStringUTFChars(env,
             base_dir, 0);
+
+    fid = (*env)->GetFieldID(env, c, "aiomaxthreads", "I");
+    int aiomaxthreads = (*env)->GetIntField(env, thiz, fid);
 
     int params = 10;
 
@@ -611,6 +619,22 @@ JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_start(
         LOGV(res_msg);
         return (*env)->NewStringUTF(env, res_msg);
     }
+
+    //Set Max AIO Threads
+    typedef void (*setAIOMaxThreads_t)();
+    dlerror();
+    setAIOMaxThreads_t setAIOMaxThreads = (setAIOMaxThreads_t)
+    		dlsym(handle,"setAIOMaxThreads");
+	const char *dlsym_error1 = dlerror();
+	if (dlsym_error1) {
+		LOGV("Cannot load symbol 'setAIOMaxThreads': %s\n", dlsym_error1);
+		handle = NULL;
+		return (*env)->NewStringUTF(env, res_msg);
+	}
+	LOGV("Attempt to change aiomaxthreads: %d", aiomaxthreads);
+	setAIOMaxThreads(aiomaxthreads);
+
+
     LOGV("Loading symbol qemu_start...\n");
     typedef void (*qemu_start_t)();
 
