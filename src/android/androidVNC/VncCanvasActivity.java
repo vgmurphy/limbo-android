@@ -640,9 +640,10 @@ public class VncCanvasActivity extends Activity {
         activity = this;
         if(Const.NOT_ICS){
         requestWindowFeature(Window.FEATURE_NO_TITLE);
+        
+        }
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        }
 
         database = new VncDatabase(this);
 

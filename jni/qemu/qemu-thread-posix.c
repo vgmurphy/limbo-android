@@ -133,6 +133,22 @@ void qemu_thread_create(QemuThread *thread,
         }
     }
 
+    // MK - Setting high priority for AIO
+#ifdef __ANDROID__
+	int rt_max_prio, rt_min_prio;
+	struct sched_param rt_param;
+	pthread_attr_init(&attr);
+	pthread_attr_setschedpolicy(&attr, SCHED_FIFO);
+	rt_max_prio = sched_get_priority_max(SCHED_FIFO);
+	rt_min_prio = sched_get_priority_min(SCHED_FIFO);
+	printf("Thread Priority Range: %d ... %d", rt_min_prio, rt_max_prio);
+	rt_param.sched_priority = rt_max_prio;
+	printf(
+			"Setting Priority for AIO:qemu_thread_create(): %d ",
+			rt_param.sched_priority);
+	pthread_attr_setschedparam(&attr, &rt_param);
+#endif // MK
+
     /* Leave signal handling to the iothread.  */
     sigfillset(&set);
     pthread_sigmask(SIG_SETMASK, &set, &oldset);
@@ -144,6 +160,7 @@ void qemu_thread_create(QemuThread *thread,
 
     pthread_attr_destroy(&attr);
 }
+
 
 void qemu_thread_get_self(QemuThread *thread) {
     thread->thread = pthread_self();

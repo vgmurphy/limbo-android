@@ -64,7 +64,7 @@ static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 static pthread_t thread_id;
 static pthread_attr_t attr;
-static int max_threads = 1;
+static int max_threads = 64; //TK Async IO creates problems so this is overriden to 1 thread for pre-ICS devices
 static int cur_threads = 0;
 static int idle_threads = 0;
 static int new_threads = 0; /* backlog of threads we need to create */
@@ -78,6 +78,10 @@ static int preadv_present = 1;
 static int preadv_present = 0;
 #endif
 
+extern void setAIOMaxThreads(int threads){
+	max_threads = threads;
+	LOGV("Changing MAX AIO Threads to: %d", max_threads);
+}
 static void die2(int err, const char *what) {
     LOGD_AIO("%s:%s\n", __FILE__, __func__);
     fprintf(stderr, "%s failed: %s\n", what, strerror(err));

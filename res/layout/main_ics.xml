@@ -549,7 +549,32 @@
                         android:layout_gravity="right|center_vertical"
                         android:gravity="right|center_vertical" />
                 </LinearLayout>
-                                            
+
+                                <LinearLayout
+                    android:id="@+id/enableMultiThread"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="right|center_vertical"
+                    android:gravity="right|center_vertical"
+                    android:orientation="horizontal" >
+
+                    <TextView
+                        android:id="@+id/enableMultiThreadStr"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="right|center_vertical"
+                        android:gravity="right|center_vertical"
+                        android:text="Enable Multithread AIO (TURBO MODE)"
+                        android:textSize="15dip" />
+
+                    <CheckBox
+                        android:id="@+id/enableMultiThreadval"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="right|center_vertical"
+                        android:gravity="right|center_vertical" />
+                </LinearLayout>
+                
                 <LinearLayout
                     android:id="@+id/vncexternall"
                     android:layout_width="fill_parent"

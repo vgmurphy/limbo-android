@@ -26,6 +26,9 @@ import android.os.Environment;
  */
 public class Const {
 
+	public static final int MIN_AIO_THREADS = 1;
+	public static final int MAX_AIO_THREADS = 64;
+
 	public static boolean debug = false;
 	
     public static String APP_NAME = "Limbo PC Emulator (QEMU)";

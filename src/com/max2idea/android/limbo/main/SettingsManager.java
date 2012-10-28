@@ -161,6 +161,19 @@ public class SettingsManager extends PreferenceActivity {
 //        UIUtils.log("Setting First time: ");
     }
 
+    static boolean getMultiAIO(Activity activity) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
+        return prefs.getBoolean("enableMultiAIO", false);
+    }
+
+    public static void setMultiAIO(Activity activity, boolean flag) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
+        SharedPreferences.Editor edit = prefs.edit();
+        edit.putBoolean("enableMultiAIO", flag);
+        edit.commit();
+//        UIUtils.log("Setting First time: ");
+    }
+    
     static String getLastCPU(LimboActivity activity) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
         return prefs.getString("lastCPU", "");

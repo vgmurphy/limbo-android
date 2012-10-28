@@ -194,6 +194,7 @@ public class LimboActivity extends Activity {
 //	private CheckBox mSnapshot;
     private CheckBox mUSBmouse;
     private CheckBox mVNC;
+    private CheckBox mMultiAIO;
     private Spinner mSnapshot;
     private Button mStart;
     private Button mStop;
@@ -204,6 +205,7 @@ public class LimboActivity extends Activity {
     private MachineOpenHelper machineDB;
     //ADS
     private MoPubView mAdView;
+	private boolean ICS = false;
 
     /**
      * Called when the activity is first created.
@@ -211,8 +213,11 @@ public class LimboActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if(Const.NOT_ICS)
+        
+        if(Const.NOT_ICS){
         requestWindowFeature(Window.FEATURE_NO_TITLE);
+        }
+        
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
@@ -226,7 +231,13 @@ public class LimboActivity extends Activity {
         machineDB = new MachineOpenHelper(activity);
 
         // Setup UI
-        this.setContentView(R.layout.main);
+        if(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH){
+        	this.ICS  = true;
+        	this.setContentView(R.layout.main_ics);
+        }else{
+        	this.setContentView(R.layout.main);	
+        }
+        
         this.setupWidgets();
         this.enableOptions(false);
 
@@ -750,7 +761,7 @@ public class LimboActivity extends Activity {
             tvm.start();
         }
         try {
-            Thread.sleep(1000);
+            Thread.sleep(500);
         } catch (InterruptedException ex) {
             Logger.getLogger(LimboActivity.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -862,8 +873,13 @@ public class LimboActivity extends Activity {
         this.mACPI = (CheckBox) findViewById(R.id.acpival);
         this.mHPET = (CheckBox) findViewById(R.id.hpetval);
         this.mUSBmouse = (CheckBox) findViewById(R.id.usbmouseval);
-        this.mVNC = (CheckBox) findViewById(R.id.vncexternalval); //No external connections
-//        mVNC.setChecked(SettingsManager.getVNCAllowExternal(activity));
+        this.mVNC = (CheckBox) findViewById(R.id.vncexternalval); //No external connections      
+        mVNC.setChecked(SettingsManager.getVNCAllowExternal(activity));
+        
+        if(ICS){
+        this.mMultiAIO = (CheckBox) findViewById(R.id.enableMultiThreadval); //No external connections
+        mMultiAIO.setChecked(SettingsManager.getMultiAIO(activity));
+        }
         
         this.mSnapshot = (Spinner) findViewById(R.id.snapshotval);
 
@@ -1471,6 +1487,25 @@ public class LimboActivity extends Activity {
 //                Log.v(TAG, "Nothing selected");
             }
         });
+        
+        if(mMultiAIO!=null)
+        mMultiAIO.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton viewButton, boolean isChecked) {
+
+
+                if (isChecked) {
+                    promptMultiAIO(activity);
+                } else {
+                	SettingsManager.setMultiAIO(activity, false);
+                }
+
+            }
+
+            public void onNothingSelected(AdapterView<?> parentView) {
+                // your code here
+//                Log.v(TAG, "Nothing selected");
+            }
+        });
     }
     private String vnc_passwd = null;
     private int vnc_allow_external = 0;
@@ -1519,6 +1554,11 @@ public class LimboActivity extends Activity {
 
                 if (a.getText().toString().trim().equals("")) {
                     Toast.makeText(getApplicationContext(), "Password cannot be empty!", Toast.LENGTH_SHORT).show();
+                    vnc_passwd = null;
+                    vnc_allow_external = 0;
+                    mVNC.setChecked(false);
+                    SettingsManager.setVNCAllowExternal(activity, false);
+                    return;
                 } else {
                     sendHandlerMessage(handler, Const.VNC_PASSWORD, "vnc_passwd", "passwd");
                     vnc_passwd = a.getText().toString();
@@ -1548,6 +1588,43 @@ public class LimboActivity extends Activity {
 
     }
 
+    public void promptMultiAIO(final Activity activity) {
+        final AlertDialog alertDialog;
+        alertDialog = new AlertDialog.Builder(activity).create();
+        alertDialog.setTitle("Warning!");
+        TextView info = new TextView(activity);
+        info.setText("Enabling Multi AIO will speed up the VM but it might not work for all devices. " +
+        		"Multi AIO is experimental and might damage any disk image you open with Limbo so keep a " +
+        		"backup of your images if you're not certain. " +
+        		"If you see errors uncheck this option and try again.");
+        alertDialog.setView(info);
+        final Handler handler = this.handler;
+        alertDialog.setButton("Set", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+
+                SettingsManager.setMultiAIO(activity, true);
+
+            }
+        });
+        alertDialog.setButton2("Cancel", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+            	mMultiAIO.setChecked(false);
+            	SettingsManager.setMultiAIO(activity, false);
+                return;
+            }
+        });
+        alertDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface dialog) {
+                mMultiAIO.setChecked(false);
+                SettingsManager.setMultiAIO(activity, false);
+            }
+        });
+        alertDialog.show();
+
+    }
+
+    
     private void loadMachine(String machine, String snapshot) {
         // TODO Auto-generated method stub
 
@@ -2007,6 +2084,11 @@ public class LimboActivity extends Activity {
         vmexecutor.vnc_allow_external = vnc_allow_external;
         vmexecutor.vnc_passwd = vnc_passwd;
         vmexecutor.dns_addr = mDNS.getText().toString();
+        if(ICS && this.mMultiAIO.isChecked()){
+        	vmexecutor.aiomaxthreads = Const.MAX_AIO_THREADS;
+        }else{
+        	vmexecutor.aiomaxthreads = Const.MIN_AIO_THREADS;
+        }
         vmexecutor.print();
         output = "Starting VM...";
         sendHandlerMessage(handler, Const.VM_STARTED);

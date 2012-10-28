@@ -33,6 +33,8 @@ public class VMExecutor {
     private final String fdb_img_path;
     private final String cpu;
     private final String TAG = "VMExecutor";
+    
+    public int aiomaxthreads = 1;
     // Default Settings
     private int memory = 128;
     private String bootdevice = null;
