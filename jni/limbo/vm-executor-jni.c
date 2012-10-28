@@ -52,14 +52,15 @@ extern void setAIOMaxThreads(int threads);
 static int started = 0;
 void * handle;
 
-#include <machine/cpu-features.h>
+//MK removing, not needed for any specific purpose
+//#include <machine/cpu-features.h>
 
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *pvt) {
     printf("* JNI_OnLoad called\n");
-    int cpufamily = android_getCpuFamily();
-    int features = android_getCpuFeatures();
-    printf("cpufamily = %ld", cpufamily);
-    printf("cpufeatures = %ld", features);
+//    int cpufamily = android_getCpuFamily();
+//    int features = android_getCpuFeatures();
+//    printf("cpufamily = %ld", cpufamily);
+//    printf("cpufeatures = %ld", features);
 /*
     if ((features & ANDROID_CPU_ARM_FEATURE_ARMv7) != 0) {
         printf("Detected ARMv7 CPU !\n");

@@ -3,7 +3,7 @@
 
 TARGET_ARCH ?= arm
 
-NDK_ROOT = /home/yair/Desktop/android-ndk-r8b
+NDK_ROOT = /home/dev/tools/android-ndk-r8b
 
 ################ No modifications below this line are necessary #####################
 
@@ -19,7 +19,7 @@ else
     TOOLCHAIN_PREFIX = i686-linux-android-
 endif
 
-TOOLCHAIN_DIR = $(NDK_ROOT)/toolchains/$(EABI)-4.4.3/prebuilt/linux-x86
+TOOLCHAIN_DIR = $(NDK_ROOT)/toolchains/$(EABI)-4.6/prebuilt/linux-x86
 TOOLCHAIN_PREFIX := $(TOOLCHAIN_DIR)/bin/$(TOOLCHAIN_PREFIX)
 
 LIMBO_JNI_ROOT := $(lastword $(MAKEFILE_LIST))
