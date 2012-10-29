@@ -285,9 +285,10 @@ $(ICONV_OBJS): EXTRA_FLAGS:= $(ICONV_INC) $(GLIB_ADTNL_DEFS)
 
 ANDROID_CFLAGS_NOOPTIM=$(filter-out -O%,$(ANDROID_CFLAGS) )
 
-glib/glib/gmem.o: glib/glib/gmem.c
-	@echo "   [Compiling1] " $<
-	$(CC) $(CFLAGS) $(EXTRA_DEFS) $(ARCH_CFLAGS) $(LOCAL_CFLAGS) $(EXTRA_FLAGS) $(ANDROID_CFLAGS_NOOPTIM) $(CUSTOM_ANDROID_CFLAGS) -o $@ -c $<
+# Don't need this since we use sigaltstack
+#glib/glib/gmem.o: glib/glib/gmem.c
+#	@echo "   [Compiling1] " $<
+#	$(CC) $(CFLAGS) $(EXTRA_DEFS) $(ARCH_CFLAGS) $(LOCAL_CFLAGS) $(EXTRA_FLAGS) $(ANDROID_CFLAGS_NOOPTIM) $(CUSTOM_ANDROID_CFLAGS) -o $@ -c $<
 
 
 %.o: %.c
