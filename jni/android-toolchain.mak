@@ -10,16 +10,16 @@ NDK_ROOT = /home/dev/tools/android-ndk-r8b
 NDK_PLATFORM = platforms/android-14
 
 ifeq ($(TARGET_ARCH),arm)
-    EABI = arm-linux-androideabi
+    EABI = arm-linux-androideabi-4.6
     TARGET_ARCH_ABI = armeabi
     TOOLCHAIN_PREFIX = arm-linux-androideabi-
 else
-    EABI = x86
+    EABI = x86-4.4.3
     TARGET_ARCH_ABI = x86
     TOOLCHAIN_PREFIX = i686-linux-android-
 endif
 
-TOOLCHAIN_DIR = $(NDK_ROOT)/toolchains/$(EABI)-4.6/prebuilt/linux-x86
+TOOLCHAIN_DIR = $(NDK_ROOT)/toolchains/$(EABI)/prebuilt/linux-x86
 TOOLCHAIN_PREFIX := $(TOOLCHAIN_DIR)/bin/$(TOOLCHAIN_PREFIX)
 
 LIMBO_JNI_ROOT := $(lastword $(MAKEFILE_LIST))
@@ -66,7 +66,5 @@ ANDROID_DEBUG_FLAGS = -g
 
 ANDROID_CFLAGS = 
 
-ANDROID_CFLAGS += -O3
-
-#ANDROID_CFLAGS +=
+ANDROID_CFLAGS += -O2
 
