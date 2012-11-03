@@ -1,4 +1,4 @@
-Limbo (i386 PC Emulator) for Android    
+Limbo PC Emulator (QEMU x86) for Android    
 
 "And so, I captured this fancy, where all that we see, or seem, 
 is but a dream within a dream." Edgar Allan Poe
@@ -7,15 +7,17 @@ A Big Thanks to:
 Fabrice Bellard http://bellard.org/ and the Qemu team http://wiki.qemu.org/Main_Page
 glib team http://developer.gnome.org/glib/
 iconv team http://www.gnu.org/software/libiconv/
-zlib team Jean-loup Gailly and Mark Adler http://zlib.net/
 android-vnc-viewer team http://code.google.com/p/android-vnc-viewer/
-and my good friend Lazlo
+
+Special contributions:
+Yair Lifshitz (build for x86 phones)
+
 ================================================================================
 
 1. What is Limbo?
 
 Limbo is a QEMU-based emulator for Android. It currently supports PC emulation 
-of Intel ix86 architectures.
+for Intel x86 architecture.
 For more information visit:
 https://code.google.com/p/limbo-android/
     
@@ -39,8 +41,6 @@ https://code.google.com/p/limbo-android/
 
     Configure variables for toolchain and NDK directories for your device
      in jni/android-toolchain.mak.
-     
-    Caveats: what's that?
 
 ===============================================================================
 4. Build
@@ -50,8 +50,12 @@ https://code.google.com/p/limbo-android/
 
     b. Build the static and shared libraries (libqemu-img.so & 
        libqemu-system-i386.so):
-        ./configure
-        make
+        
+        Change directory to ./jni and type:
+        make release-arm
+        
+        for x86 phones:
+        make release-x86
         
     c. Build the Android APK (Limbo.apk) from Eclipse or Netbeans.
     		 
@@ -65,7 +69,7 @@ https://code.google.com/p/limbo-android/
 	b. Start the Limbo app and choose CPU, Memory (~8-64MB),etc..
 	c. Choose a bootable disk image(s) for CDRom, Floppy, and a HDD image
 	d. Start the virtual machine.
-    e. Have fun
+    e. Have fun!
     	
 ===============================================================================
 6. License
@@ -85,6 +89,18 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 ===============================================================================
 Changelog:
+
+Limbo v0.9.3 (Nov 3, 2012)
+- Fixed crash issues while copying files inside VM, using sigaltstack instead of gthread.
+- Fixed issue with canceling image selection and enabled ejection of media (CD, Floppy).
+- Fixed some crashes due to pointer outside of VNC area.
+- File manager now detects VHD file format as well.
+- Some performance enhancements. Fixed issue with optimization for cpu-exec.c and using gcc-4.6 for ARM build this fixes.
+- Enabled Multithreaded AIO option for Android 3.0 devices, this should speed up 
+  disk I/O inside the virtual machine.
+- Fixed memory.h compilation issue (patch provided by Yair Lifshitz).
+- Fixed load linker errors with stdio.h (patch provided by Yair Lifshitz).
+- Enabled build for x86 phones (patch provided by Yair Lifshitz).
 
 Limbo v0.9.2 (Oct 10, 2012)
 - Fixed issue with booting HDD images, removed TSC features for now
@@ -125,6 +141,6 @@ Host support:
 
 ===============================================================================
 
-Copyright ï¿½ 2012 Max Kastanas
+Copyright © 2012 Max Kastanas
 
 Endofdoc
