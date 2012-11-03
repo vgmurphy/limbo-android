@@ -889,6 +889,23 @@ int paio_init(void) {
     if (ret)
         die2(ret, "pthread_attr_init");
 
+    // MK - Setting high priority based on FIFO
+
+    /*
+#ifdef __ANDROID__
+	int rt_max_prio, rt_min_prio;
+	struct sched_param rt_param;
+	pthread_attr_setschedpolicy(&attr, SCHED_FIFO);
+	rt_max_prio = sched_get_priority_max(SCHED_FIFO);
+	rt_min_prio = sched_get_priority_min(SCHED_FIFO);
+	printf("Thread Priority Range: %d ... %d\n", rt_min_prio, rt_max_prio);
+	rt_param.sched_priority = rt_max_prio;
+	printf("Setting Priority for paio_init(): %d\n",rt_param.sched_priority);
+	pthread_attr_setschedparam(&attr, &rt_param);
+#endif // MK
+*/
+
+
     ret = pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
     if (ret)
         die2(ret, "pthread_attr_setdetachstate");
