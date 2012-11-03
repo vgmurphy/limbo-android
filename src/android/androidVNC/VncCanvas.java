@@ -534,8 +534,12 @@ public class VncCanvas extends ImageView {
      */
     void scrollToAbsolute() {
         float scale = getScale();
+        try {
         scrollTo((int) ((absoluteXPosition + ((float) getWidth() - getImageWidth()) / 2) * scale),
                 (int) ((absoluteYPosition + ((float) getHeight() - getImageHeight()) / 2) * scale));
+        }catch (Exception e){
+        	Log.v("VNC", "Error: " + e.getMessage());
+        }
     }
 
     /**
