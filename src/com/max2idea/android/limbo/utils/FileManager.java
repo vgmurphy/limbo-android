@@ -108,6 +108,7 @@ public class FileManager extends ListActivity {
                     								||file1.getPath().endsWith("dmg")
                     								||file1.getPath().endsWith("bochs")
                     								||file1.getPath().endsWith("vpc")
+                    								||file1.getPath().endsWith("vhd")
                     								)
                     						)
                     				||(this.fileType.startsWith("cd") 
