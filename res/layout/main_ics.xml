@@ -564,7 +564,7 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="right|center_vertical"
                         android:gravity="right|center_vertical"
-                        android:text="Enable Multithread AIO (TURBO MODE)"
+                        android:text="Enable Multithread AIO"
                         android:textSize="15dip" />
 
                     <CheckBox
