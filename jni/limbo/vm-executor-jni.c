@@ -183,12 +183,13 @@ JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_changed
     change_dev_t change_dev = (change_dev_t) dlsym(handle, "change_dev");
     const char *dlsym_error = dlerror();
     if (dlsym_error) {
-        LOGV("Cannot load symbol 'qmp_change': %s\n", dlsym_error);
+        LOGV("Cannot load symbol 'change_dev': %s\n", dlsym_error);
 //        dlclose(handle);
         handle = NULL;
         return (*env)->NewStringUTF(env, res_msg);
     }
 
+    printf(res_msg, "Changing Device: %s to: %s" , dev, dev_value);
     change_dev(dev, dev_value);
 
     sprintf(res_msg, "Device %s changed to: %s", dev, dev_value);
@@ -197,6 +198,34 @@ JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_changed
     return (*env)->NewStringUTF(env, res_msg);
 }
 
+JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_ejectdev(
+        JNIEnv* env, jobject thiz) {
+    char res_msg[MSG_BUFSIZE + 1] = {0};
+
+    jclass c = (*env)->GetObjectClass(env, thiz);
+    jfieldID fid = (*env)->GetFieldID(env, c, "qemu_dev", "Ljava/lang/String;");
+    jstring jdev = (*env)->GetObjectField(env, thiz, fid);
+    const char *dev = (*env)->GetStringUTFChars(env, jdev, 0);
+
+    typedef void (*eject_dev_t)();
+
+    eject_dev_t eject_dev = (eject_dev_t) dlsym(handle, "eject_dev");
+    const char *dlsym_error = dlerror();
+    if (dlsym_error) {
+        LOGV("Cannot load symbol 'eject_dev': %s\n", dlsym_error);
+//        dlclose(handle);
+        handle = NULL;
+        return (*env)->NewStringUTF(env, res_msg);
+    }
+
+    printf(res_msg, "Ejecting Device: %s", dev);
+    eject_dev(dev);
+
+    sprintf(res_msg, "Device %s ejected", dev);
+    LOGV(res_msg);
+
+    return (*env)->NewStringUTF(env, res_msg);
+}
 
 JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_getsavestate(
         JNIEnv* env, jobject thiz) {

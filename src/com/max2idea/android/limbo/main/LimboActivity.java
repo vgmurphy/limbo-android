@@ -1132,6 +1132,8 @@ public class LimboActivity extends Activity {
                 }
                 if (currStatus.equals("RUNNING") && position > 1) {
                     vmexecutor.change_dev("ide1-cd0", currMachine.cd_iso_path);
+                }else if (currStatus.equals("RUNNING") && position == 0) {
+                    vmexecutor.change_dev("ide1-cd0", null); //Eject
                 }
                 userPressedCDROM = true;
             }
@@ -1161,6 +1163,8 @@ public class LimboActivity extends Activity {
                 }
                 if (currStatus.equals("RUNNING") && position > 1) {
                     vmexecutor.change_dev("floppy0", currMachine.fda_img_path);
+                }else if (currStatus.equals("RUNNING") && position == 0) {
+                    vmexecutor.change_dev("floppy0", null); //Eject
                 }
 
                 userPressedFDA = true;
@@ -1191,6 +1195,8 @@ public class LimboActivity extends Activity {
                 }
                 if (currStatus.equals("RUNNING") && position > 1) {
                     vmexecutor.change_dev("floppy1", currMachine.fdb_img_path);
+                }else if (currStatus.equals("RUNNING") && position == 0) {
+                    vmexecutor.change_dev("floppy1", null); //Eject
                 }
                 userPressedFDB = true;
             }
@@ -1534,7 +1540,7 @@ public class LimboActivity extends Activity {
         final AlertDialog alertDialog;
         alertDialog = new AlertDialog.Builder(activity).create();
         alertDialog.setTitle("Server: " + this.getLocalIpAddress() + ":" + "5901"
-                + " VNC is not secure even with a password! Make sure you're on a private network!");
+                + " VNC is not secure make sure you're on a private network!");
         EditText passwdView = new EditText(activity);
         passwdView.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
         passwdView.setHint("Password");
@@ -1593,8 +1599,9 @@ public class LimboActivity extends Activity {
         alertDialog = new AlertDialog.Builder(activity).create();
         alertDialog.setTitle("Warning!");
         TextView info = new TextView(activity);
-        info.setText("Enabling Multi AIO will speed up the VM but it might not work for all devices. " +
-        		"Multi AIO is experimental and might damage any disk image you open with Limbo so keep a " +
+        info.setText("Enabling Multithreaded AIO might speed up I/O in the VM " +
+        		"but it might not work for all devices. " +
+        		"Multithreaded AIO is experimental and might damage any disk image you open with Limbo so keep a " +
         		"backup of your images if you're not certain. " +
         		"If you see errors uncheck this option and try again.");
         alertDialog.setView(info);
@@ -1872,7 +1879,9 @@ public class LimboActivity extends Activity {
             if (currDir != null && !currDir.trim().equals("")) {
                 SettingsManager.setLastDir(this, currDir);
             }
-            setDriveAttr(fileType, file);
+            if(fileType != null && file !=null){
+            	setDriveAttr(fileType, file);
+            }
 
         } else if (resultCode == Const.VNC_RESET_RESULT_CODE) {
             Toast.makeText(getApplicationContext(), "Resizing Display", Toast.LENGTH_SHORT).show();

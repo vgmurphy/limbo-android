@@ -196,6 +196,8 @@ public class VMExecutor {
     protected native String getstate();
     
     protected native String changedev();
+    
+    protected native String ejectdev();
 
     /**
      * Converting the PCM file to a WAV file
@@ -240,9 +242,17 @@ public class VMExecutor {
         return this.getstate();
     }
 
-    public void change_dev(String ide1cd0, String cd_iso_path) {
-        this.qemu_dev = ide1cd0;
-        this.qemu_dev_value = cd_iso_path;
-        this.changedev();
-    }
+	public void change_dev(String dev, String image_path) {
+		this.qemu_dev = dev;
+		this.qemu_dev_value = image_path;
+		if (qemu_dev_value == null || qemu_dev_value.trim().equals("")){
+			Log.v("Limbo", "Ejecting Dev: " + dev);
+			this.ejectdev();
+		}
+		else{
+			Log.v("Limbo", "Changing Dev: " + dev + " to: " + image_path);
+			this.changedev();
+		}
+			
+	}
 }

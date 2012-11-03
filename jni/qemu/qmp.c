@@ -392,6 +392,12 @@ void change_dev(const char * device, const char *target){
         
 }
 
+void eject_dev(const char * device){
+	Error *err = NULL;
+    qmp_eject(device, 1, 1, err);
+
+}
+
 void qmp_change(const char *device, const char *target,
                 bool has_arg, const char *arg, Error **err)
 {
