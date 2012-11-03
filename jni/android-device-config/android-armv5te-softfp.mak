@@ -47,7 +47,7 @@ ARCH_CFLAGS += -ffunction-sections
 #ARCH_CFLAGS += -fomit-frame-pointer 
 
 # prevent unwanted optimizations for Qemu
-#ARCH_CFLAGS += -fno-strict-aliasing
+ARCH_CFLAGS += -fno-strict-aliasing
 
 # Loop optimization might be safe
 ARCH_CFLAGS += -fstrength-reduce 
