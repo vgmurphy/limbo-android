@@ -46,7 +46,7 @@ Limbo v0.9.3 (Nov 3, 2012)<br>
   disk I/O inside the virtual machine.<br>
 - Fixed memory.h compilation issue (patch provided by Yair Lifshitz).<br>
 - Fixed load linker errors with stdio.h (patch provided by Yair Lifshitz).<br>
-- Enabled build for x86 phones (patch provided by Yair Lifshitz).<br>
+- Port for x86 phones (patch provided by Yair Lifshitz).<br>
 <br>
 
 <br><br>

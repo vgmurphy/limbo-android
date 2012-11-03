@@ -10,7 +10,7 @@ iconv team http://www.gnu.org/software/libiconv/
 android-vnc-viewer team http://code.google.com/p/android-vnc-viewer/
 
 Special contributions:
-Yair Lifshitz (build for x86 phones)
+Yair Lifshitz (port for x86 phones)
 
 ================================================================================
 
@@ -100,7 +100,7 @@ Limbo v0.9.3 (Nov 3, 2012)
   disk I/O inside the virtual machine.
 - Fixed memory.h compilation issue (patch provided by Yair Lifshitz).
 - Fixed load linker errors with stdio.h (patch provided by Yair Lifshitz).
-- Enabled build for x86 phones (patch provided by Yair Lifshitz).
+- Port for x86 phones (patch provided by Yair Lifshitz).
 
 Limbo v0.9.2 (Oct 10, 2012)
 - Fixed issue with booting HDD images, removed TSC features for now
