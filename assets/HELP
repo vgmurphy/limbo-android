@@ -22,7 +22,7 @@
  <br><br>
  <font color="red">=> How does it work? </font><br>
  Limbo is a software emulator for Android devices. Currently it emulates 
- Inter 32bit and 64bit architectures for a variety of CPUs and peripheral devices.
+ Intel 32bit and 64bit architectures for a variety of CPUs and peripheral devices.
  Emulation speed varies depending on your Android device. For a list of compatible OSes 
  and instructions visit the Limbo wiki:
  <a href="http://code.google.com/p/limbo-android/wiki/LimboAndroid">http://code.google.com/p/limbo-android/wiki/LimboAndroid</a><br>
