@@ -33,6 +33,8 @@
 #include "sysemu.h"
 #include "x_keymap.h"
 #include "sdl_zoom.h"
+#include "logutils.h"
+
 
 static DisplayChangeListener *dcl;
 static SDL_Surface *real_screen;
@@ -62,7 +64,8 @@ static Notifier mouse_mode_notifier;
 
 static void sdl_update(DisplayState *ds, int x, int y, int w, int h)
 {
-    //    printf("updating x=%d y=%d w=%d h=%d\n", x, y, w, h);
+//        printf("updating x=%d y=%d w=%d h=%d\n", x, y, w, h);
+//        printf("scaling_active=%d\n", scaling_active);
     SDL_Rect rec;
     rec.x = x;
     rec.y = y;
@@ -96,7 +99,7 @@ static void do_sdl_resize(int width, int height, int bpp)
 {
     int flags;
 
-    //    printf("resizing to %d %d\n", w, h);
+        printf("%s, Resizing to %d %d\n", __func__, width, height);
 
     flags = SDL_HWSURFACE | SDL_ASYNCBLIT | SDL_HWACCEL;
     if (gui_fullscreen) {
@@ -108,6 +111,10 @@ static void do_sdl_resize(int width, int height, int bpp)
         flags |= SDL_NOFRAME;
 
     real_screen = SDL_SetVideoMode(width, height, bpp, flags);
+
+    //Send resolution to Java
+    Android_JNI_SetSDLResolution(width, height);
+
     if (!real_screen) {
 	fprintf(stderr, "Could not open SDL display (%dx%dx%d): %s\n", width, 
 		height, bpp, SDL_GetError());
@@ -229,15 +236,20 @@ static kbd_layout_t *kbd_layout = NULL;
 
 static uint8_t sdl_keyevent_to_keycode_generic(const SDL_KeyboardEvent *ev)
 {
+
     int keysym;
     /* workaround for X11+SDL bug with AltGR */
     keysym = ev->keysym.sym;
-    if (keysym == 0 && ev->keysym.scancode == 113)
+    if (keysym == 0 && ev->keysym.scancode == 113){
+//    	LOGV("Found Keysym SDLK_MODE");
         keysym = SDLK_MODE;
+    }
     /* For Japanese key '\' and '|' */
     if (keysym == 92 && ev->keysym.scancode == 133) {
+//    	LOGV("Found Keysym japanese symbol");
         keysym = 0xa5;
     }
+//    LOGV("Keysym/scancode: %d=>%d", keysym, keysym2scancode(kbd_layout, keysym) & SCANCODE_KEYMASK);
     return keysym2scancode(kbd_layout, keysym) & SCANCODE_KEYMASK;
 }
 
@@ -312,10 +324,14 @@ static uint8_t sdl_keyevent_to_keycode(const SDL_KeyboardEvent *ev)
         keycode -= 8; /* just an offset */
     } else if (keycode < 158) {
         /* use conversion table */
-        if (has_evdev)
+        if (has_evdev){
+//        	LOGV("Found evdev\n");
             keycode = translate_evdev_keycode(keycode - 97);
-        else
+        }
+        else{
+//        	LOGV("Found no evdev using xfree86 keycodes\n");
             keycode = translate_xfree86_keycode(keycode - 97);
+        }
     } else if (keycode == 208) { /* Hiragana_Katakana */
         keycode = 0x70;
     } else if (keycode == 211) { /* backslash */
@@ -357,8 +373,10 @@ static void sdl_process_key(SDL_KeyboardEvent *ev)
     }
 
     if (kbd_layout) {
+//    	LOGV("Found kbd layout using generic for %d\n",ev->keysym.sym);
         keycode = sdl_keyevent_to_keycode_generic(ev);
     } else {
+//    	LOGV("Found no kbd layout for %d\n",ev->keysym.sym);
         keycode = sdl_keyevent_to_keycode(ev);
     }
 
@@ -557,8 +575,28 @@ static void sdl_scale(DisplayState *ds, int width, int height)
     }
 }
 
+extern void sdl_scale1(DisplayState *ds, int width, int height)
+{
+    int bpp = real_screen->format->BitsPerPixel;
+
+    if (bpp != 16 && bpp != 32) {
+        bpp = 32;
+    }
+    do_sdl_resize(width, height, bpp);
+    scaling_active = 1;
+    if (!is_buffer_shared(ds->surface)) {
+        ds->surface = qemu_resize_displaysurface(ds, ds_get_width(ds),
+                                                 ds_get_height(ds));
+        dpy_resize(ds);
+    }
+
+	vga_hw_invalidate();
+	vga_hw_update();
+}
+
 static void toggle_full_screen(DisplayState *ds)
 {
+//	LOGV("Toggle FullScreen");
     gui_fullscreen = !gui_fullscreen;
     if (gui_fullscreen) {
         gui_saved_width = real_screen->w;
@@ -585,76 +623,147 @@ static void toggle_full_screen(DisplayState *ds)
     vga_hw_update();
 }
 
+extern void toggle_full_screen1(DisplayState *ds){
+	toggle_full_screen(ds);
+}
+
+extern void AndroidGetWindowSize(int *width, int *height);
+
 static void handle_keydown(DisplayState *ds, SDL_Event *ev)
 {
     int mod_state;
     int keycode;
 
     if (alt_grab) {
+//    	LOGV("Found alt grab\n");
         mod_state = (SDL_GetModState() & (gui_grab_code | KMOD_LSHIFT)) ==
                     (gui_grab_code | KMOD_LSHIFT);
     } else if (ctrl_grab) {
+//    	LOGV("Found ctrl grab\n");
         mod_state = (SDL_GetModState() & KMOD_RCTRL) == KMOD_RCTRL;
     } else {
+//    	LOGV("Default grab\n");
         mod_state = (SDL_GetModState() & gui_grab_code) == gui_grab_code;
     }
     gui_key_modifier_pressed = mod_state;
 
     if (gui_key_modifier_pressed) {
         keycode = sdl_keyevent_to_keycode(&ev->key);
+//        LOGV("Found modifier pressed for key/keycode = %d/%d\n", ev->key.keysym.sym, keycode);
         switch (keycode) {
-        case 0x21: /* 'f' key on US keyboard */
+        case 1: /* 'f' key on US keyboard */
+        	LOGV("Keycode Pressed 'f' Fullscreen\n");
             toggle_full_screen(ds);
             gui_keysym = 1;
             break;
-        case 0x16: /* 'u' key on US keyboard */
+        case 16: /* 'u' key on US keyboard */
+        	LOGV("Keycode Pressed 'u' unset Scale\n");
             if (scaling_active) {
+            	LOGV("Found scaling active Unsetting...\n");
                 scaling_active = 0;
                 sdl_resize(ds);
                 vga_hw_invalidate();
                 vga_hw_update();
+                reset_keys();
             }
             gui_keysym = 1;
             break;
-        case 0x02 ... 0x0a: /* '1' to '9' keys */
+
+        case 22 ... 23: /* '1' to '9' keys */ //MK hack
             /* Reset the modifiers sent to the current console */
+        	LOGV("Keycode Pressed '1-9' console\n");
             reset_keys();
-            console_select(keycode - 0x02);
+            console_select(keycode - 22);
             gui_keysym = 1;
-            if (gui_fullscreen) {
-                break;
-            }
+//            if (gui_fullscreen) {
+//            	LOGV("Found fullscreen breaking...\n");
+//                break;
+//            }
             if (!is_graphic_console()) {
                 /* release grab if going to a text console */
+            	LOGV("Found text console releasing grab...\n");
                 if (gui_grab) {
+                	LOGV("Found grab, grab ending...\n");
                     sdl_grab_end();
                 } else if (absolute_enabled) {
+                	LOGV("Found absolute_enabled, show cursor...\n");
                     sdl_show_cursor();
                 }
             } else if (absolute_enabled) {
+            	LOGV("Found absolute_enabled, hiding cursor and grabing mouse...\n");
                 sdl_hide_cursor();
                 absolute_mouse_grab();
             }
             break;
-        case 0x1b: /* '+' */
-        case 0x35: /* '-' */
-            if (!gui_fullscreen) {
-                int width = MAX(real_screen->w + (keycode == 0x1b ? 50 : -50),
+        case 24: /* '4' Zoom In */
+        case 25: /* '3' Zoom Out*/
+        	LOGV("Keycode Pressed '3/4' Zoom\n");
+//            if (!gui_fullscreen) {
+        	{
+
+                int width = MAX(real_screen->w + (keycode == 25 ? 50 : -50),
                                 160);
                 int height = (ds_get_height(ds) * width) / ds_get_width(ds);
-
+                LOGV("Found no fullscreen, scaling to: %dx%d \n", width, height);
                 sdl_scale(ds, width, height);
                 vga_hw_invalidate();
                 vga_hw_update();
+                reset_keys();
                 gui_keysym = 1;
-            }
+        	}
+//            }
+            break;
+        case 26: /* Fit to Screen */
+        	LOGV("Keycode Pressed '5' Fit to Screen\n");
+//            if (!gui_fullscreen) {
+        	{
+            	int width;
+            	int height;
+            	AndroidGetWindowSize(&width, &height);
+            	LOGV("Got Android window size=%dx%d", width, height);
+            	LOGV("Got VM  resolution=%dx%d", ds_get_width(ds), ds_get_height(ds));
+            	float aspectRatio = (float) ds_get_height(ds) / (float) ds_get_width(ds);
+            	LOGV("Got aspectRatio=%f", aspectRatio);
+            	int new_width = (int) (height / aspectRatio);
+            	if(new_width > width){
+            		LOGV("Width is overrun, modifying height");
+            		new_width = width;
+            		height = width * aspectRatio;
+            	}
+                LOGV("Found no fullscreen, Fit To Screen: %dx%d \n", new_width, height);
+                sdl_scale(ds, new_width, height);
+                vga_hw_invalidate();
+                vga_hw_update();
+                reset_keys();
+                gui_keysym = 1;
+        	}
+//            }
+            break;
+        case 27: /* Stretch to Screen */
+        	LOGV("Keycode Pressed '6' Fit to Screen\n");
+//        	            if (!gui_fullscreen) {
+        	            	{
+        	            	int width;
+        	            	int height;
+        	            	AndroidGetWindowSize(&width, &height);
+        	                LOGV("Found no fullscreen, Fit To Screen: %dx%d \n", width, height);
+        	                sdl_scale(ds, width, height);
+        	                vga_hw_invalidate();
+        	                vga_hw_update();
+        	                reset_keys();
+        	                gui_keysym = 1;
+        	            	}
+//        	            }
+        	            break;
         default:
+        	LOGV("Default\n");
             break;
         }
     } else if (!is_graphic_console()) {
         int keysym = 0;
-
+//        LOGV("Keycode Pressed while in console\n");
         if (ev->key.keysym.mod & (KMOD_LCTRL | KMOD_RCTRL)) {
+//        	LOGV("Found modifier for %d\n", ev->key.keysym.sym);
             switch (ev->key.keysym.sym) {
             case SDLK_UP:
                 keysym = QEMU_KEY_CTRL_UP;
@@ -680,10 +789,37 @@ static void handle_keydown(DisplayState *ds, SDL_Event *ev)
             case SDLK_PAGEDOWN:
                 keysym = QEMU_KEY_CTRL_PAGEDOWN;
                 break;
+            case 49: /* '1' to '9' keys */ //MK hack
+                        /* Reset the modifiers sent to the current console */
+                    	LOGV("Keycode Pressed '1-9' from Monitor console\n");
+                        reset_keys();
+                        console_select(ev->key.keysym.sym - 49);
+                        gui_keysym = 1;
+                        if (gui_fullscreen) {
+                        	LOGV("Found fullscreen breaking...\n");
+                            break;
+                        }
+                        if (!is_graphic_console()) {
+                            /* release grab if going to a text console */
+                        	LOGV("Found text console releasing grab...\n");
+                            if (gui_grab) {
+                            	LOGV("Found grab, grab ending...\n");
+                                sdl_grab_end();
+                            } else if (absolute_enabled) {
+                            	LOGV("Found absolute_enabled, show cursor...\n");
+                                sdl_show_cursor();
+                            }
+                        } else if (absolute_enabled) {
+                        	LOGV("Found absolute_enabled, hiding cursor and grabing mouse...\n");
+                            sdl_hide_cursor();
+                            absolute_mouse_grab();
+                        }
+                        break;
             default:
                 break;
             }
         } else {
+//        	LOGV("Found no modifier for %d\n", ev->key.keysym.sym);
             switch (ev->key.keysym.sym) {
             case SDLK_UP:
                 keysym = QEMU_KEY_UP;
@@ -726,6 +862,7 @@ static void handle_keydown(DisplayState *ds, SDL_Event *ev)
         }
     }
     if (is_graphic_console() && !gui_keysym) {
+//    	LOGV("Found graphic console, Processing key\n");
         sdl_process_key(&ev->key);
     }
 }
@@ -832,21 +969,23 @@ static void handle_activation(DisplayState *ds, SDL_Event *ev)
         sdl_grab_end();
     }
 #endif
-    if (!gui_grab && ev->active.gain && is_graphic_console() &&
+    if (!gui_grab
+//    		&& ev->active.gain
+    		&& is_graphic_console() &&
         (kbd_mouse_is_absolute() || absolute_enabled)) {
         absolute_mouse_grab();
     }
-    if (ev->active.state & SDL_APPACTIVE) {
-        if (ev->active.gain) {
+//    if (ev->active.state & SDL_APPACTIVE) {
+//        if (ev->active.gain) {
             /* Back to default interval */
             dcl->gui_timer_interval = 0;
             dcl->idle = 0;
-        } else {
-            /* Sleeping interval */
-            dcl->gui_timer_interval = 500;
-            dcl->idle = 1;
-        }
-    }
+//        } else {
+//            /* Sleeping interval */
+//            dcl->gui_timer_interval = 500;
+//            dcl->idle = 1;
+//        }
+//    }
 }
 
 static void sdl_refresh(DisplayState *ds)
@@ -867,6 +1006,7 @@ static void sdl_refresh(DisplayState *ds)
             sdl_update(ds, 0, 0, real_screen->w, real_screen->h);
             break;
         case SDL_KEYDOWN:
+//        	LOGV("SDL Keydown: %d", ev->key);
             handle_keydown(ds, ev);
             break;
         case SDL_KEYUP:
@@ -889,7 +1029,7 @@ static void sdl_refresh(DisplayState *ds)
             handle_activation(ds, ev);
             break;
         case SDL_VIDEORESIZE:
-            sdl_scale(ds, ev->resize.w, ev->resize.h);
+//            sdl_scale(ds, 1000, 700);
             vga_hw_invalidate();
             vga_hw_update();
             break;
@@ -959,6 +1099,8 @@ void sdl_display_init(DisplayState *ds, int full_screen, int no_frame)
     const SDL_VideoInfo *vi;
     char *filename;
 
+    printf("%s:%s Start", __FILE__, __func__);
+
 #if defined(__APPLE__)
     /* always use generic keymaps */
     if (!keyboard_layout)
@@ -986,7 +1128,7 @@ void sdl_display_init(DisplayState *ds, int full_screen, int no_frame)
      * This is a bit hackish but saves us from bigger problem.
      * Maybe it's a good idea to fix this in SDL instead.
      */
-    setenv("SDL_VIDEODRIVER", "x11", 0);
+//    setenv("SDL_VIDEODRIVER", "x11", 0);
 #endif
 
     /* Enable normal up/down events for Caps-Lock and Num-Lock keys.
@@ -1015,6 +1157,7 @@ void sdl_display_init(DisplayState *ds, int full_screen, int no_frame)
     }
 
     if (full_screen) {
+    	printf("%s: Setting fullscreen", __func__);
         gui_fullscreen = 1;
         sdl_grab_start();
     }
@@ -1047,5 +1190,6 @@ void sdl_display_init(DisplayState *ds, int full_screen, int no_frame)
     sdl_cursor_hidden = SDL_CreateCursor(&data, &data, 8, 1, 0, 0);
     sdl_cursor_normal = SDL_GetCursor();
 
+    printf("%s:%s Complete", __FILE__, __func__);
     atexit(sdl_cleanup);
 }

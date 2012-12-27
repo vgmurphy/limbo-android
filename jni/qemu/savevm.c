@@ -1556,6 +1556,7 @@ bool qemu_savevm_state_blocked(Error **errp)
 
     QTAILQ_FOREACH(se, &savevm_handlers, entry) {
         if (se->no_migrate) {
+        	LOGV("Migration not supported");
             error_set(errp, QERR_MIGRATION_NOT_SUPPORTED, se->idstr);
             return true;
         }
@@ -1568,16 +1569,19 @@ int qemu_savevm_state_begin(QEMUFile *f, int blk_enable, int shared)
     SaveStateEntry *se;
     int ret;
 
+    LOGV("Begin");
     QTAILQ_FOREACH(se, &savevm_handlers, entry) {
         if(se->set_params == NULL) {
             continue;
 	}
+        LOGV("Set Params");
 	se->set_params(blk_enable, shared, se->opaque);
     }
     
     qemu_put_be32(f, QEMU_VM_FILE_MAGIC);
     qemu_put_be32(f, QEMU_VM_FILE_VERSION);
 
+    LOGV("Se");
     QTAILQ_FOREACH(se, &savevm_handlers, entry) {
         int len;
 
@@ -1596,17 +1600,20 @@ int qemu_savevm_state_begin(QEMUFile *f, int blk_enable, int shared)
         qemu_put_be32(f, se->instance_id);
         qemu_put_be32(f, se->version_id);
 
+        LOGV("save_live_state");
         ret = se->save_live_state(f, QEMU_VM_SECTION_START, se->opaque);
         if (ret < 0) {
+        	LOGV("Cancel");
             qemu_savevm_state_cancel(f);
             return ret;
         }
     }
     ret = qemu_file_get_error(f);
     if (ret != 0) {
+    	LOGV("Cancel2");
         qemu_savevm_state_cancel(f);
     }
-
+    LOGV("End");
     return ret;
 
 }
@@ -1622,6 +1629,7 @@ int qemu_savevm_state_iterate(QEMUFile *f)
     SaveStateEntry *se;
     int ret = 1;
 
+    LOGV("Begin");
     QTAILQ_FOREACH(se, &savevm_handlers, entry) {
         if (se->save_live_state == NULL)
             continue;
@@ -1646,6 +1654,7 @@ int qemu_savevm_state_iterate(QEMUFile *f)
     if (ret != 0) {
         qemu_savevm_state_cancel(f);
     }
+    LOGV("End");
     return ret;
 }
 
@@ -1711,28 +1720,32 @@ static int qemu_savevm_state(QEMUFile *f)
 {
     int ret;
 
+    LOGV("Blocked");
     if (qemu_savevm_state_blocked(NULL)) {
         ret = -EINVAL;
         goto out;
     }
 
+    LOGV("Begin");
     ret = qemu_savevm_state_begin(f, 0, 0);
     if (ret < 0)
         goto out;
 
     do {
+    	LOGV("Iterate");
         ret = qemu_savevm_state_iterate(f);
         if (ret < 0)
             goto out;
     } while (ret == 0);
 
+    LOGV("Complete");
     ret = qemu_savevm_state_complete(f);
 
 out:
     if (ret == 0) {
         ret = qemu_file_get_error(f);
     }
-
+    LOGV("Savevm Complete");
     return ret;
 }
 
@@ -2032,9 +2045,11 @@ static int del_existing_snapshots(Monitor *mon, const char *name)
         {
             ret = bdrv_snapshot_delete(bs, name);
             if (ret < 0) {
-                monitor_printf(mon,
-                               "Error while deleting snapshot on '%s'\n",
-                               bdrv_get_device_name(bs));
+//                monitor_printf(mon,
+//                               "Error while deleting snapshot on '%s'\n",
+//                               bdrv_get_device_name(bs));
+            	LOGV("Error while deleting snapshot on '%s'\n",
+            	                               bdrv_get_device_name(bs));
                 return -1;
             }
         }
@@ -2061,6 +2076,7 @@ void do_savevm(Monitor *mon, const QDict *qdict)
     const char *name = qdict_get_try_str(qdict, "name");
     saving_state=1;
 
+    LOGV("Saving VM: %s", name);
     /* Verify if there is a device that doesn't support snapshots and is writable */
     bs = NULL;
     while ((bs = bdrv_next(bs))) {
@@ -2070,19 +2086,24 @@ void do_savevm(Monitor *mon, const QDict *qdict)
         }
 
         if (!bdrv_can_snapshot(bs)) {
-            monitor_printf(mon, "Device '%s' is writable but does not support snapshots.\n",
-                               bdrv_get_device_name(bs));
+//            monitor_printf(mon, "Device '%s' is writable but does not support snapshots.\n",
+//                               bdrv_get_device_name(bs));
+            LOGV("Device '%s' is writable but does not support snapshots.\n",
+                                           bdrv_get_device_name(bs));
             return;
         }
     }
 
     bs = bdrv_snapshots();
     if (!bs) {
-        monitor_printf(mon, "No block device can accept snapshots\n");
+//        monitor_printf(mon, "No block device can accept snapshots\n");
+    	LOGV("No block device can accept snapshots\n");
         return;
     }
 
+    LOGV("Checking if vm is running\n");
     saved_vm_running = runstate_is_running();
+    LOGV("Stopping VM\n");
     vm_stop(RUN_STATE_SAVE_VM);
 
     memset(sn, 0, sizeof(*sn));
@@ -2119,22 +2140,29 @@ void do_savevm(Monitor *mon, const QDict *qdict)
 #endif
     }
 
+    LOGV("Delete old snapshots\n");
     /* Delete old snapshots of the same name */
     if (name && del_existing_snapshots(mon, name) < 0) {
         goto the_end;
     }
 
+    LOGV("Save vm state\n");
     /* save the VM state */
     f = qemu_fopen_bdrv(bs, 1);
+    LOGV("Drive file opened\n");
     if (!f) {
-        monitor_printf(mon, "Could not open VM state file\n");
+//        monitor_printf(mon, "Could not open VM state file\n");
+    	LOGV("Could not open VM state file\n");
         goto the_end;
     }
     ret = qemu_savevm_state(f);
+    LOGV("Finished vm state\n");
     vm_state_size = qemu_ftell(f);
+    LOGV("State size: %d\n", vm_state_size);
     qemu_fclose(f);
     if (ret < 0) {
-        monitor_printf(mon, "Error %d while writing VM\n", ret);
+//        monitor_printf(mon, "Error %d while writing VM\n", ret);
+        LOGV("Error %d while writing VM\n", ret);
         goto the_end;
     }
 
@@ -2147,16 +2175,21 @@ void do_savevm(Monitor *mon, const QDict *qdict)
             sn->vm_state_size = (bs == bs1 ? vm_state_size : 0);
             ret = bdrv_snapshot_create(bs1, sn);
             if (ret < 0) {
-                monitor_printf(mon, "Error while creating snapshot on '%s'\n",
-                               bdrv_get_device_name(bs1));
+//                monitor_printf(mon, "Error while creating snapshot on '%s'\n",
+//                               bdrv_get_device_name(bs1));
+                LOGV("Error while creating snapshot on '%s'\n",
+                                               bdrv_get_device_name(bs1));
             }
         }
     }
     saving_state=0;
 
  the_end:
-    if (saved_vm_running)
+    if (saved_vm_running){
+    	LOGV("Starting VM: %s", name);
         vm_start();
+    }
+    LOGV("Complete Saving VM: %s", name);
 }
 
 void qmp_xen_save_devices_state(const char *filename, Error **errp)

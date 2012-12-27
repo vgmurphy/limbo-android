@@ -2202,6 +2202,29 @@ extern qemu_start(int argc, char **argv) {
 }
 #endif
 
+static DisplayState *ds;
+
+#ifdef CONFIG_SDL
+extern void toggle_full_screen1(DisplayState *ds);
+
+extern void toggleFullScreen(){
+	if(ds==NULL){
+		LOGV("Could not get display");
+
+		return;
+	}
+
+	LOGV("Toggle FullScreen");
+	toggle_full_screen1(ds);
+}
+
+extern void sdl_scale1(DisplayState *ds, int width, int height);
+
+extern void scale(int width, int height){
+	sdl_scale1(ds, width, height);
+}
+#endif
+
 int main(int argc, char **argv, char **envp) {
     int i;
     int snapshot, linux_boot;
@@ -2209,7 +2232,7 @@ int main(int argc, char **argv, char **envp) {
     const char *initrd_filename;
     const char *kernel_filename, *kernel_cmdline;
     char boot_devices[33] = "cad"; /* default to HD->floppy->CD-ROM */
-    DisplayState *ds;
+
     DisplayChangeListener *dcl;
     int cyls, heads, secs, translation;
     QemuOpts *hda_opts = NULL, *opts, *machine_opts;

@@ -1690,10 +1690,10 @@ EOF
     vnc_jpeg=yes
     libs_softmmu="$vnc_jpeg_libs $libs_softmmu"
   else
-    if test "$vnc_jpeg" = "yes" ; then
-      feature_not_found "vnc-jpeg"
-    fi
-    vnc_jpeg=no
+    #if test "$vnc_jpeg" = "yes" ; then
+    #  feature_not_found "vnc-jpeg"
+    #fi
+    vnc_jpeg=yes
   fi
 fi
 
@@ -1722,10 +1722,10 @@ EOF
     libs_softmmu="$vnc_png_libs $libs_softmmu"
     QEMU_CFLAGS="$QEMU_CFLAGS $vnc_png_cflags"
   else
-    if test "$vnc_png" = "yes" ; then
-      feature_not_found "vnc-png"
-    fi
-    vnc_png=no
+    #if test "$vnc_png" = "yes" ; then
+    #  feature_not_found "vnc-png"
+    #fi
+    vnc_png=yes
   fi
 fi
 

@@ -29,7 +29,7 @@ import android.preference.PreferenceManager;
 
 public class SettingsManager extends PreferenceActivity {
 
-    static String getLastDir(LimboActivity activity) {
+    public static String getLastDir(Activity activity) {
         String lastDir = Const.basefiledir;
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
         return prefs.getString("lastDir", lastDir);
@@ -53,6 +53,19 @@ public class SettingsManager extends PreferenceActivity {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
         SharedPreferences.Editor edit = prefs.edit();
         edit.putString("dnsServer", dnsServer);
+        edit.commit();
+    }
+    
+    static String getUI(Activity activity) {
+        String ui = Const.ui;
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
+        return prefs.getString("ui", ui);
+    }
+
+    public static void setUI(Activity activity, String ui) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
+        SharedPreferences.Editor edit = prefs.edit();
+        edit.putString("ui", ui);
         edit.commit();
     }
     
@@ -161,6 +174,33 @@ public class SettingsManager extends PreferenceActivity {
 //        UIUtils.log("Setting First time: ");
     }
 
+    
+    static boolean getUSBMouse(Activity activity) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
+        return prefs.getBoolean("USBMouse", false);
+    }
+
+    public static void setUSBMouse(Activity activity, boolean flag) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
+        SharedPreferences.Editor edit = prefs.edit();
+        edit.putBoolean("USBMouse", flag);
+        edit.commit();
+//        UIUtils.log("Setting First time: ");
+    }
+    
+    static boolean getPrio(Activity activity) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
+        return prefs.getBoolean("HighPrio", false);
+    }
+
+    public static void setPrio(Activity activity, boolean flag) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
+        SharedPreferences.Editor edit = prefs.edit();
+        edit.putBoolean("HighPrio", flag);
+        edit.commit();
+//        UIUtils.log("Setting First time: ");
+    }
+    
     static boolean getMultiAIO(Activity activity) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
         return prefs.getBoolean("enableMultiAIO", false);

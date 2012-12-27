@@ -38,9 +38,9 @@ do { printf("scsi-disk: " fmt , ## __VA_ARGS__); } while (0)
 #include "dma.h"
 
 #ifdef __linux
-#ifndef __ANDROID__
-#include <scsi/sg.h>
-#endif //android
+//#ifndef __ANDROID__
+#include <../../scsi/sg.h>
+//#endif //android
 #endif
 
 #define SCSI_DMA_BUF_SIZE    131072
@@ -1780,7 +1780,7 @@ static SCSIRequest *scsi_new_request(SCSIDevice *d, uint32_t tag, uint32_t lun,
 }
 
 #ifdef __linux__
-#ifndef __ANDROID__
+//#ifndef __ANDROID__
 static int get_device_type(SCSIDiskState *s)
 {
     BlockDriverState *bdrv = s->qdev.conf.bs;
@@ -1905,7 +1905,7 @@ static SCSIRequest *scsi_block_new_request(SCSIDevice *d, uint32_t tag,
     return scsi_req_alloc(&scsi_generic_req_ops, &s->qdev, tag, lun,
                           hba_private);
 }
-#endif //android
+//#endif //android
 
 #endif //linux
 
@@ -1991,7 +1991,7 @@ static TypeInfo scsi_cd_info = {
 };
 
 #ifdef __linux__
-#ifndef __ANDROID__
+//#ifndef __ANDROID__
 static Property scsi_block_properties[] = {
     DEFINE_SCSI_DISK_PROPERTIES(),
     DEFINE_PROP_END_OF_LIST(),
@@ -2018,7 +2018,7 @@ static TypeInfo scsi_block_info = {
     .instance_size = sizeof(SCSIDiskState),
     .class_init    = scsi_block_class_initfn,
 };
-#endif//android
+//#endif//android
 #endif
 
 static Property scsi_disk_properties[] = {
@@ -2058,9 +2058,9 @@ static void scsi_disk_register_types(void)
     type_register_static(&scsi_hd_info);
     type_register_static(&scsi_cd_info);
 #ifdef __linux__
-#ifndef __ANDROID__
+//#ifndef __ANDROID__
     type_register_static(&scsi_block_info);
-#endif
+//#endif
 #endif
     type_register_static(&scsi_disk_info);
 }

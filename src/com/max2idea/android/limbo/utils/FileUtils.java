@@ -19,9 +19,20 @@ Copyright (C) Max Kastanas 2012
 package com.max2idea.android.limbo.utils;
 
 import android.app.Activity;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
+import android.util.Log;
+
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+
+import com.max2idea.android.limbo.main.LimboActivity;
 
 /**
  *
@@ -57,4 +68,47 @@ public class FileUtils {
         //return the output stream as a String
         return oS.toString();
     }
+
+	public static void saveFileContents(String dBFile, String machinesToExport) {
+		// TODO Auto-generated method stub
+		byteArrayToFile(machinesToExport.getBytes(), new File(dBFile));
+	}
+	
+    public static void byteArrayToFile(byte[] byteData, File filePath) {
+
+        try {
+            FileOutputStream fos = new FileOutputStream(filePath);
+            fos.write(byteData);
+            fos.close();
+
+        } catch (FileNotFoundException ex) {
+            System.out.println("FileNotFoundException : " + ex);
+        } catch (IOException ioe) {
+            System.out.println("IOException : " + ioe);
+        }
+
+    }
+
+	public static ArrayList<Machine> getVMs(String dBFile) {
+		// TODO Auto-generated method stub
+		//Read machines from csv file
+		
+		return null;
+	}
+	
+	public static String getDataDir(){
+		PackageManager m = LimboActivity.activity.getPackageManager();
+		String packageName = LimboActivity.activity.getPackageName();
+		Log.v("VMExecutor", "Found packageName: " + packageName);
+		String dataDir = "";
+		try {
+		    PackageInfo p = m.getPackageInfo(packageName, 0);
+		    dataDir = p.applicationInfo.dataDir;
+		    Log.v("VMExecutor", "Found dataDir: " + dataDir);
+		} catch (NameNotFoundException e) {
+		    Log.w("VMExecutor", "Error Package name not found using /data/data/", e);
+		    dataDir = "/data/data/" + packageName;
+		}
+		return dataDir; 
+	}
 }

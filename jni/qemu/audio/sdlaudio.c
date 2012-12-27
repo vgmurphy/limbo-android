@@ -58,16 +58,17 @@ static struct SDLAudioState {
 } glob_sdl;
 typedef struct SDLAudioState SDLAudioState;
 
-static void GCC_FMT_ATTR (1, 2) sdl_logerr (const char *fmt, ...)
-{
-    va_list ap;
-
-    va_start (ap, fmt);
-    AUD_vlog (AUDIO_CAP, fmt, ap);
-    va_end (ap);
-
-    AUD_log (AUDIO_CAP, "Reason: %s\n", SDL_GetError ());
-}
+#include "../logutils.h"
+//static void GCC_FMT_ATTR (1, 2) sdl_logerr (const char *fmt, ...)
+//{
+//    va_list ap;
+//
+//    va_start (ap, fmt);
+//    AUD_vlog (AUDIO_CAP, fmt, ap);
+//    va_end (ap);
+//
+//    AUD_log (AUDIO_CAP, "Reason: %s\n", SDL_GetError ());
+//}
 
 static int sdl_lock (SDLAudioState *s, const char *forfn)
 {
@@ -192,11 +193,17 @@ static int sdl_open (SDL_AudioSpec *req, SDL_AudioSpec *obt)
         dolog ("sdl_open: sigfillset failed: %s\n", strerror (errno));
         return -1;
     }
-    err = pthread_sigmask (SIG_BLOCK, &new, &old);
-    if (err) {
-        dolog ("sdl_open: pthread_sigmask failed: %s\n", strerror (err));
-        return -1;
-    }
+//    err = pthread_sigmask (SIG_BLOCK, &new, &old);
+    //    if (err) {
+    //        dolog ("sdl_open: pthread_sigmask failed: %s\n", strerror (err));
+    //        return -1;
+    //    }
+
+    if (sigprocmask(SIG_SETMASK, &new, &old)) {
+		dolog("sdl_open: sigprocmask failed: %s", strerror(errno));
+		return -1;
+	}
+
 #endif
 
     status = SDL_OpenAudio (req, obt);
@@ -205,14 +212,20 @@ static int sdl_open (SDL_AudioSpec *req, SDL_AudioSpec *obt)
     }
 
 #ifndef _WIN32
-    err = pthread_sigmask (SIG_SETMASK, &old, NULL);
-    if (err) {
-        dolog ("sdl_open: pthread_sigmask (restore) failed: %s\n",
-               strerror (errno));
-        /* We have failed to restore original signal mask, all bets are off,
-           so exit the process */
-        exit (EXIT_FAILURE);
-    }
+//    err = pthread_sigmask (SIG_SETMASK, &old, NULL);
+//    if (err) {
+//        dolog ("sdl_open: pthread_sigmask (restore) failed: %s\n",
+//               strerror (errno));
+//        /* We have failed to restore original signal mask, all bets are off,
+//           so exit the process */
+//        exit (EXIT_FAILURE);
+//    }
+
+    if (sigprocmask(SIG_SETMASK, &old, NULL)) {
+    		dolog("sdl_open: sigprocmask (restore) failed: %s", strerror(errno));
+    		        exit (EXIT_FAILURE);
+    	}
+
 #endif
     return status;
 }

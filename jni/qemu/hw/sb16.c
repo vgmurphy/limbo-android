@@ -45,6 +45,8 @@
 #define IO_WRITE_PROTO(name)                                    \
     void name (void *opaque, uint32_t nport, uint32_t val)
 
+#include "../logutils.h"
+
 static const char e3[] = "COPYRIGHT (C) CREATIVE TECHNOLOGY LTD, 1992.";
 
 typedef struct SB16State {

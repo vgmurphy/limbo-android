@@ -6,7 +6,7 @@
     android:orientation="vertical" >
 
     <LinearLayout
-        android:id="@+id/snapshotl"
+        android:id="@+id/adsl"
         android:layout_width="320dip"
         android:layout_height="50dip"
         android:layout_centerInParent="true"
@@ -30,8 +30,8 @@
             xmlns:android="http://schemas.android.com/apk/res/android"
             android:id="@+id/ScrollView02"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" 
-            android:fadeScrollbars="false">
+            android:layout_height="wrap_content"
+            android:fadeScrollbars="false" >
 
             <LinearLayout
                 xmlns:android="http://schemas.android.com/apk/res/android"
@@ -81,6 +81,30 @@
 
                     <Spinner
                         android:id="@+id/snapshotval"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:singleLine="true"
+                        android:text=""
+                        android:textSize="15dip" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/uil"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:orientation="horizontal" >
+
+                    <TextView
+                        android:id="@+id/uiStr"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:text="User Interface: "
+                        android:textSize="15dip" />
+
+                    <Spinner
+                        android:id="@+id/uival"
                         android:layout_width="fill_parent"
                         android:layout_height="wrap_content"
                         android:singleLine="true"
@@ -166,7 +190,6 @@
                         android:textSize="15dip" />
                 </LinearLayout>
 
-                
                 <LinearLayout
                     android:id="@+id/cpul"
                     android:layout_width="fill_parent"
@@ -227,7 +250,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
-                        android:text="CDROM (CD): "
+                        android:text="CDROM (*.iso): "
                         android:textSize="15dip" />
 
                     <Spinner
@@ -251,7 +274,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
-                        android:text="Floppy Drive (FDA): "
+                        android:text="Floppy Drive A(*.img): "
                         android:textSize="15dip" />
 
                     <Spinner
@@ -274,7 +297,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
-                        android:text="Floppy Drive (FDB): "
+                        android:text="Floppy Drive B(*.img): "
                         android:textSize="15dip" />
 
                     <Spinner
@@ -297,7 +320,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
-                        android:text="Hard Disk (HDA): "
+                        android:text="Hard Disk A(*.img/*.qcow2): "
                         android:textSize="15dip" />
 
                     <Spinner
@@ -320,11 +343,59 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
-                        android:text="Hard Disk (HDB): "
+                        android:text="Hard Disk B(*.img/*.qcow2): "
                         android:textSize="15dip" />
 
                     <Spinner
                         android:id="@+id/hdbimgval"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:singleLine="true"
+                        android:text=""
+                        android:textSize="15dip" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/kernell"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:orientation="horizontal" >
+
+                    <TextView
+                        android:id="@+id/kernelStr"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:text="Kernel Image (vmlinuz*): "
+                        android:textSize="15dip" />
+
+                    <Spinner
+                        android:id="@+id/kernelval"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:singleLine="true"
+                        android:text=""
+                        android:textSize="15dip" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/initrdl"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:orientation="horizontal" >
+
+                    <TextView
+                        android:id="@+id/initrdStr"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:text="Initrd Image (initrd*.gz): "
+                        android:textSize="15dip" />
+
+                    <Spinner
+                        android:id="@+id/initrdval"
                         android:layout_width="fill_parent"
                         android:layout_height="wrap_content"
                         android:singleLine="true"
@@ -526,7 +597,7 @@
                 </LinearLayout>
 
                 <LinearLayout
-                    android:id="@+id/usbmousel"
+                    android:id="@+id/enableMultiThread"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="right|center_vertical"
@@ -534,22 +605,22 @@
                     android:orientation="horizontal" >
 
                     <TextView
-                        android:id="@+id/usbmouseStr"
+                        android:id="@+id/enableMultiThreadStr"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="right|center_vertical"
                         android:gravity="right|center_vertical"
-                        android:text="Enable VM USB Mouse"
+                        android:text="Enable Multithread AIO"
                         android:textSize="15dip" />
 
                     <CheckBox
-                        android:id="@+id/usbmouseval"
+                        android:id="@+id/enableMultiThreadval"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="right|center_vertical"
                         android:gravity="right|center_vertical" />
                 </LinearLayout>
-                                            
+
                 <LinearLayout
                     android:id="@+id/vncexternall"
                     android:layout_width="fill_parent"
@@ -569,6 +640,31 @@
 
                     <CheckBox
                         android:id="@+id/vncexternalval"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="right|center_vertical"
+                        android:gravity="right|center_vertical" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/priol"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="right|center_vertical"
+                    android:gravity="right|center_vertical"
+                    android:orientation="horizontal" >
+
+                    <TextView
+                        android:id="@+id/prioStr"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="right|center_vertical"
+                        android:gravity="right|center_vertical"
+                        android:text="High Priority"
+                        android:textSize="15dip" />
+
+                    <CheckBox
+                        android:id="@+id/prioval"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="right|center_vertical"

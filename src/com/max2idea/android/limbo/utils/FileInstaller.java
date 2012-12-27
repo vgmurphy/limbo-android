@@ -121,7 +121,7 @@ public class FileInstaller {
             os.close();
             is.close();
         } catch (Exception ex) {
-            Log.e("Installer", "failed to install file: " + ex);
+            Log.e("Installer", "failed to install file: " + srcFile + ", Error:" + ex.getMessage());
         }
 
     }

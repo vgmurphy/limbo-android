@@ -26,12 +26,18 @@
 <string name="delete_key">Delete Selected Key</string>
 <string name="delete_key_list">Delete Key List</string>
 <string name="disconnect">Limbo Console</string>
+<string name="devices">Devices</string>
+<string name="external_mouse">External Mouse</string>
 <string name="monitor">Monitor</string>
 <string name="export_settings">Export</string>
 <string name="export_settings_path">Export to file</string>
 <string name="enter_text_title">Enter Text to Send</string>
 <string name="enter_text">Send text</string>
+<string name="stretch_to_screen">Stretch to Screen</string>
 <string name="fit_to_screen">Fit to Screen</string>
+<string name="full_screen">Fullscreen</string>
+<string name="zoom_in">Zoom In</string>
+<string name="zoom_out">Zoom Out</string>
 <string name="force_full_check">Force full-screen bitmap</string>
 <string name="import_export_settings">Import/Export Settings</string>
 <string name="import_settings">Import</string>
@@ -59,7 +65,7 @@
 <string name="nickname_caption">Nickname</string>
 <string name="off">Off</string>
 <string name="on">On</string>
-<string name="one_to_one">1:1</string>
+<string name="one_to_one">Normal (1:1)</string>
 <string name="open_doc">Manual/Wiki</string>
 <string name="pan_follow_mouse">Pan Follows Mouse</string>
 <string name="password_caption">Password</string>

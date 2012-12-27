@@ -28,9 +28,19 @@ public class Const {
 
 	public static final int MIN_AIO_THREADS = 1;
 	public static final int MAX_AIO_THREADS = 64;
+	public static final int UI_VNC = 0;
+	public static final int UI_SDL = 1;
+	public static final int SDL_MOUSE_LEFT = 1;
+	public static final int SDL_MOUSE_MIDDLE = 2;
+	public static final int SDL_MOUSE_RIGHT = 3;
+	
 
 	public static boolean debug = false;
+	public static boolean enable_SDL = true;
+	public static boolean enable_sound = true;
+	public static boolean enableAds = false;
 	
+	public static String DBFile = Environment.getExternalStorageDirectory() + "/limbo/machines.csv";
     public static String APP_NAME = "Limbo PC Emulator (QEMU)";
     public static String basefiledir = Environment.getExternalStorageDirectory() + "/limbo/";
     public static String machinedir = basefiledir + "/machines/";
@@ -41,14 +51,17 @@ public class Const {
     public static int VNC_REQUEST_CODE=1004;
     public static int VNC_RESULT_CODE=1005;
     public static int VNC_RESET_RESULT_CODE=1006;
+    public static int SDL_REQUEST_CODE=1007;
+    public static int SDL_RESULT_CODE=1008;
+    public static int SDL_QUIT_RESULT_CODE = 1009;
     
     public static int STATUS_NULL = -1;
     public static int STATUS_CREATED = 1000;
     public static int STATUS_PAUSED = 1001;
     
     static int VM_CREATED = 1002;
-    static int VM_STARTED = 1003;
-    static int VM_STOPPED = 1004;
+    public static int VM_STARTED = 1003;
+    public static int VM_STOPPED = 1004;
     static int VM_NOTRUNNING = 1005;
     static int VM_RESTARTED = 1006;
     static int VM_PAUSED = 1007;
@@ -61,8 +74,11 @@ public class Const {
     public static int VM_NO_QCOW2 = 1014;
     public static int STATUS_CHANGED = 1015;
     public static int UIUTILS_SHOWALERT_HELP = 1016;
+    public static int VM_NO_KERNEL = 1017;
+    public static int VM_NO_INITRD = 1018;
     public static boolean NOT_ICS = true;
 	public static String dnsServer = "8.8.8.8";
+	public static String ui = "VNC";
     
     
     

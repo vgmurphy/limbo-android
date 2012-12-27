@@ -17,7 +17,7 @@
 #include "blockdev.h"
 
 #ifdef __linux__
-#ifndef __ANDROID__
+//#ifndef __ANDROID__
 
 //#define DEBUG_SCSI
 
@@ -35,7 +35,11 @@ do { fprintf(stderr, "scsi-generic: " fmt , ## __VA_ARGS__); } while (0)
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <scsi/sg.h>
+
+//#ifndef __ANDROID__
+#include <../../scsi/sg.h>
+//#endif
+
 #include "scsi-defs.h"
 
 #define SCSI_SENSE_BUF_SIZE 96
@@ -516,5 +520,5 @@ static void scsi_generic_register_types(void)
 
 type_init(scsi_generic_register_types)
 
-#endif //android
+//#endif //android
 #endif /* __linux__ */

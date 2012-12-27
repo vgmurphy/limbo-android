@@ -24,28 +24,31 @@ extern "C" {
 #endif
 
 #include <stdio.h>
+#include <android/log.h>
 
     //Define DEBUG before we include stdio.h
 //    #define DEBUG_ANDROID_AIO 1
 //    #define DEBUG_ANDROID_AIO_COMPAT 1
 
     //USE WITH ANDROID NDK
+
 #ifdef __ANDROID__
-#include <android/log.h>
-#define LOGV(...) __android_log_print(ANDROID_LOG_VERBOSE, "liblimbo",__VA_ARGS__)
-#define printf(...) __android_log_print(ANDROID_LOG_VERBOSE, "liblimbo", __VA_ARGS__)
-#define fprintf(stdout, ...) __android_log_print(ANDROID_LOG_VERBOSE, "liblimbo", __VA_ARGS__)
-#define perror(...) __android_log_print(ANDROID_LOG_VERBOSE, "liblimbo", __VA_ARGS__)
-    
+#define LOGV(...) __android_log_print(ANDROID_LOG_VERBOSE, __func__,__VA_ARGS__)
+#define printf(...) __android_log_print(ANDROID_LOG_VERBOSE, __func__, __VA_ARGS__)
+#define fprintf(stdout, ...) __android_log_print(ANDROID_LOG_VERBOSE, __func__, __VA_ARGS__)
+#define perror(...) __android_log_print(ANDROID_LOG_VERBOSE, __func__, __VA_ARGS__)
+#define sdl_logerr(...) __android_log_print(ANDROID_LOG_VERBOSE, __func__, __VA_ARGS__)
+#define dolog(...) __android_log_print(ANDROID_LOG_VERBOSE, __func__, __VA_ARGS__)
+
 //DEBUG
-//#define LOGD_AIO(...) __android_log_print(ANDROID_LOG_VERBOSE, "liblimbo",__VA_ARGS__)
-//#define LOGD_MLP(...) __android_log_print(ANDROID_LOG_VERBOSE, "liblimbo",__VA_ARGS__)
-//#define LOGD_TRD(...) __android_log_print(ANDROID_LOG_VERBOSE, "liblimbo",__VA_ARGS__)
-//#define LOGD_CPUS(...) __android_log_print(ANDROID_LOG_VERBOSE, "liblimbo",__VA_ARGS__)
-//#define LOGD_VL(...) __android_log_print(ANDROID_LOG_VERBOSE, "liblimbo",__VA_ARGS__)
-//#define LOGD_TMR(...) __android_log_print(ANDROID_LOG_VERBOSE, "liblimbo",__VA_ARGS__)
+//#define LOGD_AIO(...) __android_log_print(ANDROID_LOG_VERBOSE, __func__,__VA_ARGS__)
+//#define LOGD_MLP(...) __android_log_print(ANDROID_LOG_VERBOSE, __func__,__VA_ARGS__)
+//#define LOGD_TRD(...) __android_log_print(ANDROID_LOG_VERBOSE, __func__,__VA_ARGS__)
+//#define LOGD_CPUS(...) __android_log_print(ANDROID_LOG_VERBOSE, __func__,__VA_ARGS__)
+//#define LOGD_VL(...) __android_log_print(ANDROID_LOG_VERBOSE, __func__,__VA_ARGS__)
+//#define LOGD_TMR(...) __android_log_print(ANDROID_LOG_VERBOSE, __func__,__VA_ARGS__)
     
-#define LOGD_AIO(...) 
+#define LOGD_AIO(...)
 #define LOGD_MLP(...)
 #define LOGD_TRD(...)
 #define LOGD_CPUS(...)

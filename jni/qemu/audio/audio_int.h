@@ -243,14 +243,15 @@ static inline int audio_ring_dist (int dst, int src, int len)
     return (dst >= src) ? (dst - src) : (len - src + dst);
 }
 
-static void GCC_ATTR dolog (const char *fmt, ...)
-{
-    va_list ap;
-
-    va_start (ap, fmt);
-    AUD_vlog (AUDIO_CAP, fmt, ap);
-    va_end (ap);
-}
+#include "../logutils.h"
+//static void GCC_ATTR dolog (const char *fmt, ...)
+//{
+//    va_list ap;
+//
+//    va_start (ap, fmt);
+//    AUD_vlog (AUDIO_CAP, fmt, ap);
+//    va_end (ap);
+//}
 
 #ifdef DEBUG
 static void GCC_ATTR ldebug (const char *fmt, ...)

@@ -38,7 +38,7 @@ import java.util.Iterator;
  */
 public class MachineOpenHelper extends SQLiteOpenHelper {
 
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 3;
     private static final String DATABASE_NAME = "LIMBO";
     private static final String MACHINE_TABLE_NAME = "machines";
     // COlumns
@@ -46,6 +46,8 @@ public class MachineOpenHelper extends SQLiteOpenHelper {
     public static final String SNAPSHOT_NAME = "SNAPSHOT_NAME";
     public static final String CPU = "CPU";
     public static final String MEMORY = "MEMORY";
+    public static final String KERNEL = "KERNEL";
+    public static final String INITRD = "INITRD";
     public static final String CDROM = "CDROM";
     public static final String FDA = "FDA";
     public static final String FDB = "FDB";
@@ -102,7 +104,13 @@ public class MachineOpenHelper extends SQLiteOpenHelper {
             + " INTEGER, "
             + ENABLE_USBMOUSE
             + " INTEGER, "
-            + STATUS + " TEXT, " + LASTUPDATED + " DATE " + ");";
+            + STATUS + " TEXT, " 
+            + LASTUPDATED + " DATE, "
+            + KERNEL
+            + " INTEGER, "
+            + INITRD
+            + " TEXT "
+            + ");";
     private final Activity activity;
     private String TAG = "MachineOpenHelper";
 
@@ -119,6 +127,17 @@ public class MachineOpenHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+    	Log.w("machineOpenHelper",
+                "Upgrading database from version " + oldVersion + " to "
+                        + newVersion );
+        if(newVersion >= 3 && oldVersion <=2){
+            Log.w("machineOpenHelper",
+                    "Upgrading database from version " + oldVersion + " to "
+                            + newVersion );
+            db.execSQL("ALTER TABLE "+MACHINE_TABLE_NAME+" ADD COLUMN "+ this.KERNEL + " TEXT;");
+            db.execSQL("ALTER TABLE "+MACHINE_TABLE_NAME+" ADD COLUMN "+ this.INITRD + " TEXT;");
+            
+        }
         
     }
 
@@ -144,7 +163,10 @@ public class MachineOpenHelper extends SQLiteOpenHelper {
         stateValues.put(this.HDCACHE_CONFIG, myMachine.hd_cache);
         stateValues.put(this.DISABLE_ACPI, myMachine.disableacpi);
         stateValues.put(this.DISABLE_HPET, myMachine.disablehpet);
-        stateValues.put(this.ENABLE_USBMOUSE, myMachine.usbmouse);
+        stateValues.put(this.ENABLE_USBMOUSE, myMachine.bluetoothmouse);
+        stateValues.put(this.SOUNDCARD_CONFIG, myMachine.soundcard);
+        stateValues.put(this.KERNEL, myMachine.kernel);
+        stateValues.put(this.INITRD, myMachine.initrd);
 
         SimpleDateFormat dateFormat = new SimpleDateFormat(
                 "yyyy-MM-dd HH:mm:ss");
@@ -241,7 +263,8 @@ public class MachineOpenHelper extends SQLiteOpenHelper {
                 + this.NET_CONFIG + " , " + this.NIC_CONFIG + " , " + this.VGA
                 + " , " + this.SOUNDCARD_CONFIG + " , " + this.HDCACHE_CONFIG
                 + " , " + this.DISABLE_ACPI + " , " + this.DISABLE_HPET + " , "
-                + this.ENABLE_USBMOUSE + " , " + this.SNAPSHOT_NAME + " , " + this.BOOT_CONFIG + "  "
+                + this.ENABLE_USBMOUSE + " , " + this.SNAPSHOT_NAME + " , " + this.BOOT_CONFIG + " , "
+                + this.KERNEL + " , " + this.INITRD + "  "
                 + " from " + this.MACHINE_TABLE_NAME + " where " + this.STATUS + " in ( "
                 + Const.STATUS_CREATED + " , " + Const.STATUS_PAUSED + " "
                 + " ) " + " and " + this.MACHINE_NAME + "=\"" + machine + "\""
@@ -272,6 +295,8 @@ public class MachineOpenHelper extends SQLiteOpenHelper {
             int usbmouse = (int) cur.getInt(15);
             String snapshotStr = cur.getString(16);
             String bootdev = cur.getString(17);
+            String kernel = cur.getString(18);
+            String initrd = cur.getString(19);
 
 //            Log.v("DB", "Got Machine: " + machinename);
 //            Log.v("DB", "Got cpu: " + cpu);
@@ -289,10 +314,12 @@ public class MachineOpenHelper extends SQLiteOpenHelper {
             myMachine.nic_driver = nic;
             myMachine.disableacpi = acpi;
             myMachine.disablehpet = hpet;
-            myMachine.usbmouse = usbmouse;
+            myMachine.bluetoothmouse = usbmouse;
             myMachine.hd_cache = hdcache;
             myMachine.snapshot_name = snapshotStr;
             myMachine.bootdevice = bootdev;
+            myMachine.kernel = kernel;
+            myMachine.initrd = initrd;
 
             break;
         }
@@ -334,6 +361,8 @@ public class MachineOpenHelper extends SQLiteOpenHelper {
                     + " and " + this.SNAPSHOT_NAME + "=\"" + b.snapshot_name + "\"", null);
         } catch (Exception e) {
             // catch code
+        	Log.v(TAG,"Error while deleting VM: " + e.getMessage());
+        	
         }
         db.close();
 
@@ -363,4 +392,44 @@ public class MachineOpenHelper extends SQLiteOpenHelper {
         db.close();
         return arrStr;
     }
+
+	public void insertMachines(String machines) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public String exportMachines() {
+        String qry = "select " + this.MACHINE_NAME + " , "
+                + this.CPU + " , "
+                + this.MEMORY + " , " + this.CDROM + " , " + this.FDA + " , "
+                + this.FDB + " , " + this.HDA + " , " + this.HDB + " , "
+                + this.NET_CONFIG + " , " + this.NIC_CONFIG + " , " + this.VGA
+                + " , " + this.SOUNDCARD_CONFIG + " , " + this.HDCACHE_CONFIG
+                + " , " + this.DISABLE_ACPI + " , " + this.DISABLE_HPET + " , "
+                + this.ENABLE_USBMOUSE + " , " + this.SNAPSHOT_NAME + " , " + this.BOOT_CONFIG + " , "
+                + this.KERNEL + " , " + this.INITRD + "  "
+                + " from " + this.MACHINE_TABLE_NAME + "; ";
+
+        String arrStr = "";
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cur = db.rawQuery(qry, null);
+
+        cur.moveToFirst();
+        while (cur.isAfterLast() == false) {
+        	String urlPath = "";
+        	for(int i=0; i<cur.getColumnCount();i++){
+        		urlPath += ("\"" + cur.getString(i) + "\"");
+        		if(i<cur.getColumnCount()-1){
+        			urlPath += ",";
+        		}
+        		
+        	}
+        	arrStr += (urlPath + "\n");
+            cur.moveToNext();
+        }
+        cur.close();
+        db.close();
+        return arrStr;
+    }
+	
 }

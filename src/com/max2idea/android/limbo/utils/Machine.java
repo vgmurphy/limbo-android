@@ -38,6 +38,9 @@ public class Machine {
     public  String fdb_img_path;
     public  String cpu;
     
+    public  String kernel;
+    public  String initrd;
+    
     //Default Settings
     public int memory = 128;
     public String bootdevice = "c";
@@ -53,7 +56,7 @@ public class Machine {
 	public int restart = 0;
 	public int disableacpi = 0;
 	public int disablehpet = 0;
-	public int usbmouse = 0;
+	public int bluetoothmouse = 0;
         public int enableqmp = 0;
         public int enablevnc = 1;
 	public int status = Const.STATUS_NULL;

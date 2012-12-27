@@ -527,6 +527,10 @@ static int do_qmp_capabilities(Monitor *mon, const QDict *params,
 
 static void handle_user_command(Monitor *mon, const char *cmdline);
 
+void sendHumanMonitorCommand(const char *command_line){
+	Error **errp;
+	qmp_human_monitor_command(command_line, 0,0, errp);
+}
 char *qmp_human_monitor_command(const char *command_line, bool has_cpu_index,
                                 int64_t cpu_index, Error **errp)
 {
@@ -4460,7 +4464,19 @@ static void monitor_read(void *opaque, const uint8_t *buf, int size)
 
     cur_mon = old_mon;
 }
+extern void and_do_savevm(const char * name);
 
+extern void saveSnapshot(const char *snapshot) {
+	LOGV("Saving Snapshot: %s", snapshot);
+	and_do_savevm(snapshot);
+}
+
+extern void sendMonitorCommand(const char *cmdline) {
+	monitor_suspend(default_mon);
+	LOGV("Running Command: %s", cmdline);
+	handle_user_command(default_mon, cmdline);
+	monitor_resume(default_mon);
+}
 static void monitor_command_cb(Monitor *mon, const char *cmdline, void *opaque)
 {
     monitor_suspend(mon);

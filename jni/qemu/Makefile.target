@@ -1,5 +1,8 @@
 # -*- Mode: makefile -*-
 
+include ../../android-toolchain.mak
+include ../../android-device-config.mak
+
 GENERATED_HEADERS = config-target.h
 CONFIG_NO_PCI = $(if $(subst n,,$(CONFIG_PCI)),n,y)
 CONFIG_NO_KVM = $(if $(subst n,,$(CONFIG_KVM)),n,y)
@@ -12,9 +15,6 @@ include $(SRC_PATH)/rules.mak
 ifneq ($(HWDIR),)
 include $(HWDIR)/config.mak
 endif
-
-include ../../android-toolchain.mak
-include ../../android-device-config.mak
 	
 TARGET_PATH=$(SRC_PATH)/target-$(TARGET_BASE_ARCH)
 $(call set-vpath, $(SRC_PATH):$(TARGET_PATH):$(SRC_PATH)/hw)
@@ -427,16 +427,29 @@ else
 #$(QEMU_PROG): $(obj-y) $(obj-$(TARGET_BASE_ARCH)-y)
 #	$(call LINK,$^)
 
+ifeq ($(TARGET_ARCH),x86)
+	sdllibs=
+else
+	sdllibs=../../../obj/local/armeabi/libpng.a \
+	../../../obj/local/armeabi/libjpeg.a \
+	../../../obj/local/armeabi/libSDL2.so \
+	../../../obj/local/armeabi/libSDL2_image.so \
+	../../../obj/local/armeabi/libSDL2_mixer.so
+endif
+
 $(QEMU_PROG): $(obj-y) $(obj-$(TARGET_BASE_ARCH)-y)
 	$(LNK)     \
+	-Wl,-soname,$(QEMU_PROG) \
 	-shared $(SYS_ROOT) \
+	-Wl,--no-undefined -Wl,-z,noexecstack  \
 	$(sort $(obj-y)) \
 	$(obj-$(TARGET_BASE_ARCH)-y) \
 	$(GCC_STATIC) \
 	../../libglib.a \
 	../../libiconv.a \
+	$(sdllibs) \
 	$(USR_LIB) \
-	-llog -lm -lz \
+	-llog -lm -lz -lstdc++ -lc -dl \
     $(P_THREAD) \
 	-o ./lib$(QEMU_PROG).so
 	cp lib$(QEMU_PROG).so ../../	

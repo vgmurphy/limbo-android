@@ -18,9 +18,9 @@
 #include "virtio-blk.h"
 #include "scsi-defs.h"
 #ifdef __linux__
-#ifndef __ANDROID__
-# include <scsi/sg.h>
-#endif //android
+//#ifndef __ANDROID__
+# include <../../scsi/sg.h>
+//#endif //android
 #endif
 
 typedef struct VirtIOBlock
@@ -186,7 +186,7 @@ static void virtio_blk_handle_scsi(VirtIOBlockReq *req)
     }
 
 #ifdef __linux__
-#ifndef __ANDROID__
+//#ifndef __ANDROID__
     struct sg_io_hdr hdr;
     memset(&hdr, 0, sizeof(struct sg_io_hdr));
     hdr.interface_id = 'S';
@@ -254,7 +254,7 @@ static void virtio_blk_handle_scsi(VirtIOBlockReq *req)
 
     virtio_blk_req_complete(req, status);
     g_free(req);
-#endif //android
+//#endif //android
 #else
     abort();
 #endif
@@ -384,9 +384,9 @@ static void virtio_blk_handle_request(VirtIOBlockReq *req,
     if (type & VIRTIO_BLK_T_FLUSH) {
         virtio_blk_handle_flush(req, mrb);
     } else if (type & VIRTIO_BLK_T_SCSI_CMD) {
-#ifndef __ANDROID__
+//#ifndef __ANDROID__
         virtio_blk_handle_scsi(req);
-#endif //android
+//#endif //android
     } else if (type & VIRTIO_BLK_T_GET_ID) {
         VirtIOBlock *s = req->dev;
 

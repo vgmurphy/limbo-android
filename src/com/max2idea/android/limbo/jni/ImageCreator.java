@@ -18,6 +18,8 @@
  */
 package com.max2idea.android.limbo.jni;
 
+import com.max2idea.android.limbo.utils.FileUtils;
+
 import android.util.Log;
 
 /**
@@ -29,7 +31,7 @@ public class ImageCreator {
 
     private String filename;
     private int memory = 0;
-    private String lib_path = "/data/data/com.max2idea.android.limbo.main/lib/libqemu-img.so";
+    private String lib_path = FileUtils.getDataDir() +  "/lib/libqemu-img.so";
     private String lib = "liblimbo.so";
     private final int prealloc;
 
@@ -41,8 +43,9 @@ public class ImageCreator {
     }
 
     private void loadNativeLibs(String lib) {
+    	
         // Load the C library
-        loadNativeLib(lib, "/data/data/com.max2idea.android.limbo.main/lib");
+        loadNativeLib(lib, FileUtils.getDataDir() + "/lib");
     }
 
     // Load the shared lib
