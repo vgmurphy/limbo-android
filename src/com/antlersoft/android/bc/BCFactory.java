@@ -16,7 +16,6 @@ public class BCFactory {
 	private static BCFactory _theInstance = new BCFactory();
 	
 	private IBCActivityManager bcActivityManager;
-	private IBCGestureDetector bcGestureDetector;
 	private IBCHaptic bcHaptic;
 	private IBCMotionEvent bcMotionEvent;
 	private IBCStorageContext bcStorageContext;
@@ -72,33 +71,7 @@ public class BCFactory {
 		return bcActivityManager;
 	}
 	
-	/**
-	 * Return the implementation of IBCGestureDetector appropriate for this SDK level
-	 * 
-	 * Since we dropped support of SDK levels < 3, there is only one version at the moment.
-	 * @return
-	 */
-	public IBCGestureDetector getBCGestureDetector()
-	{
-		if (bcGestureDetector == null)
-		{
-			synchronized (this)
-			{
-				if (bcGestureDetector == null)
-				{
-					try
-					{
-						bcGestureDetector = (IBCGestureDetector)getClass().getClassLoader().loadClass("com.antlersoft.android.bc.BCGestureDetectorDefault").newInstance();
-					}
-					catch (Exception ie)
-					{
-						throw new RuntimeException("Error instantiating", ie);
-					}
-				}
-			}
-		}
-		return bcGestureDetector;
-	}
+	
 	
 	/**
 	 * Return the implementation of IBCHaptic appropriate for this SDK level
@@ -167,42 +140,7 @@ public class BCFactory {
 		}
 		return bcMotionEvent;
 	}
-	
-	@SuppressWarnings("unchecked")
-	static private Class[] scaleDetectorConstructorArgs = new Class[] { Context.class, OnScaleGestureListener.class };
-	
-	/**
-	 * Return an instance of an implementation of {@link IBCScaleGestureDetector} appropriate to the SDK of this device.
-	 * This will work very much like android.view.ScaleGestureDetector on SDK >= 5.  For previous
-	 * SDK versions, it is a dummy implementation that does nothing and will never call the listener.
-	 * <p>
-	 * Note that unlike the other methods in this class, the returned interface instance is not
-	 * stateless.
-	 * @param context The context to which the detector is applied
-	 * @param listener The listener to which the implementation will send scale events
-	 * @return The gesture detector
-	 */
-	public IBCScaleGestureDetector getScaleGestureDetector(Context context, OnScaleGestureListener listener)
-	{
-		IBCScaleGestureDetector result;
-		
-		if (getSdkVersion() >= 5)
-		{
-			try {
-				result = (IBCScaleGestureDetector)getClass().getClassLoader().
-					loadClass("com.antlersoft.android.bc.ScaleGestureDetector").
-					getConstructor(scaleDetectorConstructorArgs).newInstance(new Object[] { context, listener });
-			} catch (Exception e) {
-				throw new RuntimeException("Error instantiating ScaleGestureDetector", e);
-			}
-		}
-		else
-		{
-			result = new DummyScaleGestureDetector();
-		}
-		return result;
-	}
-	
+
 	/**
 	 * 
 	 * @return An implementation of IBCStorageContext appropriate for the running Android release

@@ -25,8 +25,6 @@ import java.util.List;
 
 import com.antlersoft.android.bc.BCFactory;
 
-import com.antlersoft.android.zoomer.ZoomControls;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -62,6 +60,7 @@ import com.max2idea.android.limbo.main.Const;
 import com.max2idea.android.limbo.main.R;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import android.widget.ZoomControls;
 
 public class VncCanvasActivity extends Activity {
 
@@ -749,7 +748,20 @@ public class VncCanvasActivity extends Activity {
 
             }
         });
-        zoomer.setOnZoomKeyboardClickListener(new View.OnClickListener() {
+        zoomer.setOnZoomInClickListener(new View.OnClickListener() {
+
+            /*
+             * (non-Javadoc)
+             * 
+             * @see android.view.View.OnClickListener#onClick(android.view.View)
+             */
+            @Override
+            public void onClick(View v) {
+                InputMethodManager inputMgr = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                inputMgr.toggleSoftInput(0, 0);
+            }
+        });
+        zoomer.setOnZoomOutClickListener(new View.OnClickListener() {
 
             /*
              * (non-Javadoc)

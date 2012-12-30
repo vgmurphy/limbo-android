@@ -3124,15 +3124,15 @@ public class LimboActivity extends Activity {
 				"kvm64 (64Bit)"
 
 		// arm
-		// , "arm926 (arm)", "arm946 (arm)", "arm1026 (arm)",
-		// "arm1136 (arm)", "arm1136-r2 (arm)", "arm1176 (arm)",
-		// "arm11mpcore (arm)", "cortex-m3 (arm)", "cortex-a8 (arm)",
-		// "cortex-a8-r2 (arm)", "cortex-a9 (arm)", "cortex-a15 (arm)",
-		// "ti925t (arm)", "pxa250 (arm)", "sa1100 (arm)", "sa1110 (arm)",
-		// "pxa255 (arm)", "pxa260 (arm)", "pxa261 (arm)", "pxa262 (arm)",
-		// "pxa270 (arm)", "pxa270-a0 (arm)", "pxa270-a1 (arm)",
-		// "pxa270-b0 (arm)", "pxa270-b1 (arm)", "pxa270-c0 (arm)",
-		// "pxa270-c5 (arm)", "any (arm)"
+		 , "arm926 (arm)", "arm946 (arm)", "arm1026 (arm)",
+		 "arm1136 (arm)", "arm1136-r2 (arm)", "arm1176 (arm)",
+		 "arm11mpcore (arm)", "cortex-m3 (arm)", "cortex-a8 (arm)",
+		 "cortex-a8-r2 (arm)", "cortex-a9 (arm)", "cortex-a15 (arm)",
+		 "ti925t (arm)", "pxa250 (arm)", "sa1100 (arm)", "sa1110 (arm)",
+		 "pxa255 (arm)", "pxa260 (arm)", "pxa261 (arm)", "pxa262 (arm)",
+		 "pxa270 (arm)", "pxa270-a0 (arm)", "pxa270-a1 (arm)",
+		 "pxa270-b0 (arm)", "pxa270-b1 (arm)", "pxa270-c0 (arm)",
+		 "pxa270-c5 (arm)", "any (arm)"
 		};
 
 		cpuAdapter = new ArrayAdapter(this,

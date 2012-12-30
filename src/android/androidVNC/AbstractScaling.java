@@ -87,7 +87,6 @@ public abstract class AbstractScaling {
 	 */
 	public void setScaleTypeForActivity(VncCanvasActivity activity)
 	{
-		activity.zoomer.hide();
 		activity.vncCanvas.scaling = this;
 		activity.vncCanvas.setScaleType(scaleType);
 		activity.getConnection().setScaleMode(scaleType);

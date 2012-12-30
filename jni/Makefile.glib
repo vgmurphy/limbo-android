@@ -34,18 +34,7 @@ ICONV_INC= \
 ICONV_SRC_FILES= \
 ./iconv/libcharset/lib/localcharset.c \
 ./iconv/libcharset/lib/relocatable.c \
-./iconv/lib/iconv.c \
-./iconv/srclib/progname.c \
-./iconv/srclib/allocator.c \
-./iconv/srclib/xmalloc.c \
-./iconv/srclib/malloca.c \
-./iconv/srclib/xreadlink.c \
-./iconv/srclib/xstrdup.c \
-./iconv/srclib/uniwidth/width.c \
-./iconv/srclib/areadlink.c \
-./iconv/srclib/careadlinkat.c \
-./iconv/srclib/error.c \
-./iconv/srclib/safe-read.c
+./iconv/lib/iconv.c
 
 ## GLIB
 GLIB_INC=-I$(LOCAL_PATH)/glib/glib \
@@ -305,6 +294,8 @@ clean:
 
 veryclean:
 	-find . -name *.o -exec rm -rf {} \;
+	-find . -name *.a -exec rm -rf {} \;
+	-find . -name *.d -exec rm -rf {} \;
 
 libiconv:
 	$(AR) $(AR_FLAGS) \
