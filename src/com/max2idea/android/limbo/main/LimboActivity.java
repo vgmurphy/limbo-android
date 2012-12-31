@@ -22,7 +22,6 @@ import android.androidVNC.COLORMODEL;
 import android.androidVNC.ConnectionBean;
 import android.androidVNC.VncCanvasActivity;
 import android.androidVNC.VncConstants;
-import android.androidVNC.VncDatabase;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -2448,7 +2447,7 @@ public class LimboActivity extends Activity {
 
 	}
 
-	private VncDatabase database;
+
 	private ConnectionBean selected;
 
 	private void startvnc() {

@@ -92,9 +92,7 @@ public abstract class AbstractScaling {
 		activity.getConnection().setScaleMode(scaleType);
 		if (activity.inputHandler == null || ! isValidInputMode(activity.getModeIdFromHandler(activity.inputHandler))) {
 			activity.inputHandler=activity.getInputHandlerById(getDefaultHandlerId());
-			activity.getConnection().setInputMode(activity.inputHandler.getName());
 		}
-		activity.getConnection().Gen_update(activity.database.getWritableDatabase());
 		activity.updateInputMenu();
 	}
 	

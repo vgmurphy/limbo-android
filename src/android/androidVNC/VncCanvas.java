@@ -213,16 +213,6 @@ public class VncCanvas extends ImageView {
             
         }
 
-        // <RepeaterMagic>
-        if (connection.getUseRepeater() && connection.getRepeaterId() != null && connection.getRepeaterId().length() > 0) {
-            Log.i(TAG, "Negotiating repeater/proxy connection");
-            byte[] protocolMsg = new byte[12];
-            rfb.is.read(protocolMsg);
-            byte[] buffer = new byte[250];
-            System.arraycopy(connection.getRepeaterId().getBytes(), 0, buffer, 0, connection.getRepeaterId().length());
-            rfb.os.write(buffer);
-        }
-        // </RepeaterMagic>
 
         rfb.readVersionMsg();
         Log.i(TAG, "RFB server supports protocol version " + rfb.serverMajor + "." + rfb.serverMinor);
@@ -312,7 +302,7 @@ public class VncCanvas extends ImageView {
     }
 
     private void mouseFollowPan() {
-        if (connection.getFollowPan() && scaling.isAbleToPan()) {
+        if (scaling.isAbleToPan()) {
             int scrollx = absoluteXPosition;
             int scrolly = absoluteYPosition;
             int width = getVisibleWidth();
