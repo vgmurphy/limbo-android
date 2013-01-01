@@ -57,6 +57,7 @@ import android.os.Handler;
 import android.view.Display;
 import android.widget.EditText;
 import com.max2idea.android.limbo.main.Const;
+import com.max2idea.android.limbo.main.LimboActivity;
 import com.max2idea.android.limbo.main.R;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -740,6 +741,7 @@ public class VncCanvasActivity extends Activity {
 //				connection.setAddress(host.substring(0, host.indexOf(':')));
 //			}
 		}
+		connection.setPassword(LimboActivity.getVnc_passwd());
 		setContentView(R.layout.canvas);
 
 		vncCanvas = (VncCanvas) findViewById(R.id.vnc_canvas);
