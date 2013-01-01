@@ -207,7 +207,7 @@ public class LimboActivity extends Activity {
 	private CheckBox mHPET;
 	// private CheckBox mSnapshot;
 	// private CheckBox mBluetoothMouse;
-	private CheckBox mVNC;
+	private CheckBox mVNCAllowExternal;
 	private CheckBox mMultiAIO;
 	private CheckBox mPrio;
 	private Spinner mSnapshot;
@@ -703,8 +703,8 @@ public class LimboActivity extends Activity {
 
 		// this.mSnapshot.setEnabled(true); // Disabled for now
 
-		if (mUI.getSelectedItemPosition() == 0)
-			this.mVNC.setEnabled(flag);
+		if (mUI.getSelectedItemPosition() == 0 && flag)
+			this.mVNCAllowExternal.setEnabled(flag);
 
 	}
 
@@ -890,8 +890,12 @@ public class LimboActivity extends Activity {
 		if (mNetConfig.getSelectedItemPosition() > 0)
 			this.mNetDevices.setEnabled(flag);
 		this.mVGAConfig.setEnabled(flag);
+		
 		if (Const.enable_sound)
 			this.mSoundCardConfig.setEnabled(flag);
+		
+		this.mMultiAIO.setEnabled(flag);
+		this.mPrio.setEnabled(flag);
 
 		if (Const.enable_SDL)
 			this.mUI.setEnabled(flag);
@@ -903,7 +907,7 @@ public class LimboActivity extends Activity {
 		// this.mBluetoothMouse.setEnabled(b);
 
 		if (mUI.getSelectedItemPosition() == 0)
-			this.mVNC.setEnabled(flag);
+			this.mVNCAllowExternal.setEnabled(flag);
 		this.mSnapshot.setEnabled(flag);
 
 	}
@@ -1148,9 +1152,10 @@ public class LimboActivity extends Activity {
 		this.mHDCacheConfig.setEnabled(false); // Disabled for now
 		this.mACPI = (CheckBox) findViewById(R.id.acpival);
 		this.mHPET = (CheckBox) findViewById(R.id.hpetval);
-		this.mVNC = (CheckBox) findViewById(R.id.vncexternalval); // No external
+		this.mVNCAllowExternal = (CheckBox) findViewById(R.id.vncexternalval); // No external
 																	// connections
-		mVNC.setChecked(SettingsManager.getVNCAllowExternal(activity));
+//		mVNCAllowExternal.setChecked(SettingsManager.getVNCAllowExternal(activity));
+		mVNCAllowExternal.setChecked(false);
 		this.mPrio = (CheckBox) findViewById(R.id.prioval); //
 		mPrio.setChecked(SettingsManager.getPrio(activity));
 
@@ -1279,11 +1284,13 @@ public class LimboActivity extends Activity {
 
 				}
 				if (position == 0) {
-					mVNC.setEnabled(true);
+					mVNCAllowExternal.setEnabled(true);
+					if(mSnapshot.getSelectedItemPosition() == 0)
 					mSoundCardConfig.setEnabled(false);
 				} else {
-					mVNC.setEnabled(false);
-					mSoundCardConfig.setEnabled(true);
+					mVNCAllowExternal.setEnabled(false);
+					if(mSnapshot.getSelectedItemPosition() == 0)
+						mSoundCardConfig.setEnabled(true);
 				}
 				userPressedUI = true;
 				// Log.v("CPU List", "reset userPressed = " + userPressedCPU);
@@ -1831,12 +1838,12 @@ public class LimboActivity extends Activity {
 		});
 
 		//
-		mVNC.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+		mVNCAllowExternal.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 			public void onCheckedChanged(CompoundButton viewButton,
 					boolean isChecked) {
 
 				if (isChecked) {
-					promptVNC(activity);
+					promptVNCAllowExternal(activity);
 				} else {
 					vnc_passwd = null;
 					vnc_allow_external = 0;
@@ -1959,7 +1966,7 @@ public class LimboActivity extends Activity {
 		alertDialog.show();
 	}
 
-	public void promptVNC(final Activity activity) {
+	public void promptVNCAllowExternal(final Activity activity) {
 		final AlertDialog alertDialog;
 		alertDialog = new AlertDialog.Builder(activity).create();
 		alertDialog.setTitle("Enable VNC server");
@@ -2017,15 +2024,15 @@ public class LimboActivity extends Activity {
 							.show();
 					vnc_passwd = null;
 					vnc_allow_external = 0;
-					mVNC.setChecked(false);
-					SettingsManager.setVNCAllowExternal(activity, false);
+					mVNCAllowExternal.setChecked(false);
+//					SettingsManager.setVNCAllowExternal(activity, false);
 					return;
 				} else {
 					sendHandlerMessage(handler, Const.VNC_PASSWORD,
 							"vnc_passwd", "passwd");
 					vnc_passwd = a.getText().toString();
 					vnc_allow_external = 1;
-					// SettingsManager.setVNCAllowExternal(activity, true);
+//					 SettingsManager.setVNCAllowExternal(activity, true);
 				}
 
 			}
@@ -2034,14 +2041,16 @@ public class LimboActivity extends Activity {
 			public void onClick(DialogInterface dialog, int which) {
 				vnc_passwd = null;
 				vnc_allow_external = 0;
-				// SettingsManager.setVNCAllowExternal(activity, false);
+				mVNCAllowExternal.setChecked(false);
+//				 SettingsManager.setVNCAllowExternal(activity, false);
 				return;
 			}
 		});
 		alertDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
 			@Override
 			public void onCancel(DialogInterface dialog) {
-				mVNC.setChecked(false);
+				mVNCAllowExternal.setChecked(false);
+//				SettingsManager.setVNCAllowExternal(activity, false);
 				vnc_passwd = null;
 				vnc_allow_external = 0;
 			}

@@ -975,9 +975,6 @@ public class VncCanvasActivity extends Activity {
 		// Log.v("VNC", "Inside Options Check");
 		vncCanvas.afterMenu = true;
 		switch (item.getItemId()) {
-		case R.id.itemInfo:
-			vncCanvas.showConnectionInfo();
-			return true;
 		case R.id.itemSpecialKeys:
 			showDialog(R.layout.metakey);
 			return true;
@@ -1012,23 +1009,23 @@ public class VncCanvasActivity extends Activity {
 		case R.id.itemCtrlAltDel:
 			vncCanvas.sendMetaKey(MetaKeyBean.keyCtrlAltDel);
 			return true;
-		case R.id.itemFollowMouse:
-			vncCanvas.panToMouse();
-			return true;
-		case R.id.itemFollowPan:
-			return true;
-		case R.id.itemArrowLeft:
-			vncCanvas.sendMetaKey(MetaKeyBean.keyArrowLeft);
-			return true;
-		case R.id.itemArrowUp:
-			vncCanvas.sendMetaKey(MetaKeyBean.keyArrowUp);
-			return true;
-		case R.id.itemArrowRight:
-			vncCanvas.sendMetaKey(MetaKeyBean.keyArrowRight);
-			return true;
-		case R.id.itemArrowDown:
-			vncCanvas.sendMetaKey(MetaKeyBean.keyArrowDown);
-			return true;
+//		case R.id.itemFollowMouse:
+//			vncCanvas.panToMouse();
+//			return true;
+//		case R.id.itemFollowPan:
+//			return true;
+//		case R.id.itemArrowLeft:
+//			vncCanvas.sendMetaKey(MetaKeyBean.keyArrowLeft);
+//			return true;
+//		case R.id.itemArrowUp:
+//			vncCanvas.sendMetaKey(MetaKeyBean.keyArrowUp);
+//			return true;
+//		case R.id.itemArrowRight:
+//			vncCanvas.sendMetaKey(MetaKeyBean.keyArrowRight);
+//			return true;
+//		case R.id.itemArrowDown:
+//			vncCanvas.sendMetaKey(MetaKeyBean.keyArrowDown);
+//			return true;
 		case R.id.itemSendKeyAgain:
 			return true;
 		case R.id.itemOpenDoc:

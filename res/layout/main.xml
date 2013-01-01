@@ -1,22 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/main_layout"
-    android:layout_width="wrap_content"
-    android:layout_height="fill_parent"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
     android:orientation="vertical" >
 
     <LinearLayout
         android:id="@+id/adsl"
         android:layout_width="320dip"
         android:layout_height="50dip"
-        android:layout_centerInParent="true"
         android:layout_gravity="center" >
 
         <com.mopub.mobileads.MoPubView
             android:id="@+id/adview"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
-            android:layout_centerInParent="true"
             android:layout_gravity="center" />
     </LinearLayout>
 
@@ -27,16 +25,14 @@
         android:orientation="vertical" >
 
         <ScrollView
-            xmlns:android="http://schemas.android.com/apk/res/android"
             android:id="@+id/ScrollView02"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:fadeScrollbars="false" >
 
             <LinearLayout
-                xmlns:android="http://schemas.android.com/apk/res/android"
                 android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
+                android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:padding="15dip" >
 
@@ -112,6 +108,8 @@
                         android:textSize="15dip" />
                 </LinearLayout>
 
+                
+
                 <RelativeLayout
                     android:id="@+id/startl"
                     android:layout_width="fill_parent"
@@ -172,7 +170,7 @@
                 </RelativeLayout>
 
                 <LinearLayout
-                    android:id="@+id/statusl"
+                    android:id="@+id/deviceConfl"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center|center_vertical"
@@ -181,7 +179,7 @@
                     android:padding="5dip" >
 
                     <TextView
-                        android:id="@+id/statusStr"
+                        android:id="@+id/deviConfStr"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center|center_vertical"
@@ -545,157 +543,196 @@
                         android:text=""
                         android:textSize="15dip" />
                 </LinearLayout>
-
                 <LinearLayout
-                    android:id="@+id/acpil"
+                    android:id="@+id/advancedl"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="right|center_vertical"
-                    android:gravity="right|center_vertical"
-                    android:orientation="horizontal" >
+                    android:layout_gravity="center|center_vertical"
+                    android:gravity="center|center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="5dip" >
 
                     <TextView
-                        android:id="@+id/acpiStr"
+                        android:id="@+id/advancedConfStr"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="right|center_vertical"
-                        android:gravity="right|center_vertical"
-                        android:text="Disable ACPI"
+                        android:layout_gravity="center|center_vertical"
+                        android:gravity="center|center_vertical"
+                        android:text="Advanced Configuration"
                         android:textSize="15dip" />
-
-                    <CheckBox
-                        android:id="@+id/acpival"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="right|center_vertical"
-                        android:gravity="right|center_vertical" />
                 </LinearLayout>
-
                 <LinearLayout
-                    android:id="@+id/hpetl"
+                    android:id="@+id/globall"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="right|center_vertical"
-                    android:gravity="right|center_vertical"
                     android:orientation="horizontal" >
 
-                    <TextView
-                        android:id="@+id/hpetStr"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="right|center_vertical"
-                        android:gravity="right|center_vertical"
-                        android:text="Disable HPET"
-                        android:textSize="15dip" />
-
-                    <CheckBox
-                        android:id="@+id/hpetval"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="right|center_vertical"
-                        android:gravity="right|center_vertical" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/enableMultiThread"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="right|center_vertical"
-                    android:gravity="right|center_vertical"
-                    android:orientation="horizontal" >
-
-                    <TextView
-                        android:id="@+id/enableMultiThreadStr"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="right|center_vertical"
-                        android:gravity="right|center_vertical"
-                        android:text="Enable Multithread AIO"
-                        android:textSize="15dip" />
-
-                    <CheckBox
-                        android:id="@+id/enableMultiThreadval"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="right|center_vertical"
-                        android:gravity="right|center_vertical" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/vncexternall"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="right|center_vertical"
-                    android:gravity="right|center_vertical"
-                    android:orientation="horizontal" >
-
-                    <TextView
-                        android:id="@+id/vncExternalStr"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="right|center_vertical"
-                        android:gravity="right|center_vertical"
-                        android:text="Allow external VNC Connections"
-                        android:textSize="15dip" />
-
-                    <CheckBox
-                        android:id="@+id/vncexternalval"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="right|center_vertical"
-                        android:gravity="right|center_vertical" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/priol"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="right|center_vertical"
-                    android:gravity="right|center_vertical"
-                    android:orientation="horizontal" >
-
-                    <TextView
-                        android:id="@+id/prioStr"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="right|center_vertical"
-                        android:gravity="right|center_vertical"
-                        android:text="High Priority"
-                        android:textSize="15dip" />
-
-                    <CheckBox
-                        android:id="@+id/prioval"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="right|center_vertical"
-                        android:gravity="right|center_vertical" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/dnsl"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:orientation="horizontal" >
-
-                    <TextView
-                        android:id="@+id/dnsStr"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center_vertical"
-                        android:text="DNS (ie Google DNS Server = 8.8.8.8): "
-                        android:textSize="15dip" />
-
-                    <EditText
-                        android:id="@+id/dnsval"
+                    <LinearLayout
+                        android:id="@+id/globalll"
                         android:layout_width="fill_parent"
                         android:layout_height="wrap_content"
-                        android:singleLine="true"
-                        android:text="8.8.8.8"
-                        android:textSize="15dip" />
+                        android:layout_weight="1"
+                        android:orientation="vertical" >
+
+                        <LinearLayout
+                            android:id="@+id/acpil"
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="right|center_vertical"
+                            android:gravity="right|center_vertical"
+                            android:orientation="horizontal" >
+
+                            <TextView
+                                android:id="@+id/acpiStr"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="right|center_vertical"
+                                android:gravity="right|center_vertical"
+                                android:text="Disable ACPI"
+                                android:textSize="15dip" />
+
+                            <CheckBox
+                                android:id="@+id/acpival"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="right|center_vertical"
+                                android:gravity="right|center_vertical" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/hpetl"
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="right|center_vertical"
+                            android:gravity="right|center_vertical"
+                            android:orientation="horizontal" >
+
+                            <TextView
+                                android:id="@+id/hpetStr"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="right|center_vertical"
+                                android:gravity="right|center_vertical"
+                                android:text="Disable HPET"
+                                android:textSize="15dip" />
+
+                            <CheckBox
+                                android:id="@+id/hpetval"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="right|center_vertical"
+                                android:gravity="right|center_vertical" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/enableMultiThread"
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="right|center_vertical"
+                            android:gravity="right|center_vertical"
+                            android:orientation="horizontal" >
+
+                            <TextView
+                                android:id="@+id/enableMultiThreadStr"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="right|center_vertical"
+                                android:gravity="right|center_vertical"
+                                android:text="Enable Multithread AIO"
+                                android:textSize="15dip" />
+
+                            <CheckBox
+                                android:id="@+id/enableMultiThreadval"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="right|center_vertical"
+                                android:gravity="right|center_vertical" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/globalrl"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical" >
+
+                        <LinearLayout
+                            android:id="@+id/vncexternall"
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="right|center_vertical"
+                            android:gravity="right|center_vertical"
+                            android:orientation="horizontal" >
+
+                            <TextView
+                                android:id="@+id/vncExternalStr"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="right|center_vertical"
+                                android:gravity="right|center_vertical"
+                                android:text="Allow external VNC Connections"
+                                android:textSize="15dip" />
+
+                            <CheckBox
+                                android:id="@+id/vncexternalval"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="right|center_vertical"
+                                android:gravity="right|center_vertical" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/priol"
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="right|center_vertical"
+                            android:gravity="right|center_vertical"
+                            android:orientation="horizontal" >
+
+                            <TextView
+                                android:id="@+id/prioStr"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="right|center_vertical"
+                                android:gravity="right|center_vertical"
+                                android:text="High Priority"
+                                android:textSize="15dip" />
+
+                            <CheckBox
+                                android:id="@+id/prioval"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="right|center_vertical"
+                                android:gravity="right|center_vertical" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/dnsl"
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_vertical"
+                            android:orientation="horizontal" >
+
+                            <TextView
+                                android:id="@+id/dnsStr"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical"
+                                android:text="DNS Server: "
+                                android:textSize="15dip" />
+
+                            <EditText
+                                android:id="@+id/dnsval"
+                                android:layout_width="fill_parent"
+                                android:layout_height="wrap_content"
+                                android:singleLine="true"
+                                android:text="8.8.8.8"
+                                android:textSize="15dip" />
+                        </LinearLayout>
+                    </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
         </ScrollView>
     </LinearLayout>
-
 </LinearLayout>

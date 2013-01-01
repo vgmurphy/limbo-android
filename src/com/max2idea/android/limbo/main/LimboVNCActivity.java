@@ -202,6 +202,9 @@ public class LimboVNCActivity extends android.androidVNC.VncCanvasActivity {
 			menu.findItem(R.id.itemMonitor).setTitle("Monitor Console");
 
 		}
+		menu.removeItem(menu.findItem(R.id.itemEnterText).getItemId());
+		menu.removeItem(menu.findItem(R.id.itemSendKeyAgain).getItemId());
+		menu.removeItem(menu.findItem(R.id.itemSpecialKeys).getItemId());
 
 		Menu inputMenu = menu.findItem(R.id.itemInputMode).getSubMenu();
 
@@ -210,9 +213,6 @@ public class LimboVNCActivity extends android.androidVNC.VncCanvasActivity {
 			inputModeMenuItems[i] = inputMenu.findItem(inputModeIds[i]);
 		}
 		updateInputMenu();
-		menu.findItem(R.id.itemFollowMouse).setChecked(
-				connection.getFollowMouse());
-		menu.findItem(R.id.itemFollowPan).setChecked(connection.getFollowPan());
 
 		if (this.mouseOn) {
 			menu.findItem(R.id.itemCenterMouse).setTitle("Pan (Mouse Off)");
@@ -222,14 +222,6 @@ public class LimboVNCActivity extends android.androidVNC.VncCanvasActivity {
 			menu.findItem(R.id.itemCenterMouse).setIcon(R.drawable.mouse);
 
 		}
-		menu.removeItem(menu.findItem(R.id.itemFollowPan).getItemId());
-		menu.removeItem(menu.findItem(R.id.itemFollowMouse).getItemId());
-		// menu.removeItem(menu.findItem(R.id.itemInputMode).getItemId());
-		menu.removeItem(menu.findItem(R.id.itemInfo).getItemId());
-		menu.removeItem(menu.findItem(R.id.itemArrowUp).getItemId());
-		menu.removeItem(menu.findItem(R.id.itemArrowDown).getItemId());
-		menu.removeItem(menu.findItem(R.id.itemArrowLeft).getItemId());
-		menu.removeItem(menu.findItem(R.id.itemArrowRight).getItemId());
 
 		return true;
 

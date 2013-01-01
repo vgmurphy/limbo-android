@@ -161,18 +161,19 @@ public class SettingsManager extends PreferenceActivity {
 //        UIUtils.log("Setting First time: ");
     }
     
-    static boolean getVNCAllowExternal(Activity activity) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
-        return prefs.getBoolean("VNCAllowExternal", false);
-    }
-
-    public static void setVNCAllowExternal(Activity activity, boolean flag) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
-        SharedPreferences.Editor edit = prefs.edit();
-        edit.putBoolean("VNCAllowExternal", flag);
-        edit.commit();
-//        UIUtils.log("Setting First time: ");
-    }
+    //FIXME: Need to save password to enable this feature
+//    static boolean getVNCAllowExternal(Activity activity) {
+//        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
+//        return prefs.getBoolean("VNCAllowExternal", false);
+//    }
+//
+//    public static void setVNCAllowExternal(Activity activity, boolean flag) {
+//        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
+//        SharedPreferences.Editor edit = prefs.edit();
+//        edit.putBoolean("VNCAllowExternal", flag);
+//        edit.commit();
+////        UIUtils.log("Setting First time: ");
+//    }
 
     
     static boolean getUSBMouse(Activity activity) {
