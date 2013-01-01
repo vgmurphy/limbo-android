@@ -34,6 +34,7 @@ public class Const {
 	public static final int SDL_MOUSE_MIDDLE = 2;
 	public static final int SDL_MOUSE_RIGHT = 3;
 	
+	
 
 	public static boolean debug = false;
 	public static boolean enable_SDL = true;
@@ -68,7 +69,7 @@ public class Const {
     static int VM_RESUMED = 1008;
     static int VM_SAVED = 1009;
     static int IMG_CREATED = 1010;
-    static int VNC_PASSWORD = 1011;
+    static int VNC_PASSWORD = 1011;    
     public static int SNAPSHOT_CREATED = 1012;
     public static int UIUTILS_SHOWALERT_HTML = 1013;    
     public static int VM_NO_QCOW2 = 1014;
@@ -76,6 +77,8 @@ public class Const {
     public static int UIUTILS_SHOWALERT_HELP = 1016;
     public static int VM_NO_KERNEL = 1017;
     public static int VM_NO_INITRD = 1018;
+    public static final int VM_EXPORT = 1019;
+    public static final int VM_IMPORT = 1020;
     public static boolean NOT_ICS = true;
 	public static String dnsServer = "8.8.8.8";
 	public static String ui = "VNC";

@@ -256,6 +256,50 @@ public class LimboActivity extends Activity {
 		this.setupWidgets();
 		this.enableOptions(false);
 
+		resetUserPressed();
+		populateAttributes();
+
+		if (Const.enableAds) {
+			setupAds();
+		}
+
+		execTimeListener();
+
+		if (this.isFirstLaunch()) {
+			onFirstLaunch();
+		}
+
+		// acquireLocks();
+	}
+
+	private void resetUserPressed() {
+		// TODO Auto-generated method stub
+		  userPressedUI = false;
+		  userPressedCPU = false;
+		  userPressedMachine = false;
+		  userPressedRAM = false;
+		  userPressedCDROM = false;
+		 userPressedHDCfg = false;
+		 userPressedSndCfg = false;
+		 userPressedVGACfg = false;
+		 userPressedNicCfg = false;
+		 userPressedNetCfg = false;
+		 userPressedBootDev = false;
+		 userPressedFDB = false;
+		 userPressedFDA = false;
+		 userPressedHDB = false;
+		 userPressedHDA = false;
+		 userPressedKernel = false;
+		 userPressedInitrd = false;
+		 userPressedACPI = false;
+		 userPressedHPET = false;
+		 userPressedBluetoothMouse = false;
+		 userPressedSnapshot = false;
+		 userPressedVNC = false;
+	}
+
+	private void populateAttributes() {
+		// TODO Auto-generated method stub
 		this.populateMachines();
 		this.populateCPUs();
 		this.populateRAM();
@@ -274,18 +318,6 @@ public class LimboActivity extends Activity {
 		this.populateHDCacheConfig();
 		this.populateSnapshot();
 		this.populateUI();
-
-		if (Const.enableAds) {
-			setupAds();
-		}
-
-		execTimeListener();
-
-		if (this.isFirstLaunch()) {
-			onFirstLaunch();
-		}
-
-		// acquireLocks();
 	}
 
 	public void onFirstLaunch() {
@@ -531,6 +563,22 @@ public class LimboActivity extends Activity {
 					mStatusText.setText("Saving State");
 				}
 			}
+			if (messageType != null && messageType == Const.VM_EXPORT) {
+				progDialog.dismiss();
+				Toast.makeText(activity, "Machines are exported in "
+						+ Const.DBFile, Toast.LENGTH_LONG).show();
+			}
+			if (messageType != null && messageType == Const.VM_IMPORT) {
+				progDialog.dismiss();
+				Toast.makeText(activity, " Machines have been imported from "
+						 + Const.DBFile, Toast.LENGTH_LONG).show();
+				 
+				resetUserPressed();
+				populateAttributes();
+			}
+			
+			
+			
 		}
 	};
 
@@ -683,7 +731,7 @@ public class LimboActivity extends Activity {
 		handler.sendMessage(msg1);
 	}
 
-	static private ProgressDialog progDialog;
+	static public ProgressDialog progDialog;
 
 	// Another Generic Messanger
 	public static void sendHandlerMessage(Handler handler, int message_type) {
@@ -696,21 +744,26 @@ public class LimboActivity extends Activity {
 
 	private void onDeleteMachine() {
 		this.machineDB.deleteMachine(currMachine);
-		this.populateMachines();
+		this.resetUserPressed();
+		this.populateAttributes();
 		Toast.makeText(this, "Machine " + currMachine.machinename + " deleted",
-				Toast.LENGTH_SHORT);
+				Toast.LENGTH_SHORT).show();
 	}
 
 	private void onExportMachines() {
-		String machinesToExport = machineDB.exportMachines();
-		FileUtils.saveFileContents(Const.DBFile, machinesToExport);
-		Toast.makeText(this, machinesToExport + " Machines are exported in "
-				+ Const.DBFile, Toast.LENGTH_SHORT);
+		progDialog = ProgressDialog.show(activity, "Please Wait",
+				"Exporting Machines...", true);
+		ExportMachines exporter = new ExportMachines();
+		exporter.execute();
+		
+		
+		
 	}
 
 	private void onImportMachines() {
 		// Warn the user that VMs with same names will be replaced
 		promptImportMachines();
+		
 
 	}
 
@@ -729,7 +782,7 @@ public class LimboActivity extends Activity {
 		imageNameView.setId(201012010);
 		imageNameView
 				.setText("Step 1: Place the machine.CSV file you export previously under \"limbo\" directory in your SD card.\n"
-						+ "Step 2: WARNING: Any machine/snapshot already existing will be replaced!\n"
+						+ "Step 2: WARNING: Any machine with the same name will be replaced!\n"
 						+ "Step 3: Press \"OK\".\n");
 
 		RelativeLayout.LayoutParams searchViewParams = new RelativeLayout.LayoutParams(
@@ -744,21 +797,11 @@ public class LimboActivity extends Activity {
 		alertDialog.setButton("OK", new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int which) {
 				// For each line create a Machine
-				ArrayList<Machine> machines = FileUtils.getVMs(Const.DBFile);
-				if (machines == null) {
-					return;
-				}
-				for (int i = 0; i < machines.size(); i++) {
-					Machine machine = machines.get(i);
-					if (machineDB.getMachine(machine.machinename, "") != null) {
-						machineDB.deleteMachine(machine);
-						machineDB.insertMachine(machine);
-					}
-				}
-				// Toast.makeText(this, machines.size() +
-				// " Machines are imported from "
-				// + Const.DBFile, Toast.LENGTH_SHORT);
-
+				progDialog = ProgressDialog.show(activity, "Please Wait",
+						"Importing Machines...", true);
+				
+				ImportMachines importer = new ImportMachines();
+				importer.execute();
 			}
 		});
 		alertDialog.setButton2("Cancel", new DialogInterface.OnClickListener() {
@@ -2240,6 +2283,62 @@ public class LimboActivity extends Activity {
 		}
 	}
 
+	private class ExportMachines extends AsyncTask<Void, Void, Void> {
+
+		@Override
+		protected Void doInBackground(Void... arg0) {
+			
+			//Export
+			String machinesToExport = machineDB.exportMachines();
+			FileUtils.saveFileContents(Const.DBFile, machinesToExport);
+			
+			return null;
+		}
+
+		@Override
+		protected void onPostExecute(Void test) {
+			
+			sendHandlerMessage(handler, Const.VM_EXPORT);
+
+
+		}
+	}
+	
+	private class ImportMachines extends AsyncTask<Void, Void, Void> {
+
+		@Override
+		protected Void doInBackground(Void... arg0) {
+			//Import
+			ArrayList<Machine> machines = FileUtils.getVMs(Const.DBFile);
+			if (machines == null) {
+				return null;
+			}
+			for (int i = 0; i < machines.size(); i++) {
+				Machine machine = machines.get(i);
+				if (machineDB.getMachine(machine.machinename, "") != null) {
+					machineDB.deleteMachine(machine);
+				}
+				machineDB.insertMachine(machine);
+				addDriveToList(machine.cd_iso_path, "cdrom");
+				addDriveToList(machine.hda_img_path, "hda");
+				addDriveToList(machine.hdb_img_path, "hdb");
+				addDriveToList(machine.fda_img_path, "fda");
+				addDriveToList(machine.fdb_img_path, "fdb");
+				addDriveToList(machine.kernel, "kernel");
+				addDriveToList(machine.initrd, "initrd");
+			}
+			
+			return null;
+		}
+
+		@Override
+		protected void onPostExecute(Void test) {
+			
+			sendHandlerMessage(handler, Const.VM_IMPORT);
+
+		}
+	}
+	
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
 
 		if (keyCode == KeyEvent.KEYCODE_BACK) {
@@ -3413,6 +3512,9 @@ public class LimboActivity extends Activity {
 	private void addDriveToList(String file, String type) {
 		// Check if exists
 		// Log.v(TAG, "Adding To list: " + type + ":" + file);
+		if(file==null)
+			return;
+		
 		int res = favDB.getFavUrlSeq(file, type);
 		if (res == -1) {
 			if (type.equals("hda")) {

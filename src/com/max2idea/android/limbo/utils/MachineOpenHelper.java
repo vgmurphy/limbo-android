@@ -179,10 +179,10 @@ public class MachineOpenHelper extends SQLiteOpenHelper {
                     stateValues);
         } catch (Exception e) {
             // catch code
-            Log.v(TAG, "Error while Insert machine............................: "
+            Log.v(TAG, "Error while Insert machine: "
                     + e.getMessage());
         }
-        Log.v(TAG, "Inserting Machine.................. " + seqnum);
+        Log.v(TAG, "Inserting Machine: " + myMachine.machinename + " : "+ seqnum);
         db.close();
         return seqnum;
     }
@@ -415,6 +415,14 @@ public class MachineOpenHelper extends SQLiteOpenHelper {
         Cursor cur = db.rawQuery(qry, null);
 
         cur.moveToFirst();
+        String urlPath1 = "";
+        for(int i=0; i<cur.getColumnCount();i++){
+    		urlPath1 += ("\"" + cur.getColumnName(i) + "\"");
+    		if(i<cur.getColumnCount()-1){
+    			urlPath1 += ",";
+    		}
+    	}
+        arrStr += (urlPath1 + "\n");
         while (cur.isAfterLast() == false) {
         	String urlPath = "";
         	for(int i=0; i<cur.getColumnCount();i++){
