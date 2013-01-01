@@ -1246,6 +1246,8 @@ public class SDLActivity extends Activity {
 		// TODO Auto-generated method stub
 		new Thread(new Runnable() {
 			public void run() {
+				SDLActivity.stretchToScreen = false;
+				SDLActivity.fitToScreen = false;
 				sendCtrlAtlKey(KeyEvent.KEYCODE_4);
 			}
 		}).start();
@@ -1257,6 +1259,8 @@ public class SDLActivity extends Activity {
 
 		new Thread(new Runnable() {
 			public void run() {
+				SDLActivity.stretchToScreen = false;
+				SDLActivity.fitToScreen = false;
 				sendCtrlAtlKey(KeyEvent.KEYCODE_3);
 
 			}
