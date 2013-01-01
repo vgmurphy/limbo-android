@@ -25,6 +25,16 @@ limbo: qemu glib sdl
 config:
 	$(MAKE) -f Makefile.config V=1
 
+debug-arm:
+	$(MAKE) ultraclean
+	$(MAKE) config TARGET_ARCH=arm
+	$(MAKE) all TARGET_ARCH=arm NDK_DEBUG=1
+	
+debug-x86:
+	$(MAKE) ultraclean
+	$(MAKE) config TARGET_ARCH=x86
+	$(MAKE) all TARGET_ARCH=x86 NDK_DEBUG=1
+	
 release-arm:
 	$(MAKE) ultraclean
 	$(MAKE) config TARGET_ARCH=arm
