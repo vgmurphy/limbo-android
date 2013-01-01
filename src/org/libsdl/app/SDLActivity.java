@@ -43,6 +43,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
@@ -137,6 +138,7 @@ public class SDLActivity extends Activity {
 	public static Spinner mCD;
 	public static Spinner mFDA;
 	public static Spinner mFDB;
+	public static Button mOK;
 
 	public static boolean userPressedCDROM = true;
 	public static boolean userPressedFDA = true;
@@ -271,9 +273,15 @@ public class SDLActivity extends Activity {
 			SDLActivity.mCD = (Spinner) findViewById(R.id.cdromimgval);
 			SDLActivity.mFDA = (Spinner) findViewById(R.id.floppyimgval);
 			SDLActivity.mFDB = (Spinner) findViewById(R.id.floppybimgval);
+			SDLActivity.mOK = (Button) findViewById(R.id.okButton);
 		}
 
 		private void setupListeners() {
+			SDLActivity.mOK.setOnClickListener(new View.OnClickListener() {
+		        public void onClick(View v) {
+		            dismiss();
+		        }
+		    });
 			SDLActivity.mCD
 					.setOnItemSelectedListener(new OnItemSelectedListener() {
 
@@ -301,12 +309,14 @@ public class SDLActivity extends Activity {
 							}
 							if (SDLActivity.userPressedCDROM
 									&& LimboActivity.vmexecutor != null
-									&& position > 1) {
+									&& position > 1
+									&& !LimboActivity.vmexecutor.busy) {
 								LimboActivity.vmexecutor.change_dev("ide1-cd0",
 										LimboActivity.currMachine.cd_iso_path);
 							} else if (SDLActivity.userPressedCDROM
 									&& LimboActivity.vmexecutor != null
-									&& position == 0) {
+									&& position == 0
+									&& !LimboActivity.vmexecutor.busy) {
 								LimboActivity.vmexecutor.change_dev("ide1-cd0",
 										null); // Eject
 							}
@@ -415,6 +425,9 @@ public class SDLActivity extends Activity {
 			SDLActivity.populateCDRom("cd");
 			SDLActivity.populateFloppy("fda");
 			SDLActivity.populateFloppy("fdb");
+			setCDROM(LimboActivity.currMachine.cd_iso_path, false);
+			setFDA(LimboActivity.currMachine.fda_img_path, false);
+			setFDB(LimboActivity.currMachine.fdb_img_path, false);
 		}
 	}
 

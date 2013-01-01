@@ -74,6 +74,7 @@ public class VMExecutor {
 	private int height;
 	private String arch = "x86";
 	private String append = "/dev/ram";
+	public boolean busy = false;
 
 
 	/**
@@ -308,6 +309,7 @@ public class VMExecutor {
 	}
 
 	public void change_dev(String dev, String image_path) {
+		this.busy = true;
 		this.qemu_dev = dev;
 		this.qemu_dev_value = image_path;
 		if (qemu_dev_value == null || qemu_dev_value.trim().equals("")) {
@@ -317,6 +319,7 @@ public class VMExecutor {
 			Log.v("Limbo", "Changing Dev: " + dev + " to: " + image_path);
 			this.changedev();
 		}
+		this.busy = false;
 
 	}
 
