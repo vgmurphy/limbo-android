@@ -47,6 +47,8 @@ extern void setAIOMaxThreads(int threads);
 
 extern void sendMonitorCommand(const char *cmdline);
 
+extern void toggleFullScreen();
+
 /* JNI interface: constructs arguments and calls main function
  */
 
@@ -82,73 +84,6 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *pvt) {
 	return JNI_VERSION_1_2;
 }
 
-extern void do_sdl_resize(int width, int height, int bpp);
-
-JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_resize(
-		JNIEnv* env, jobject thiz) {
-	char res_msg[MSG_BUFSIZE + 1] = { 0 };
-
-	if (handle == NULL)
-		return (*env)->NewStringUTF(env, "VM not running");
-
-	LOGV("Resize: %s\n");
-
-	typedef void (*do_sdl_resize_t)();
-	dlerror();
-	do_sdl_resize_t do_sdl_resize = (do_sdl_resize_t) dlsym(handle,
-			"do_sdl_resize");
-	const char *dlsym_error = dlerror();
-	if (dlsym_error) {
-		LOGV("Cannot load symbol 'do_sdl_resize': %s\n", dlsym_error);
-//        dlclose(handle);
-//        handle = NULL;
-		return (*env)->NewStringUTF(env, res_msg);
-	}
-
-	do_sdl_resize(720, 400, 16);
-	sprintf(res_msg, "Resized");
-	LOGV(res_msg);
-
-	return (*env)->NewStringUTF(env, res_msg);
-}
-
-extern void scale(int width, int height);
-
-JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_scale(
-		JNIEnv* env, jobject thiz) {
-	char res_msg[MSG_BUFSIZE + 1] = { 0 };
-
-	if (handle == NULL)
-		return (*env)->NewStringUTF(env, "VM not running");
-
-	LOGV("Scaling\n");
-	jclass c = (*env)->GetObjectClass(env, thiz);
-	jfieldID fid = (*env)->GetFieldID(env, c, "width", "I");
-	int width = (*env)->GetIntField(env, thiz, fid);
-
-	fid = (*env)->GetFieldID(env, c, "height", "I");
-	int height = (*env)->GetIntField(env, thiz, fid);
-
-	typedef void (*scale_t)();
-	dlerror();
-	scale_t scale = (scale_t) dlsym(handle, "scale");
-	const char *dlsym_error = dlerror();
-	if (dlsym_error) {
-		LOGV("Cannot load symbol 'scale': %s\n", dlsym_error);
-//        dlclose(handle);
-//        handle = NULL;
-		return (*env)->NewStringUTF(env, res_msg);
-	}
-
-	scale(width, height);
-	sprintf(res_msg, "Scaled");
-	LOGV(res_msg);
-
-	return (*env)->NewStringUTF(env, res_msg);
-}
-
-extern void toggleFullScreen();
-
 JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_togglefullscreen(
 		JNIEnv* env, jobject thiz) {
 	char res_msg[MSG_BUFSIZE + 1] = { 0 };
@@ -170,123 +105,6 @@ JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_togglef
 
 	toggleFullScreen();
 	sprintf(res_msg, "Full Screen");
-	LOGV(res_msg);
-
-	return (*env)->NewStringUTF(env, res_msg);
-}
-
-JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_savevm1(
-		JNIEnv* env, jobject thiz) {
-	char res_msg[MSG_BUFSIZE + 1] = { 0 };
-
-	if (handle == NULL)
-		return (*env)->NewStringUTF(env, "VM not running");
-
-	jclass c = (*env)->GetObjectClass(env, thiz);
-	jfieldID fid = (*env)->GetFieldID(env, c, "snapshot_name",
-			"Ljava/lang/String;");
-	jstring snapshot_name = (*env)->GetObjectField(env, thiz, fid);
-	const char *snapshot_name_str = (*env)->GetStringUTFChars(env,
-			snapshot_name, 0);
-
-	char cmd[MSG_BUFSIZE + 1];
-
-	LOGV("Save VM TEST\n");
-
-	typedef void (*sendMonitorCommand_t)();
-	dlerror();
-	sendMonitorCommand_t sendMonitorCommand = (sendMonitorCommand_t) dlsym(
-			handle, "sendMonitorCommand");
-	const char *dlsym_error = dlerror();
-	if (dlsym_error) {
-		LOGV("Cannot load symbol 'sendMonitorCommand': %s\n", dlsym_error);
-		return (*env)->NewStringUTF(env, res_msg);
-	}
-
-	strcpy(cmd, "savevm ");
-	strcat(cmd, snapshot_name_str);
-	LOGV("Sending Monitor command: %s\n", cmd);
-	sendMonitorCommand(cmd);
-	sprintf(res_msg, "Complete saving VM");
-	LOGV(res_msg);
-
-	return (*env)->NewStringUTF(env, res_msg);
-}
-
-extern void saveSnapshot(const char *snapshot);
-
-JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_savevm2(
-		JNIEnv* env, jobject thiz) {
-	char res_msg[MSG_BUFSIZE + 1] = { 0 };
-
-	if (handle == NULL)
-		return (*env)->NewStringUTF(env, "VM not running");
-
-	jclass c = (*env)->GetObjectClass(env, thiz);
-	jfieldID fid = (*env)->GetFieldID(env, c, "snapshot_name",
-			"Ljava/lang/String;");
-	jstring snapshot_name = (*env)->GetObjectField(env, thiz, fid);
-	const char *snapshot_name_str = (*env)->GetStringUTFChars(env,
-			snapshot_name, 0);
-
-	char cmd[MSG_BUFSIZE + 1];
-
-	LOGV("Save VM TEST2\n");
-
-	typedef void (*saveSnapshot_t)();
-	dlerror();
-	saveSnapshot_t saveSnapshot = (saveSnapshot_t) dlsym(handle,
-			"saveSnapshot");
-	const char *dlsym_error = dlerror();
-	if (dlsym_error) {
-		LOGV("Cannot load symbol 'saveSnapshot': %s\n", dlsym_error);
-		return (*env)->NewStringUTF(env, res_msg);
-	}
-
-	LOGV("Saving Snapshot: %s\n", snapshot_name_str);
-	saveSnapshot(snapshot_name_str);
-	sprintf(res_msg, "Complete saving VM");
-	LOGV(res_msg);
-
-	return (*env)->NewStringUTF(env, res_msg);
-}
-
-extern void sendHumanMonitorCommand(const char *command_line);
-
-JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_savevm3(
-		JNIEnv* env, jobject thiz) {
-	char res_msg[MSG_BUFSIZE + 1] = { 0 };
-
-	if (handle == NULL)
-		return (*env)->NewStringUTF(env, "VM not running");
-
-	jclass c = (*env)->GetObjectClass(env, thiz);
-	jfieldID fid = (*env)->GetFieldID(env, c, "snapshot_name",
-			"Ljava/lang/String;");
-	jstring snapshot_name = (*env)->GetObjectField(env, thiz, fid);
-	const char *snapshot_name_str = (*env)->GetStringUTFChars(env,
-			snapshot_name, 0);
-
-	char cmd[MSG_BUFSIZE + 1];
-
-	LOGV("Save VM TEST\n");
-
-	typedef void (*sendHumanMonitorCommand_t)();
-	dlerror();
-	sendHumanMonitorCommand_t sendHumanMonitorCommand =
-			(sendHumanMonitorCommand_t) dlsym(handle,
-					"sendHumanMonitorCommand");
-	const char *dlsym_error = dlerror();
-	if (dlsym_error) {
-		LOGV("Cannot load symbol 'sendHumanMonitorCommand': %s\n", dlsym_error);
-		return (*env)->NewStringUTF(env, res_msg);
-	}
-
-	strcpy(cmd, "savevm ");
-	strcat(cmd, snapshot_name_str);
-	LOGV("Sending Human Monitor command: %s\n", cmd);
-	sendHumanMonitorCommand(cmd);
-	sprintf(res_msg, "Complete saving VM");
 	LOGV(res_msg);
 
 	return (*env)->NewStringUTF(env, res_msg);
@@ -802,13 +620,16 @@ JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_start(
 	}
 	if (enablevnc) {
 		params += 2;
+	}else {
+		//SDL needs keyboard layout
+		params += 2; //For -k option
 	}
 
 	params += 2; // For CPU option
-
 	params += 2; //For -smp option
 	params += 2; //For -M option
-	params += 2; //For -k option
+
+
 
 	if (strncmp(arch_str, "arm", 3) == 0) {
 		params += 6; //For kernel, initrd, and append options
@@ -1007,7 +828,10 @@ JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_start(
 		} else
 			strcpy(argv[param++], "localhost:1"); // Allow all hosts to connect
 	} else {
-		LOGV("Disabling VNC server");
+		LOGV("Disabling VNC server, using SDL instead");
+		//SDL needs explicit keyboard layout
+		strcpy(argv[param++], "-k");
+		strcpy(argv[param++], "en-us");
 	}
 
 	strcpy(argv[param++], "-smp");
@@ -1019,9 +843,6 @@ JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_start(
 	} else {
 		strcpy(argv[param++], "pc");
 	}
-
-	strcpy(argv[param++], "-k");
-	strcpy(argv[param++], "en-us");
 
 	argv[param] = NULL;
 	int argc = params - 1;
