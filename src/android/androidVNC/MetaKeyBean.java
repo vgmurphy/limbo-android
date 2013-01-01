@@ -13,6 +13,9 @@ import android.view.KeyEvent;
  * 
  */
 public class MetaKeyBean {
+	int keySym;
+	int metaFlags;
+	
 	static final ArrayList<MetaKeyBase> allKeys;
 	static final String[] allKeysNames;
 	public static final HashMap<Integer, MetaKeyBase> keysByKeyCode;
@@ -188,11 +191,12 @@ public class MetaKeyBean {
 			_regenDesc = true;
 
 		}
+		this.keySym = arg_keySym ;
 	}
 
 	int getKeySym() {
 		// TODO Auto-generated method stub
-		return 0;
+		return keySym;
 	}
 
 	/*
@@ -204,11 +208,12 @@ public class MetaKeyBean {
 		if (arg_metaFlags != getMetaFlags()) {
 			_regenDesc = true;
 		}
+		this.metaFlags = arg_metaFlags;
 	}
 
 	int getMetaFlags() {
 		// TODO Auto-generated method stub
-		return 0;
+		return this.metaFlags;
 	}
 
 	/*
