@@ -60,7 +60,8 @@ public class LimboVNCActivity extends android.androidVNC.VncCanvasActivity {
 		toast.setGravity(Gravity.TOP | Gravity.CENTER, 0, 0);
 		toast.show();
 		this.vncCanvas.setFocusableInTouchMode(true);
-		// fullScreen();
+		onMouse();
+
 	}
 
 	public void stopTimeListener() {
