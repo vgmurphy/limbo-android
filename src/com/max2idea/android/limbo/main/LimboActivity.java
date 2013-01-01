@@ -1888,6 +1888,14 @@ public class LimboActivity extends Activity {
 	}
 
 	private static String vnc_passwd = null;
+	public static String getVnc_passwd() {
+		return vnc_passwd;
+	}
+
+	public static void setVnc_passwd(String vnc_passwd) {
+		LimboActivity.vnc_passwd = vnc_passwd;
+	}
+
 	private static int vnc_allow_external = 0;
 
 	// This is easier: traverse the interfaces and get the local IPs
@@ -2569,36 +2577,7 @@ public class LimboActivity extends Activity {
 			Logger.getLogger(LimboActivity.class.getName()).log(Level.SEVERE,
 					null, ex);
 		}
-
 		Intent intent = new Intent(this, LimboVNCActivity.class);
-		android.content.ContentValues values = new android.content.ContentValues();
-		values.put("_id", Long.toString(0));
-		values.put("NICKNAME", "limbo");
-		values.put("ADDRESS", "localhost");
-		values.put("PORT", Integer.toString(5901));
-		if (this.vnc_passwd != null && !this.vnc_passwd.equals("")) {
-			values.put("PASSWORD", this.vnc_passwd);
-		} else {
-			values.put("PASSWORD", "");
-		}
-		values.put("COLORMODEL", COLORMODEL.C24bit.nameString());
-		values.put("FORCEFULL", Long.toString(0));
-		values.put("REPEATERID", 0);
-		values.put("INPUTMODE", VncCanvasActivity.TOUCHPAD_MODE);
-		values.put("SCALEMODE", ScaleType.MATRIX.toString());
-		values.put("USELOCALCURSOR", "0");
-		values.put("KEEPPASSWORD", "0");
-		values.put("FOLLOWMOUSE", "0");
-		values.put("USEREPEATER", "0");
-		values.put("METALISTID", Long.toString(0));
-		values.put("LAST_META_KEY_ID", Long.toString(0));
-		values.put("FOLLOWPAN", "0");
-		values.put("USERNAME", "limbouser");
-		values.put("SECURECONNECTIONTYPE", "None");
-		values.put("SHOWZOOMBUTTONS", ("0"));
-		// values.put("DOUBLE_TAP_ACTION", "DOUBLE_CLICK");
-
-		intent.putExtra(VncConstants.CONNECTION, values);
 		startActivityForResult(intent, Const.VNC_REQUEST_CODE);
 	}
 
