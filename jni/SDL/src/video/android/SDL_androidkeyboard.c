@@ -120,7 +120,7 @@ static SDL_Scancode Android_Keycodes[] = {
     SDL_SCANCODE_UNKNOWN, /* AKEYCODE_NUM */
     SDL_SCANCODE_UNKNOWN, /* AKEYCODE_HEADSETHOOK */
     SDL_SCANCODE_UNKNOWN, /* AKEYCODE_FOCUS */
-    SDL_SCANCODE_UNKNOWN, /* AKEYCODE_PLUS */
+    SDL_SCANCODE_KP_PLUS, /* AKEYCODE_PLUS */ //MK Fix for Limbo
     SDL_SCANCODE_MENU, /* AKEYCODE_MENU */
     SDL_SCANCODE_UNKNOWN, /* AKEYCODE_NOTIFICATION */
     SDL_SCANCODE_AC_SEARCH, /* AKEYCODE_SEARCH */
@@ -270,7 +270,7 @@ TranslateKeycode(int keycode)
         scancode = Android_Keycodes[keycode];
     }
     if (scancode == SDL_SCANCODE_UNKNOWN) {
-        __android_log_print(ANDROID_LOG_INFO, "SDL", "Unknown keycode %d", keycode);
+//        __android_log_print(ANDROID_LOG_INFO, "SDL", "Unknown keycode %d", keycode);
     }
 //    LOGV("keycode/Scancode %d=>%d", keycode, scancode);
     return scancode;

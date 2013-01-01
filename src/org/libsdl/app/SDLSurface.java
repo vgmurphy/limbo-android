@@ -27,9 +27,9 @@ import com.max2idea.android.limbo.main.Const;
  * 
  * Because of this, that's where we set up the SDL thread
  */
-public class SDLSurface extends GLSurfaceView implements SurfaceHolder.Callback,
-		View.OnKeyListener, View.OnTouchListener, SensorEventListener
-{
+public class SDLSurface extends GLSurfaceView implements
+		SurfaceHolder.Callback, View.OnKeyListener, View.OnTouchListener,
+		SensorEventListener {
 
 	//
 	// Sensors
@@ -40,17 +40,17 @@ public class SDLSurface extends GLSurfaceView implements SurfaceHolder.Callback,
 
 		@Override
 		public boolean onDown(MotionEvent event) {
-//			Log.v("onDown",
-//					"Action=" + event.getAction() + ", X,Y=" + event.getX()
-//							+ "," + event.getY() + " P=" + event.getPressure());
+			// Log.v("onDown",
+			// "Action=" + event.getAction() + ", X,Y=" + event.getX()
+			// + "," + event.getY() + " P=" + event.getPressure());
 			return true;
 		}
 
 		@Override
 		public void onLongPress(MotionEvent event) {
-//			Log.v("onLongPress",
-//					"Action=" + event.getAction() + ", X,Y=" + event.getX()
-//							+ "," + event.getY() + " P=" + event.getPressure());
+			// Log.v("onLongPress",
+			// "Action=" + event.getAction() + ", X,Y=" + event.getX()
+			// + "," + event.getY() + " P=" + event.getPressure());
 			SDLActivity.onNativeTouch(Const.SDL_MOUSE_LEFT, 0,
 					MotionEvent.ACTION_DOWN, 0, 0, 0);
 		}
@@ -67,8 +67,9 @@ public class SDLSurface extends GLSurfaceView implements SurfaceHolder.Callback,
 				float y = event.getY(i);
 				float p = event.getPressure(i);
 
-//				Log.v("onSingleTapConfirmed", "Action=" + action + ", X,Y=" + x
-//						+ "," + y + " P=" + p);
+				// Log.v("onSingleTapConfirmed", "Action=" + action + ", X,Y=" +
+				// x
+				// + "," + y + " P=" + p);
 
 				// if (x < (SDLActivity.width - SDLActivity.vm_width) / 2) {
 				// return true;
@@ -107,8 +108,8 @@ public class SDLSurface extends GLSurfaceView implements SurfaceHolder.Callback,
 				float y = event.getY(i);
 				float p = event.getPressure(i);
 
-//				Log.v("onDoubleTap", "Action=" + action + ", X,Y=" + x + ","
-//						+ y + " P=" + p);
+				// Log.v("onDoubleTap", "Action=" + action + ", X,Y=" + x + ","
+				// + y + " P=" + p);
 				doubleClick(event, i);
 			}
 
@@ -261,11 +262,31 @@ public class SDLSurface extends GLSurfaceView implements SurfaceHolder.Callback,
 
 		if (event.getAction() == KeyEvent.ACTION_DOWN) {
 //			Log.v("SDL", "key down: " + keyCode);
-			SDLActivity.onNativeKeyDown(keyCode);
+			if (keyCode == 77) {
+				SDLActivity.onNativeKeyDown(59);
+				SDLActivity.onNativeKeyDown(9);
+			} else if (keyCode == 17) {
+				SDLActivity.onNativeKeyDown(59);
+				SDLActivity.onNativeKeyDown(15);
+			} else if (keyCode == 18) {
+				SDLActivity.onNativeKeyDown(59);
+				SDLActivity.onNativeKeyDown(10);
+			} else
+				SDLActivity.onNativeKeyDown(keyCode);
 			return true;
 		} else if (event.getAction() == KeyEvent.ACTION_UP) {
 //			Log.v("SDL", "key up: " + keyCode);
-			SDLActivity.onNativeKeyUp(keyCode);
+			if (keyCode == 77) { //@ key
+				SDLActivity.onNativeKeyUp(59);
+				SDLActivity.onNativeKeyUp(9);
+			} else if (keyCode == 17) { //* key
+				SDLActivity.onNativeKeyUp(59);
+				SDLActivity.onNativeKeyUp(15);
+			} else if (keyCode == 18) { //# key
+				SDLActivity.onNativeKeyUp(59);
+				SDLActivity.onNativeKeyUp(10);
+			} else
+				SDLActivity.onNativeKeyUp(keyCode);
 			return true;
 		}
 
@@ -274,18 +295,18 @@ public class SDLSurface extends GLSurfaceView implements SurfaceHolder.Callback,
 
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
-//		Log.v("onTouchEvent",
-//				"Action=" + event.getAction() + ", X,Y=" + event.getX() + ","
-//						+ event.getY() + " P=" + event.getPressure());
+		// Log.v("onTouchEvent",
+		// "Action=" + event.getAction() + ", X,Y=" + event.getX() + ","
+		// + event.getY() + " P=" + event.getPressure());
 		if (!firstTouch) {
 			SDLActivity.onNativeTouch(0, 0, MotionEvent.ACTION_MOVE, 0, 0, 0);
 			firstTouch = true;
 		}
 		if (event.getPointerCount() > 1) {
 
-//			Log.v("Right Click",
-//					"Action=" + event.getAction() + ", X,Y=" + event.getX()
-//							+ "," + event.getY() + " P=" + event.getPressure());
+			// Log.v("Right Click",
+			// "Action=" + event.getAction() + ", X,Y=" + event.getX()
+			// + "," + event.getY() + " P=" + event.getPressure());
 			rightClick(event);
 			return true;
 		} else
@@ -340,8 +361,8 @@ public class SDLSurface extends GLSurfaceView implements SurfaceHolder.Callback,
 				SDLActivity.onNativeTouch(0, 0, MotionEvent.ACTION_MOVE,
 						(x - old_x) * sensitivity_mult, (y - old_y)
 								* sensitivity_mult, p);
-//			Log.v("onTouch", "Moving by=" + action + ", X,Y=" + (x - old_x)
-//					+ "," + (y - old_y) + " P=" + p);
+			// Log.v("onTouch", "Moving by=" + action + ", X,Y=" + (x - old_x)
+			// + "," + (y - old_y) + " P=" + p);
 			// save current
 			old_x = x;
 			old_y = y;
@@ -379,6 +400,5 @@ public class SDLSurface extends GLSurfaceView implements SurfaceHolder.Callback,
 					event.values[2]);
 		}
 	}
-
 
 }
