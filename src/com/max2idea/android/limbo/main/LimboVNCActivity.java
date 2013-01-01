@@ -139,36 +139,48 @@ public class LimboVNCActivity extends android.androidVNC.VncCanvasActivity {
 		} else if (item.getItemId() == R.id.itemSaveState) {
 			this.promptStateName(activity);
 		} else if (item.getItemId() == R.id.itemFitToScreen) {
-			input1 = getInputHandlerById(R.id.itemInputTouchpad);
-			if (input1 != null) {
-				inputHandler = input1;
-				connection.setInputMode(input1.getName());
-				connection.setFollowMouse(true);
-				mouseOn = true;
-				showPanningState();
-				return true;
-			}
+			return onFitToScreen();
 		} else if (item.getItemId() == this.QUIT) {
 		} else if (item.getItemId() == R.id.itemCenterMouse) {
-			if (mouseOn == false) {
-				input1 = getInputHandlerById(R.id.itemInputTouchpad);
-			} else {
-				input1 = getInputHandlerById(R.id.itemInputTouchPanZoomMouse);
-			}
-			if (input1 != null) {
-				inputHandler = input1;
-				connection.setInputMode(input1.getName());
-				if (mouseOn == false) {
-					connection.setFollowMouse(true);
-					mouseOn = true;
-				} else {
-					mouseOn = false;
-				}
-				showPanningState();
-				return true;
-			}
+			return onMouse();
 		}
 		this.vncCanvas.requestFocus();
+		return true;
+	}
+
+	private boolean onFitToScreen() {
+		// TODO Auto-generated method stub
+		input1 = getInputHandlerById(R.id.itemInputTouchpad);
+		if (input1 != null) {
+			inputHandler = input1;
+			connection.setInputMode(input1.getName());
+			connection.setFollowMouse(true);
+			mouseOn = true;
+			showPanningState();
+			return true;
+		}
+		return true;
+	}
+
+	private boolean onMouse() {
+		// TODO Auto-generated method stub
+		if (mouseOn == false) {
+			input1 = getInputHandlerById(R.id.itemInputTouchpad);
+		} else {
+			input1 = getInputHandlerById(R.id.itemInputTouchPanZoomMouse);
+		}
+		if (input1 != null) {
+			inputHandler = input1;
+			connection.setInputMode(input1.getName());
+			if (mouseOn == false) {
+				connection.setFollowMouse(true);
+				mouseOn = true;
+			} else {
+				mouseOn = false;
+			}
+			showPanningState();
+			return true;
+		}
 		return true;
 	}
 
