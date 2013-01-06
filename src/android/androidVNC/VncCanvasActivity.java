@@ -972,7 +972,6 @@ public class VncCanvasActivity extends Activity {
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		// Log.v("VNC", "Inside Options Check");
 		vncCanvas.afterMenu = true;
 		switch (item.getItemId()) {
 		case R.id.itemSpecialKeys:

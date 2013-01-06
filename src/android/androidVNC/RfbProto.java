@@ -1122,6 +1122,7 @@ public class RfbProto {
   // from the Java key values to the X keysym values used by the RFB protocol.
   //
   public synchronized void writeKeyEvent(int keySym, int metaState, boolean down) throws IOException {
+//	  Log.i("writeKeyEvent","key = " + keySym + " metastate = " + metaState + " down = " + down);
     eventBufLen = 0;
     if (down)
     	writeModifierKeyEvents(metaState);

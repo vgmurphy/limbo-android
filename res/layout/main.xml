@@ -671,7 +671,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_gravity="right|center_vertical"
                                 android:gravity="right|center_vertical"
-                                android:text="Allow external VNC Connections"
+                                android:text="Allow External VNC"
                                 android:textSize="15dip" />
 
                             <CheckBox

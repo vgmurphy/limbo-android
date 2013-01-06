@@ -126,7 +126,6 @@ public class LimboVNCActivity extends android.androidVNC.VncCanvasActivity {
 
 	@Override
 	public boolean onOptionsItemSelected(final MenuItem item) {
-		Log.v("Limbo", "Inside Options Check");
 		super.onOptionsItemSelected(item);
 		if (item.getItemId() == this.KEYBOARD
 				|| item.getItemId() == R.id.itemKeyboard) {
@@ -188,7 +187,6 @@ public class LimboVNCActivity extends android.androidVNC.VncCanvasActivity {
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
 		menu.clear();
-		Log.v("Limbo", "Inside Options Created");
 		getMenuInflater().inflate(R.menu.vnccanvasactivitymenu, menu);
 
 		if (vncCanvas.scaling != null) {
