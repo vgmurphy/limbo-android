@@ -41,6 +41,7 @@ Limbo v0.9.4 (Jan 6, 2012)<br>
 - New SDL User Interface.<br>
 - Enabled External Mouse (Bluetooth).<br>
 - Sound Emulation for SB16 (only under SDL Interface).<br>
+- Fixed Keyboard CTRL,ALT keys and removed extra screens for VNC<br>
 <br>
 
 <br><br>
