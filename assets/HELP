@@ -35,14 +35,7 @@
  
 =============== CHANGELOG ===============
 <br><br>
-Limbo v0.9.4-TEST-B (Dec 27, 2012)<br>
-<br>
-- Fixed compatibility for x86 phones (disabled SDL)
-- Enabled emulation for ARM targets, current issue with SCSI disks
-<br>
-
-<br><br>
-Limbo v0.9.4-TEST-A (Dec 24, 2012)<br>
+Limbo v0.9.4 (Jan 6, 2012)<br>
 <br>
 - Increased RAM Memory to 1GB.<br>
 - New SDL User Interface.<br>
