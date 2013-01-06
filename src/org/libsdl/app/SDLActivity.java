@@ -243,7 +243,7 @@ public class SDLActivity extends Activity {
 				SettingsManager.setLastDir(this, currDir);
 			}
 			if (fileType != null && file != null) {
-				setDriveAttr(fileType, file);
+				setDriveAttr(fileType, file, true);
 			}
 
 		}
@@ -504,7 +504,7 @@ public class SDLActivity extends Activity {
 		}
 	}
 
-	private static void setDriveAttr(String fileType, String file) {
+	private static void setDriveAttr(String fileType, String file, boolean userPressed) {
 		// TODO Auto-generated method stub
 		addDriveToList(file, fileType);
 		if (fileType != null && fileType.startsWith("cd") && file != null
@@ -514,7 +514,7 @@ public class SDLActivity extends Activity {
 			if (((ArrayAdapter) SDLActivity.mCD.getAdapter()).getPosition(file) < 0) {
 				((ArrayAdapter) SDLActivity.mCD.getAdapter()).add(file);
 			}
-			setCDROM(file, false);
+			setCDROM(file, userPressed);
 		} else if (fileType != null && fileType.startsWith("fd")
 				&& file != null && !file.trim().equals("")) {
 			if (fileType.startsWith("fda")) {
@@ -524,7 +524,7 @@ public class SDLActivity extends Activity {
 						.getPosition(file) < 0) {
 					((ArrayAdapter) SDLActivity.mFDA.getAdapter()).add(file);
 				}
-				setFDA(file, false);
+				setFDA(file, userPressed);
 			} else if (fileType.startsWith("fdb")) {
 				int ret = LimboActivity.machineDB.update(
 						LimboActivity.currMachine, MachineOpenHelper.FDB, file);
@@ -532,7 +532,7 @@ public class SDLActivity extends Activity {
 						.getPosition(file) < 0) {
 					((ArrayAdapter) SDLActivity.mFDB.getAdapter()).add(file);
 				}
-				setFDB(file, false);
+				setFDB(file, userPressed);
 			}
 		}
 
