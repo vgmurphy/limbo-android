@@ -278,10 +278,10 @@ public class SDLActivity extends Activity {
 
 		private void setupListeners() {
 			SDLActivity.mOK.setOnClickListener(new View.OnClickListener() {
-		        public void onClick(View v) {
-		            dismiss();
-		        }
-		    });
+				public void onClick(View v) {
+					dismiss();
+				}
+			});
 			SDLActivity.mCD
 					.setOnItemSelectedListener(new OnItemSelectedListener() {
 
@@ -1188,12 +1188,8 @@ public class SDLActivity extends Activity {
 									int which) {
 								new Thread(new Runnable() {
 									public void run() {
-										// Log.v("SDL", "VM is stopped");
+										Log.v("SDL", "VM is stopped");
 										nativeQuit();
-										Intent data = new Intent();
-										setResult(Const.SDL_QUIT_RESULT_CODE,
-												data);
-										getParent().finish();
 									}
 								}).start();
 
@@ -1796,22 +1792,20 @@ public class SDLActivity extends Activity {
 
 		if (LimboActivity.vmexecutor.sound_card != null
 				&& !LimboActivity.vmexecutor.sound_card.equals("None")) {
-			
-			
+
 			mAudioThread = new Thread(new Runnable() {
 				public void run() {
 					mAudioTrack.play();
 					nativeRunAudioThread();
 				}
 			});
-			//Use Max priority is better
+			// Use Max priority is better
 			mAudioThread.setPriority(Thread.MIN_PRIORITY);
 			mAudioThread.start();
 			Log.v("SDLAudio", "Audio Thread started");
-		}else {
+		} else {
 			Log.v("SDLAudio", "Audio disabled");
 		}
-
 
 	}
 
@@ -1822,11 +1816,11 @@ public class SDLActivity extends Activity {
 			if (result > 0) {
 				i += result;
 			} else if (result == 0) {
-//				try {
-//					Thread.sleep(1);
-//				} catch (InterruptedException e) {
-//					// Nom nom
-//				}
+				// try {
+				// Thread.sleep(1);
+				// } catch (InterruptedException e) {
+				// // Nom nom
+				// }
 			} else {
 				Log.w("SDL", "SDL audio: error return from write(short)");
 				return;
