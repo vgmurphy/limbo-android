@@ -421,6 +421,11 @@ JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_start(
 
 	LOGV("MEM= %d", mem);
 
+	fid = (*env)->GetFieldID(env, c, "cpuNum", "I");
+	int cpuNum = (*env)->GetIntField(env, thiz, fid);
+
+	LOGV("CPU Num= %d", cpuNum);
+
 	fid = (*env)->GetFieldID(env, c, "disableacpi", "I");
 	int disableacpi = (*env)->GetIntField(env, thiz, fid);
 
@@ -620,7 +625,7 @@ JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_start(
 	}
 	if (enablevnc) {
 		params += 2;
-	}else {
+	} else {
 		//SDL needs keyboard layout
 		params += 2; //For -k option
 	}
@@ -629,14 +634,15 @@ JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_start(
 	params += 2; //For -smp option
 	params += 2; //For -M option
 
-
-
 	if (strncmp(arch_str, "arm", 3) == 0) {
 		params += 6; //For kernel, initrd, and append options
 	}
 
 	char mem_str[MAX_STRING_LEN] = "128";
 	sprintf(mem_str, "%d", mem);
+
+	char cpu_num_str[MAX_STRING_LEN] = "1";
+	sprintf(cpu_num_str, "%d", cpuNum);
 
 	int i = 0;
 	LOGV("Params = %d", params);
@@ -835,7 +841,7 @@ JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_start(
 	}
 
 	strcpy(argv[param++], "-smp");
-	strcpy(argv[param++], "1");
+	strcpy(argv[param++], cpu_num_str);
 
 	strcpy(argv[param++], "-M");
 	if (strncmp(arch_str, "arm", 3) == 0) {

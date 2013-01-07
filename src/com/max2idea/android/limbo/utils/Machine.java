@@ -63,6 +63,8 @@ public class Machine {
 
 	public String snapshot_name = "";
 
+	public int cpuNum =1;
+
 	   public Machine(String machinename) {
 		   this.machinename = machinename;
 	   }

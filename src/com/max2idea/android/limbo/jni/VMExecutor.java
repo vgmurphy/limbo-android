@@ -46,6 +46,7 @@ public class VMExecutor {
 	public int aiomaxthreads = 1;
 	// Default Settings
 	private int memory = 128;
+	private int cpuNum = 128;
 	private String bootdevice = null;
 	// net
 	private String net_cfg = "None";
@@ -82,6 +83,7 @@ public class VMExecutor {
 	public VMExecutor(Machine machine) {
 
 		this.memory = machine.memory;
+		this.cpuNum = machine.cpuNum;
 		this.vga_type = machine.vga_type;
 		this.hd_cache = machine.hd_cache;
 		this.snapshot_name = machine.snapshot_name;

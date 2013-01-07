@@ -110,6 +110,7 @@ public class LimboActivity extends Activity {
 	public static VMExecutor vmexecutor;
 	public boolean userPressedUI = false;
 	public boolean userPressedCPU = false;
+	public boolean userPressedCPUNum = false;
 	public boolean userPressedMachine = false;
 	public boolean userPressedRAM = false;
 	public boolean userPressedCDROM = false;
@@ -147,6 +148,7 @@ public class LimboActivity extends Activity {
 
 	public void setUserPressed(boolean pressed) {
 		userPressedCPU = pressed;
+		userPressedCPUNum = pressed;
 		userPressedUI = pressed;
 		userPressedMachine = pressed;
 		userPressedRAM = pressed;
@@ -188,6 +190,7 @@ public class LimboActivity extends Activity {
 	private String output;
 	private Spinner mMachine;
 	private Spinner mCPU;
+	private Spinner mCPUNum;
 	private Spinner mKernel;
 	private Spinner mInitrd;
 	private Spinner mHDA;
@@ -276,6 +279,7 @@ public class LimboActivity extends Activity {
 		// TODO Auto-generated method stub
 		  userPressedUI = false;
 		  userPressedCPU = false;
+		  userPressedCPUNum = false;
 		  userPressedMachine = false;
 		  userPressedRAM = false;
 		  userPressedCDROM = false;
@@ -302,6 +306,7 @@ public class LimboActivity extends Activity {
 		// TODO Auto-generated method stub
 		this.populateMachines();
 		this.populateCPUs();
+		this.populateCPUNum();
 		this.populateRAM();
 		this.populateKernel();
 		this.populateInitrd();
@@ -660,6 +665,7 @@ public class LimboActivity extends Activity {
 	public void enableOptions(boolean flag) {
 
 		this.mCPU.setEnabled(flag); // Disabled for now
+		this.mCPUNum.setEnabled(flag); // Disabled for now
 
 		this.mRamSize.setEnabled(flag); // Disabled for now
 
@@ -873,6 +879,7 @@ public class LimboActivity extends Activity {
 		// Everything Except removable devices
 		this.mMachine.setEnabled(flag);
 		this.mCPU.setEnabled(flag);
+		this.mCPUNum.setEnabled(flag);
 		this.mRamSize.setEnabled(flag);
 		if (this.currMachine != null && this.currMachine.cpu.startsWith("arm")) {
 			this.mKernel.setEnabled(flag); // Disabled for now
@@ -951,6 +958,7 @@ public class LimboActivity extends Activity {
 
 	public AutoScrollView mLyricsScroll;
 	private ArrayAdapter cpuAdapter;
+	private ArrayAdapter cpuNumAdapter;
 	private ArrayAdapter uiAdapter;
 	private ArrayAdapter machineAdapter;
 	private ArrayAdapter ramAdapter;
@@ -1127,6 +1135,7 @@ public class LimboActivity extends Activity {
 		this.mMachine = (Spinner) findViewById(R.id.machineval);
 
 		this.mCPU = (Spinner) findViewById(R.id.cpuval);
+		this.mCPUNum = (Spinner) findViewById(R.id.cpunumval);
 		this.mUI = (Spinner) findViewById(R.id.uival);
 		if (!Const.enable_SDL)
 			this.mUI.setEnabled(false);
@@ -1304,6 +1313,33 @@ public class LimboActivity extends Activity {
 			}
 		});
 
+		mCPUNum.setOnItemSelectedListener(new OnItemSelectedListener() {
+			public void onItemSelected(AdapterView<?> parentView,
+					View selectedItemView, int position, long id) {
+				String cpuNum = (String) ((ArrayAdapter) mCPUNum.getAdapter())
+						.getItem(position);
+				// Log.v(TAG, "Position " + position + " RAM = " + ram
+				// + " userPressed = " + userPressedRAM);
+				// SettingsManager.setLastCPU(activity,cpu);
+				if (userPressedCPUNum) {
+					currMachine.cpuNum = Integer.parseInt(cpuNum);
+					int ret = machineDB.update(currMachine,
+							MachineOpenHelper.CPUNUM, cpuNum);
+				}
+
+				userPressedCPUNum = true;
+				// Log.v("Ram list", "reset userPressed = " + userPressedRAM);
+
+			}
+
+			public void onNothingSelected(AdapterView<?> parentView) {
+				// your code here
+				// Log.v(TAG, "Nothing selected");
+				userPressedCPUNum = true;
+				// Log.v("Ram none", "reset userPressed = " + userPressedRAM);
+			}
+		});
+		
 		mRamSize.setOnItemSelectedListener(new OnItemSelectedListener() {
 			public void onItemSelected(AdapterView<?> parentView,
 					View selectedItemView, int position, long id) {
@@ -2112,6 +2148,7 @@ public class LimboActivity extends Activity {
 		this.currMachine = machineDB.getMachine(machine, snapshot);
 
 		this.setCPU(currMachine.cpu, false);
+		this.setCPUNum(currMachine.cpuNum, false);
 		this.setRAM(currMachine.memory, false);
 		this.setKernel(currMachine.kernel, false);
 		this.setInitrd(currMachine.initrd, false);
@@ -2769,6 +2806,25 @@ public class LimboActivity extends Activity {
 		this.userPressedRAM = false;
 		this.mRamSize.invalidate();
 	}
+	
+	private void populateCPUNum() {
+		this.userPressedCPUNum = false;
+
+		String[] arraySpinner = new String[128];
+
+		for (int i = 0; i < arraySpinner.length; i++) {
+			arraySpinner[i] = (i + 1) + "";
+		}
+		;
+
+		cpuNumAdapter = new ArrayAdapter(this,
+				android.R.layout.simple_spinner_item, arraySpinner);
+		cpuNumAdapter
+				.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		this.mCPUNum.setAdapter(cpuNumAdapter);
+		this.userPressedCPUNum = false;
+		this.mCPUNum.invalidate();
+	}
 
 	// Set Hard Disk
 	private void setRAM(int ram, boolean userPressed) {
@@ -2780,6 +2836,20 @@ public class LimboActivity extends Activity {
 			mRamSize.setSelection(pos);
 		} else {
 			this.userPressedRAM = true;
+			// Log.v("RAM", "reset userPressed = " + userPressedRAM);
+		}
+	}
+	
+	
+	private void setCPUNum(int cpuNum, boolean userPressed) {
+		this.userPressedCPUNum = userPressed;
+		// Log.v("DB", "UserPressed: " + userPressedRAM + " RAM=" + ram);
+		if (cpuNum != 0) {
+			int pos = cpuNumAdapter.getPosition(cpuNum + "");
+			// Log.v("DB", "Got pos: " + pos + " for RAM=" + ram);
+			mCPUNum.setSelection(pos);
+		} else {
+			this.userPressedCPUNum= true;
 			// Log.v("RAM", "reset userPressed = " + userPressedRAM);
 		}
 	}
@@ -3210,15 +3280,15 @@ public class LimboActivity extends Activity {
 				"kvm64 (64Bit)"
 
 		// arm
-//		 , "arm926 (arm)", "arm946 (arm)", "arm1026 (arm)",
-//		 "arm1136 (arm)", "arm1136-r2 (arm)", "arm1176 (arm)",
-//		 "arm11mpcore (arm)", "cortex-m3 (arm)", "cortex-a8 (arm)",
-//		 "cortex-a8-r2 (arm)", "cortex-a9 (arm)", "cortex-a15 (arm)",
-//		 "ti925t (arm)", "pxa250 (arm)", "sa1100 (arm)", "sa1110 (arm)",
-//		 "pxa255 (arm)", "pxa260 (arm)", "pxa261 (arm)", "pxa262 (arm)",
-//		 "pxa270 (arm)", "pxa270-a0 (arm)", "pxa270-a1 (arm)",
-//		 "pxa270-b0 (arm)", "pxa270-b1 (arm)", "pxa270-c0 (arm)",
-//		 "pxa270-c5 (arm)", "any (arm)"
+		 , "arm926 (arm)", "arm946 (arm)", "arm1026 (arm)",
+		 "arm1136 (arm)", "arm1136-r2 (arm)", "arm1176 (arm)",
+		 "arm11mpcore (arm)", "cortex-m3 (arm)", "cortex-a8 (arm)",
+		 "cortex-a8-r2 (arm)", "cortex-a9 (arm)", "cortex-a15 (arm)",
+		 "ti925t (arm)", "pxa250 (arm)", "sa1100 (arm)", "sa1110 (arm)",
+		 "pxa255 (arm)", "pxa260 (arm)", "pxa261 (arm)", "pxa262 (arm)",
+		 "pxa270 (arm)", "pxa270-a0 (arm)", "pxa270-a1 (arm)",
+		 "pxa270-b0 (arm)", "pxa270-b1 (arm)", "pxa270-c0 (arm)",
+		 "pxa270-c5 (arm)", "any (arm)"
 		};
 
 		cpuAdapter = new ArrayAdapter(this,
