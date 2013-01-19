@@ -90,6 +90,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ===============================================================================
 Changelog:
 
+Limbo v0.9.4 (Jan 6, 2012)
+- Increased RAM Memory to 1GB.
+- New SDL User Interface.
+- Enabled External Mouse (Bluetooth)
+- Sound Emulation for SB16 (only under SDL Interface)
+- Fixed Keyboard CTRL,ALT keys and removed extra screens for VNC
+
 Limbo v0.9.3 (Nov 3, 2012)
 - Fixed crash issues while copying files inside VM, using sigaltstack instead of gthread.
 - Fixed issue with canceling image selection and enabled ejection of media (CD, Floppy).
