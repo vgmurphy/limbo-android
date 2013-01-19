@@ -56,6 +56,19 @@ public class SettingsManager extends PreferenceActivity {
         edit.commit();
     }
     
+    static String getAppend(Activity activity) {
+        String dnsServer = Const.append;
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
+        return prefs.getString("append", dnsServer);
+    }
+
+    public static void setAppend(Activity activity, String dnsServer) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
+        SharedPreferences.Editor edit = prefs.edit();
+        edit.putString("append", dnsServer);
+        edit.commit();
+    }
+    
     static String getUI(Activity activity) {
         String ui = Const.ui;
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);

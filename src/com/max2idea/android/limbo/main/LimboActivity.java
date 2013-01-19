@@ -110,6 +110,7 @@ public class LimboActivity extends Activity {
 	public static VMExecutor vmexecutor;
 	public boolean userPressedUI = false;
 	public boolean userPressedCPU = false;
+	public boolean userPressedMachineType = false;
 	public boolean userPressedCPUNum = false;
 	public boolean userPressedMachine = false;
 	public boolean userPressedRAM = false;
@@ -139,6 +140,7 @@ public class LimboActivity extends Activity {
 	private static final int IMPORT = 5;
 	private ImageView mStatus;
 	private EditText mDNS;
+	private EditText mAppend;
 	private boolean timeQuit = false;
 	private Object lockTime = new Object();
 	public static String currStatus = "READY";
@@ -148,6 +150,7 @@ public class LimboActivity extends Activity {
 
 	public void setUserPressed(boolean pressed) {
 		userPressedCPU = pressed;
+		userPressedMachineType = pressed;
 		userPressedCPUNum = pressed;
 		userPressedUI = pressed;
 		userPressedMachine = pressed;
@@ -190,6 +193,7 @@ public class LimboActivity extends Activity {
 	private String output;
 	private Spinner mMachine;
 	private Spinner mCPU;
+	private Spinner mMachineType;
 	private Spinner mCPUNum;
 	private Spinner mKernel;
 	private Spinner mInitrd;
@@ -277,35 +281,37 @@ public class LimboActivity extends Activity {
 
 	private void resetUserPressed() {
 		// TODO Auto-generated method stub
-		  userPressedUI = false;
-		  userPressedCPU = false;
-		  userPressedCPUNum = false;
-		  userPressedMachine = false;
-		  userPressedRAM = false;
-		  userPressedCDROM = false;
-		 userPressedHDCfg = false;
-		 userPressedSndCfg = false;
-		 userPressedVGACfg = false;
-		 userPressedNicCfg = false;
-		 userPressedNetCfg = false;
-		 userPressedBootDev = false;
-		 userPressedFDB = false;
-		 userPressedFDA = false;
-		 userPressedHDB = false;
-		 userPressedHDA = false;
-		 userPressedKernel = false;
-		 userPressedInitrd = false;
-		 userPressedACPI = false;
-		 userPressedHPET = false;
-		 userPressedBluetoothMouse = false;
-		 userPressedSnapshot = false;
-		 userPressedVNC = false;
+		userPressedUI = false;
+		userPressedCPU = false;
+		userPressedMachineType = false;
+		userPressedCPUNum = false;
+		userPressedMachine = false;
+		userPressedRAM = false;
+		userPressedCDROM = false;
+		userPressedHDCfg = false;
+		userPressedSndCfg = false;
+		userPressedVGACfg = false;
+		userPressedNicCfg = false;
+		userPressedNetCfg = false;
+		userPressedBootDev = false;
+		userPressedFDB = false;
+		userPressedFDA = false;
+		userPressedHDB = false;
+		userPressedHDA = false;
+		userPressedKernel = false;
+		userPressedInitrd = false;
+		userPressedACPI = false;
+		userPressedHPET = false;
+		userPressedBluetoothMouse = false;
+		userPressedSnapshot = false;
+		userPressedVNC = false;
 	}
 
 	private void populateAttributes() {
 		// TODO Auto-generated method stub
 		this.populateMachines();
 		this.populateCPUs();
+		this.populateMachineType();
 		this.populateCPUNum();
 		this.populateRAM();
 		this.populateKernel();
@@ -518,6 +524,13 @@ public class LimboActivity extends Activity {
 						Toast.LENGTH_SHORT).show();
 				populateMachines();
 				setMachine(machineValue);
+				if (LimboActivity.currMachine != null
+						&& currMachine.cpu != null
+						&& currMachine.cpu.endsWith("(arm)")) {
+					mKernel.setEnabled(true); // Disabled for now
+					mInitrd.setEnabled(true); // Disabled for now
+					mMachineType.setEnabled(true); // Disabled for now
+				}
 
 			}
 			if (messageType != null && messageType == Const.IMG_CREATED) {
@@ -570,20 +583,20 @@ public class LimboActivity extends Activity {
 			}
 			if (messageType != null && messageType == Const.VM_EXPORT) {
 				progDialog.dismiss();
-				Toast.makeText(activity, "Machines are exported in "
-						+ Const.DBFile, Toast.LENGTH_LONG).show();
+				Toast.makeText(activity,
+						"Machines are exported in " + Const.DBFile,
+						Toast.LENGTH_LONG).show();
 			}
 			if (messageType != null && messageType == Const.VM_IMPORT) {
 				progDialog.dismiss();
-				Toast.makeText(activity, " Machines have been imported from "
-						 + Const.DBFile, Toast.LENGTH_LONG).show();
-				 
+				Toast.makeText(activity,
+						" Machines have been imported from " + Const.DBFile,
+						Toast.LENGTH_LONG).show();
+
 				resetUserPressed();
 				populateAttributes();
 			}
-			
-			
-			
+
 		}
 	};
 
@@ -665,13 +678,16 @@ public class LimboActivity extends Activity {
 	public void enableOptions(boolean flag) {
 
 		this.mCPU.setEnabled(flag); // Disabled for now
+
 		this.mCPUNum.setEnabled(flag); // Disabled for now
 
 		this.mRamSize.setEnabled(flag); // Disabled for now
 
-		if (this.currMachine != null && this.currMachine.cpu.startsWith("arm")) {
+		if (this.currMachine != null && currMachine.cpu.endsWith("(arm)")) {
 			this.mKernel.setEnabled(flag); // Disabled for now
 			this.mInitrd.setEnabled(flag); // Disabled for now
+			this.mAppend.setEnabled(flag); // Disabled for now
+			this.mMachineType.setEnabled(flag); // Disabled for now
 		}
 
 		this.mHDA.setEnabled(flag); // Disabled for now
@@ -761,15 +777,12 @@ public class LimboActivity extends Activity {
 				"Exporting Machines...", true);
 		ExportMachines exporter = new ExportMachines();
 		exporter.execute();
-		
-		
-		
+
 	}
 
 	private void onImportMachines() {
 		// Warn the user that VMs with same names will be replaced
 		promptImportMachines();
-		
 
 	}
 
@@ -805,7 +818,7 @@ public class LimboActivity extends Activity {
 				// For each line create a Machine
 				progDialog = ProgressDialog.show(activity, "Please Wait",
 						"Importing Machines...", true);
-				
+
 				ImportMachines importer = new ImportMachines();
 				importer.execute();
 			}
@@ -881,9 +894,11 @@ public class LimboActivity extends Activity {
 		this.mCPU.setEnabled(flag);
 		this.mCPUNum.setEnabled(flag);
 		this.mRamSize.setEnabled(flag);
-		if (this.currMachine != null && this.currMachine.cpu.startsWith("arm")) {
+		if (this.currMachine != null && currMachine.cpu.endsWith("(arm)")) {
 			this.mKernel.setEnabled(flag); // Disabled for now
 			this.mInitrd.setEnabled(flag); // Disabled for now
+			this.mAppend.setEnabled(flag); // Disabled for now
+			this.mMachineType.setEnabled(flag); // Disabled for now
 		}
 		mHDA.setEnabled(flag);
 		mHDB.setEnabled(flag);
@@ -897,10 +912,10 @@ public class LimboActivity extends Activity {
 		if (mNetConfig.getSelectedItemPosition() > 0)
 			this.mNetDevices.setEnabled(flag);
 		this.mVGAConfig.setEnabled(flag);
-		
+
 		if (Const.enable_sound)
 			this.mSoundCardConfig.setEnabled(flag);
-		
+
 		this.mMultiAIO.setEnabled(flag);
 		this.mPrio.setEnabled(flag);
 
@@ -958,6 +973,7 @@ public class LimboActivity extends Activity {
 
 	public AutoScrollView mLyricsScroll;
 	private ArrayAdapter cpuAdapter;
+	private ArrayAdapter machineTypeAdapter;
 	private ArrayAdapter cpuNumAdapter;
 	private ArrayAdapter uiAdapter;
 	private ArrayAdapter machineAdapter;
@@ -992,7 +1008,7 @@ public class LimboActivity extends Activity {
 
 		if (currMachine != null
 				&& currMachine.cpu != null
-				&& currMachine.cpu.startsWith("arm")
+				&& currMachine.cpu.endsWith("(arm)")
 				&& (currMachine.kernel == null || currMachine.kernel.equals(""))) {
 			sendHandlerMessage(handler, Const.VM_NO_KERNEL);
 			return;
@@ -1010,6 +1026,7 @@ public class LimboActivity extends Activity {
 
 		// Global settings
 		vmexecutor.dns_addr = mDNS.getText().toString();
+		vmexecutor.append = mAppend.getText().toString();
 		if (ICS && this.mMultiAIO.isChecked()) {
 			vmexecutor.aiomaxthreads = Const.MAX_AIO_THREADS;
 		} else {
@@ -1132,9 +1149,17 @@ public class LimboActivity extends Activity {
 		this.mDNS.setFocusable(true);
 		this.mDNS.setText(SettingsManager.getDNSServer(activity));
 
+		this.mAppend = (EditText) findViewById(R.id.appendval);
+		this.mAppend.setFocusableInTouchMode(true);
+		this.mAppend.setFocusable(true);
+		this.mAppend.setEnabled(false);
+		this.mAppend.setText(SettingsManager.getAppend(activity));
+
 		this.mMachine = (Spinner) findViewById(R.id.machineval);
 
 		this.mCPU = (Spinner) findViewById(R.id.cpuval);
+		this.mMachineType = (Spinner) findViewById(R.id.machinetypeval);
+		this.mMachineType.setEnabled(false);
 		this.mCPUNum = (Spinner) findViewById(R.id.cpunumval);
 		this.mUI = (Spinner) findViewById(R.id.uival);
 		if (!Const.enable_SDL)
@@ -1161,9 +1186,10 @@ public class LimboActivity extends Activity {
 		this.mHDCacheConfig.setEnabled(false); // Disabled for now
 		this.mACPI = (CheckBox) findViewById(R.id.acpival);
 		this.mHPET = (CheckBox) findViewById(R.id.hpetval);
-		this.mVNCAllowExternal = (CheckBox) findViewById(R.id.vncexternalval); // No external
-																	// connections
-//		mVNCAllowExternal.setChecked(SettingsManager.getVNCAllowExternal(activity));
+		this.mVNCAllowExternal = (CheckBox) findViewById(R.id.vncexternalval); // No
+																				// external
+		// connections
+		// mVNCAllowExternal.setChecked(SettingsManager.getVNCAllowExternal(activity));
 		mVNCAllowExternal.setChecked(false);
 		this.mPrio = (CheckBox) findViewById(R.id.prioval); //
 		mPrio.setChecked(SettingsManager.getPrio(activity));
@@ -1263,6 +1289,12 @@ public class LimboActivity extends Activity {
 					currMachine.cpu = cpu;
 					int ret = machineDB.update(currMachine,
 							MachineOpenHelper.CPU, cpu);
+					if(currMachine.cpu.endsWith("(arm)")){
+						mKernel.setEnabled(true);
+						mInitrd.setEnabled(true);
+						mAppend.setEnabled(true);
+						mMachineType.setEnabled(true);
+					}
 				}
 				userPressedCPU = true;
 
@@ -1273,6 +1305,34 @@ public class LimboActivity extends Activity {
 				// your code here
 				// Log.v(TAG, "Nothing selected");
 				userPressedCPU = true;
+				// Log.v("CPU none", "reset userPressed = " + userPressedCPU);
+			}
+		});
+
+		mMachineType.setOnItemSelectedListener(new OnItemSelectedListener() {
+			public void onItemSelected(AdapterView<?> parentView,
+					View selectedItemView, int position, long id) {
+				// your code here
+
+				String machineType = (String) ((ArrayAdapter) mMachineType
+						.getAdapter()).getItem(position);
+				// Log.v(TAG, "Position " + position + " CPU = " + cpu
+				// + " userPressed = " + userPressedCPU);
+				// SettingsManager.setLastCPU(activity,cpu);
+				if (userPressedMachineType) {
+					currMachine.machine_type = machineType;
+					int ret = machineDB.update(currMachine,
+							MachineOpenHelper.MACHINE_TYPE, machineType);
+				}
+				userPressedMachineType = true;
+
+				// Log.v("CPU List", "reset userPressed = " + userPressedCPU);
+			}
+
+			public void onNothingSelected(AdapterView<?> parentView) {
+				// your code here
+				// Log.v(TAG, "Nothing selected");
+				userPressedMachineType = true;
 				// Log.v("CPU none", "reset userPressed = " + userPressedCPU);
 			}
 		});
@@ -1294,11 +1354,11 @@ public class LimboActivity extends Activity {
 				}
 				if (position == 0) {
 					mVNCAllowExternal.setEnabled(true);
-					if(mSnapshot.getSelectedItemPosition() == 0)
-					mSoundCardConfig.setEnabled(false);
+					if (mSnapshot.getSelectedItemPosition() == 0)
+						mSoundCardConfig.setEnabled(false);
 				} else {
 					mVNCAllowExternal.setEnabled(false);
-					if(mSnapshot.getSelectedItemPosition() == 0)
+					if (mSnapshot.getSelectedItemPosition() == 0)
 						mSoundCardConfig.setEnabled(true);
 				}
 				userPressedUI = true;
@@ -1339,7 +1399,7 @@ public class LimboActivity extends Activity {
 				// Log.v("Ram none", "reset userPressed = " + userPressedRAM);
 			}
 		});
-		
+
 		mRamSize.setOnItemSelectedListener(new OnItemSelectedListener() {
 			public void onItemSelected(AdapterView<?> parentView,
 					View selectedItemView, int position, long id) {
@@ -1873,26 +1933,46 @@ public class LimboActivity extends Activity {
 			}
 		});
 
-		//
-		mVNCAllowExternal.setOnCheckedChangeListener(new OnCheckedChangeListener() {
-			public void onCheckedChanged(CompoundButton viewButton,
-					boolean isChecked) {
+		mAppend.addTextChangedListener(new TextWatcher() {
 
-				if (isChecked) {
-					promptVNCAllowExternal(activity);
-				} else {
-					vnc_passwd = null;
-					vnc_allow_external = 0;
-					// SettingsManager.setVNCAllowExternal(activity, false);
-				}
-
+			public void afterTextChanged(Editable s) {
+				SettingsManager.setAppend(activity, mAppend.getText()
+						.toString());
 			}
 
-			public void onNothingSelected(AdapterView<?> parentView) {
-				// your code here
-				// Log.v(TAG, "Nothing selected");
+			public void beforeTextChanged(CharSequence s, int start, int count,
+					int after) {
+				// Log.d("seachScreen", "beforeTextChanged");
+			}
+
+			public void onTextChanged(CharSequence s, int start, int before,
+					int count) {
+				// Log.d("seachScreen", "onTextChanged");
 			}
 		});
+
+		//
+		mVNCAllowExternal
+				.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+					public void onCheckedChanged(CompoundButton viewButton,
+							boolean isChecked) {
+
+						if (isChecked) {
+							promptVNCAllowExternal(activity);
+						} else {
+							vnc_passwd = null;
+							vnc_allow_external = 0;
+							// SettingsManager.setVNCAllowExternal(activity,
+							// false);
+						}
+
+					}
+
+					public void onNothingSelected(AdapterView<?> parentView) {
+						// your code here
+						// Log.v(TAG, "Nothing selected");
+					}
+				});
 
 		mPrio.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 			public void onCheckedChanged(CompoundButton viewButton,
@@ -1931,6 +2011,7 @@ public class LimboActivity extends Activity {
 	}
 
 	private static String vnc_passwd = null;
+
 	public static String getVnc_passwd() {
 		return vnc_passwd;
 	}
@@ -2061,14 +2142,14 @@ public class LimboActivity extends Activity {
 					vnc_passwd = null;
 					vnc_allow_external = 0;
 					mVNCAllowExternal.setChecked(false);
-//					SettingsManager.setVNCAllowExternal(activity, false);
+					// SettingsManager.setVNCAllowExternal(activity, false);
 					return;
 				} else {
 					sendHandlerMessage(handler, Const.VNC_PASSWORD,
 							"vnc_passwd", "passwd");
 					vnc_passwd = a.getText().toString();
 					vnc_allow_external = 1;
-//					 SettingsManager.setVNCAllowExternal(activity, true);
+					// SettingsManager.setVNCAllowExternal(activity, true);
 				}
 
 			}
@@ -2078,7 +2159,7 @@ public class LimboActivity extends Activity {
 				vnc_passwd = null;
 				vnc_allow_external = 0;
 				mVNCAllowExternal.setChecked(false);
-//				 SettingsManager.setVNCAllowExternal(activity, false);
+				// SettingsManager.setVNCAllowExternal(activity, false);
 				return;
 			}
 		});
@@ -2086,7 +2167,7 @@ public class LimboActivity extends Activity {
 			@Override
 			public void onCancel(DialogInterface dialog) {
 				mVNCAllowExternal.setChecked(false);
-//				SettingsManager.setVNCAllowExternal(activity, false);
+				// SettingsManager.setVNCAllowExternal(activity, false);
 				vnc_passwd = null;
 				vnc_allow_external = 0;
 			}
@@ -2148,6 +2229,7 @@ public class LimboActivity extends Activity {
 		this.currMachine = machineDB.getMachine(machine, snapshot);
 
 		this.setCPU(currMachine.cpu, false);
+		this.setMachineType(currMachine.machine_type, false);
 		this.setCPUNum(currMachine.cpuNum, false);
 		this.setRAM(currMachine.memory, false);
 		this.setKernel(currMachine.kernel, false);
@@ -2341,28 +2423,27 @@ public class LimboActivity extends Activity {
 
 		@Override
 		protected Void doInBackground(Void... arg0) {
-			
-			//Export
+
+			// Export
 			String machinesToExport = machineDB.exportMachines();
 			FileUtils.saveFileContents(Const.DBFile, machinesToExport);
-			
+
 			return null;
 		}
 
 		@Override
 		protected void onPostExecute(Void test) {
-			
-			sendHandlerMessage(handler, Const.VM_EXPORT);
 
+			sendHandlerMessage(handler, Const.VM_EXPORT);
 
 		}
 	}
-	
+
 	private class ImportMachines extends AsyncTask<Void, Void, Void> {
 
 		@Override
 		protected Void doInBackground(Void... arg0) {
-			//Import
+			// Import
 			ArrayList<Machine> machines = FileUtils.getVMs(Const.DBFile);
 			if (machines == null) {
 				return null;
@@ -2381,18 +2462,18 @@ public class LimboActivity extends Activity {
 				addDriveToList(machine.kernel, "kernel");
 				addDriveToList(machine.initrd, "initrd");
 			}
-			
+
 			return null;
 		}
 
 		@Override
 		protected void onPostExecute(Void test) {
-			
+
 			sendHandlerMessage(handler, Const.VM_IMPORT);
 
 		}
 	}
-	
+
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
 
 		if (keyCode == KeyEvent.KEYCODE_BACK) {
@@ -2600,7 +2681,6 @@ public class LimboActivity extends Activity {
 
 	}
 
-
 	private ConnectionBean selected;
 
 	private void startvnc() {
@@ -2806,7 +2886,7 @@ public class LimboActivity extends Activity {
 		this.userPressedRAM = false;
 		this.mRamSize.invalidate();
 	}
-	
+
 	private void populateCPUNum() {
 		this.userPressedCPUNum = false;
 
@@ -2839,8 +2919,7 @@ public class LimboActivity extends Activity {
 			// Log.v("RAM", "reset userPressed = " + userPressedRAM);
 		}
 	}
-	
-	
+
 	private void setCPUNum(int cpuNum, boolean userPressed) {
 		this.userPressedCPUNum = userPressed;
 		// Log.v("DB", "UserPressed: " + userPressedRAM + " RAM=" + ram);
@@ -2849,7 +2928,7 @@ public class LimboActivity extends Activity {
 			// Log.v("DB", "Got pos: " + pos + " for RAM=" + ram);
 			mCPUNum.setSelection(pos);
 		} else {
-			this.userPressedCPUNum= true;
+			this.userPressedCPUNum = true;
 			// Log.v("RAM", "reset userPressed = " + userPressedRAM);
 		}
 	}
@@ -2989,6 +3068,19 @@ public class LimboActivity extends Activity {
 			mCPU.setSelection(pos);
 		} else {
 			this.userPressedCPU = true;
+			// Log.v("CPU", "reset userPressed = " + this.userPressedCPU);
+		}
+	}
+
+	private void setMachineType(String machineType, boolean userPressed) {
+		this.userPressedMachineType = userPressed;
+		// Log.v("DB", "UserPressed: " + userPressedCPU + " CPU=" + cpu);
+		if (machineType != null) {
+			int pos = machineTypeAdapter.getPosition(machineType);
+			// Log.v("DB", "Got pos: " + pos + " for CPU=" + cpu);
+			mMachineType.setSelection(pos);
+		} else {
+			this.userPressedMachineType = true;
 			// Log.v("CPU", "reset userPressed = " + this.userPressedCPU);
 		}
 	}
@@ -3272,24 +3364,36 @@ public class LimboActivity extends Activity {
 
 		String[] arraySpinner = {
 				// x86 32bit
-				"qemu32", "coreduo", "486", "pentium", "pentium2", "pentium3",
-				"athlon", "n270",
+				"Default (x86)",
+				"qemu32",
+				"coreduo",
+				"486",
+				"pentium",
+				"pentium2",
+				"pentium3",
+				"athlon",
+				"n270",
 
 				// x86 (64Bit)
-				"qemu64 (64Bit)", "phenom (64Bit)", "core2duo (64Bit)",
+				"Default (64Bit)",
+				"qemu64 (64Bit)",
+				"phenom (64Bit)",
+				"core2duo (64Bit)",
 				"kvm64 (64Bit)"
 
-		// arm
-		 , "arm926 (arm)", "arm946 (arm)", "arm1026 (arm)",
-		 "arm1136 (arm)", "arm1136-r2 (arm)", "arm1176 (arm)",
-		 "arm11mpcore (arm)", "cortex-m3 (arm)", "cortex-a8 (arm)",
-		 "cortex-a8-r2 (arm)", "cortex-a9 (arm)", "cortex-a15 (arm)",
-		 "ti925t (arm)", "pxa250 (arm)", "sa1100 (arm)", "sa1110 (arm)",
-		 "pxa255 (arm)", "pxa260 (arm)", "pxa261 (arm)", "pxa262 (arm)",
-		 "pxa270 (arm)", "pxa270-a0 (arm)", "pxa270-a1 (arm)",
-		 "pxa270-b0 (arm)", "pxa270-b1 (arm)", "pxa270-c0 (arm)",
-		 "pxa270-c5 (arm)", "any (arm)"
-		};
+				// arm
+//				,"Default (arm)",
+//				"arm926 (arm)", 
+//				"arm946 (arm)", "arm1026 (arm)",
+//				"arm1136 (arm)", "arm1136-r2 (arm)", "arm1176 (arm)",
+//				"arm11mpcore (arm)", "cortex-m3 (arm)", "cortex-a8 (arm)",
+//				"cortex-a8-r2 (arm)", "cortex-a9 (arm)", "cortex-a15 (arm)",
+//				"ti925t (arm)", "pxa250 (arm)", "sa1100 (arm)", "sa1110 (arm)",
+//				"pxa255 (arm)", "pxa260 (arm)", "pxa261 (arm)", "pxa262 (arm)",
+//				"pxa270 (arm)", "pxa270-a0 (arm)", "pxa270-a1 (arm)",
+//				"pxa270-b0 (arm)", "pxa270-b1 (arm)", "pxa270-c0 (arm)",
+//				"pxa270-c5 (arm)", "any (arm)" 
+				};
 
 		cpuAdapter = new ArrayAdapter(this,
 				android.R.layout.simple_spinner_item, arraySpinner);
@@ -3297,6 +3401,54 @@ public class LimboActivity extends Activity {
 				.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		this.mCPU.setAdapter(cpuAdapter);
 		this.mCPU.invalidate();
+	}
+
+	private void populateMachineType() {
+		this.userPressedMachineType = false;
+
+		String[] arraySpinner = {
+//				"beagle - Beagle board (OMAP3530)",
+//				"beaglexm - Beagle board XM (OMAP3630)",
+//				"collie - Collie PDA (SA-1110)",
+//				"nuri - Samsung NURI board (Exynos4210)",
+//				"smdkc210 - Samsung SMDKC210 board (Exynos4210)",
+//				"connex - Gumstix Connex (PXA255)",
+//				"verdex - Gumstix Verdex (PXA270)",
+//				"highbank - Calxeda Highbank (ECX-1000)",
+//				"integratorcp - ARM Integrator/CP (ARM926EJ-S) (default)",
+//				"mainstone - Mainstone II (PXA27x)",
+//				"musicpal - Marvell 88w8618 / MusicPal (ARM926EJ-S)",
+//				"n800 - Nokia N800 tablet aka. RX-34 (OMAP2420)",
+//				"n810 - Nokia N810 tablet aka. RX-44 (OMAP2420)",
+//				"n900 - Nokia N900 (OMAP3)",
+//				"sx1 - Siemens SX1 (OMAP310) V2",
+//				"sx1-v1 - Siemens SX1 (OMAP310) V1",
+//				"overo - Gumstix Overo board (OMAP3530)",
+//				"cheetah - Palm Tungsten|E aka. Cheetah PDA (OMAP310)",
+//				"realview-eb - ARM RealView Emulation Baseboard (ARM926EJ-S)",
+//				"realview-eb-mpcore - ARM RealView Emulation Baseboard (ARM11MPCore)",
+//				"realview-pb-a8 - ARM RealView Platform Baseboard for Cortex-A8",
+//				"realview-pbx-a9 - ARM RealView Platform Baseboard Explore for Cortex-A9",
+//				"akita -  Akita PDA (PXA270)",
+//				"spitz - Spitz PDA (PXA270)",
+//				"borzoi - Borzoi PDA (PXA270)",
+//				"terrier - Terrier PDA (PXA270)",
+//				"lm3s811evb - Stellaris LM3S811EVB",
+//				"lm3s6965evb - Stellaris LM3S6965EVB",
+//				"tosa - Tosa PDA (PXA255)",
+				"versatilepb - ARM Versatile/PB (ARM926EJ-S)",
+//				"versatileab - ARM Versatile/AB (ARM926EJ-S)",
+//				"vexpress-a9 - ARM Versatile Express for Cortex-A9",
+//				"vexpress-a15 - ARM Versatile Express for Cortex-A15",
+//				"z2 - Zipit Z2 (PXA27x)", 
+				};
+
+		machineTypeAdapter = new ArrayAdapter(this,
+				android.R.layout.simple_spinner_item, arraySpinner);
+		machineTypeAdapter
+				.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		this.mMachineType.setAdapter(machineTypeAdapter);
+		this.mMachineType.invalidate();
 	}
 
 	private void populateUI() {
@@ -3570,9 +3722,9 @@ public class LimboActivity extends Activity {
 	private void addDriveToList(String file, String type) {
 		// Check if exists
 		// Log.v(TAG, "Adding To list: " + type + ":" + file);
-		if(file==null)
+		if (file == null)
 			return;
-		
+
 		int res = favDB.getFavUrlSeq(file, type);
 		if (res == -1) {
 			if (type.equals("hda")) {
@@ -3746,7 +3898,8 @@ public class LimboActivity extends Activity {
 
 	private String checkStatus() {
 		String state = "READY";
-		if (vmexecutor != null && vmexecutor.get_state().equals("RUNNING")) {
+		if (vmexecutor != null && vmexecutor.libLoaded 
+				&& vmexecutor.get_state().equals("RUNNING")) {
 			state = "RUNNING";
 		} else if (vmexecutor != null) {
 			String save_state = vmexecutor.get_save_state();

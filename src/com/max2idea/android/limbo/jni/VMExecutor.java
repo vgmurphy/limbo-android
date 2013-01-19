@@ -74,8 +74,10 @@ public class VMExecutor {
 	private int width;
 	private int height;
 	private String arch = "x86";
-	private String append = "/dev/ram";
+	public String append = "";
 	public boolean busy = false;
+	private String machine_type;
+	public boolean libLoaded = false;
 
 
 	/**
@@ -95,23 +97,30 @@ public class VMExecutor {
 		this.kernel = machine.kernel;
 		this.initrd = machine.initrd;
 		this.cpu = machine.cpu;
+		
+		
 
+		
 		if (machine.cpu.endsWith("(arm)")) {
 			this.libqemu = FileUtils.getDataDir()
 					+ "/lib/libqemu-system-arm.so";
 			this.cpu = machine.cpu.split(" ")[0];
 			this.arch = "arm";
+			this.machine_type = machine.machine_type.split(" ")[0];
 		} else if (machine.cpu.endsWith("(64Bit)")) {
 			this.libqemu = FileUtils.getDataDir()
 					+ "/lib/libqemu-system-x86_64.so";
 			this.cpu = machine.cpu.split(" ")[0];
 			this.arch = "x86_64";
+			this.machine_type = "pc";
 		} else {
 			this.cpu = machine.cpu;
 			// x86_64 can run 32bit as well as no need for the extra lib
 			this.libqemu = FileUtils.getDataDir()
 					+ "/lib/libqemu-system-x86_64.so";
+			this.cpu = machine.cpu.split(" ")[0];
 			this.arch = "x86";
+			this.machine_type = "pc";
 		}
 
 		if (machine.cd_iso_path == null || machine.cd_iso_path.equals("None")) {
@@ -141,18 +150,6 @@ public class VMExecutor {
 			this.fdb_img_path = null;
 		} else {
 			this.fdb_img_path = machine.fdb_img_path;
-		}
-		if (machine.bootdevice == null) {
-			this.bootdevice = null;
-			this.append = "\"root=/dev/ram\"";
-		} else if (machine.bootdevice.equals("Default")) {
-			this.bootdevice = null;
-		} else if (machine.bootdevice.equals("CD Rom")) {
-			this.bootdevice = "d";
-		} else if (machine.bootdevice.equals("Floppy")) {
-			this.bootdevice = "a";
-		} else if (machine.bootdevice.equals("Hard Disk")) {
-			this.bootdevice = "c";
 		}
 
 		if (this.arch.equals("arm")) {
@@ -200,6 +197,7 @@ public class VMExecutor {
 		}else if(arch.equals("arm")){
 			System.loadLibrary("qemu-system-arm");
 		}
+		libLoaded=true;
 		
 
 	}

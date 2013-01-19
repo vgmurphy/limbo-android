@@ -416,6 +416,13 @@ JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_start(
 
 	LOGV("CPU= %s", cpu_str);
 
+	fid = (*env)->GetFieldID(env, c, "machine_type", "Ljava/lang/String;");
+	jstring jmachine_type = (*env)->GetObjectField(env, thiz, fid);
+	const char *machine_type_str = (*env)->GetStringUTFChars(env, jmachine_type,
+			0);
+
+	LOGV("Machine Type= %s", machine_type_str);
+
 	fid = (*env)->GetFieldID(env, c, "memory", "I");
 	int mem = (*env)->GetIntField(env, thiz, fid);
 
@@ -574,7 +581,11 @@ JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_start(
 
 	LOGV("Finished getting Java fields");
 
-	int params = 8;
+	int params = 6;
+
+	if (cpu_str != NULL && strcmp(cpu_str, "Default") != 0) {
+		params += 2;
+	}
 
 	if (hda_img_path_str != NULL) {
 		params += 2;
@@ -585,9 +596,9 @@ JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_start(
 	if (cdrom_iso_path_str != NULL) {
 		params += 2;
 	}
-	if (fda_img_path_str != NULL) {
+	//if (fda_img_path_str != NULL) { //Always define a diskette drive
 		params += 2;
-	}
+	//}
 	if (fdb_img_path_str != NULL) {
 		params += 2;
 	}
@@ -602,7 +613,7 @@ JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_start(
 	if (vga_type_str != NULL && strncmp(arch_str, "arm", 3) != 0) {
 		params += 2;
 	}
-	if (sound_card_str != NULL) {
+	if (sound_card_str != NULL || (strncmp(arch_str, "arm", 3) == 0)) {
 		params += 2;
 	}
 
@@ -635,7 +646,12 @@ JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_start(
 	params += 2; //For -M option
 
 	if (strncmp(arch_str, "arm", 3) == 0) {
-		params += 6; //For kernel, initrd, and append options
+		if (kernel_str != NULL && strcmp(kernel_str, "") != 0)
+			params += 2;
+		if (initrd_str != NULL && strcmp(initrd_str, "") != 0)
+			params += 2;
+		if (append_str != NULL && strcmp(append_str, "") != 0)
+			params += 2;
 	}
 
 	char mem_str[MAX_STRING_LEN] = "128";
@@ -655,19 +671,27 @@ JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_start(
 	strcpy(argv[param++], lib_path_str);
 
 	if (strncmp(arch_str, "arm", 3) == 0) {
-		strcpy(argv[param++], "-kernel");
-		strcpy(argv[param++], kernel_str);
+		if (kernel_str != NULL && strcmp(kernel_str, "") != 0) {
+			strcpy(argv[param++], "-kernel");
+			strcpy(argv[param++], kernel_str);
+		}
 
-		strcpy(argv[param++], "-initrd");
-		strcpy(argv[param++], initrd_str);
+		if (initrd_str != NULL && strcmp(initrd_str, "") != 0) {
+			strcpy(argv[param++], "-initrd");
+			strcpy(argv[param++], initrd_str);
+		}
 
-		strcpy(argv[param++], "-append");
-		strcpy(argv[param++], append_str);
-
+		if (append_str != NULL && strcmp(append_str, "") != 0) {
+			strcpy(argv[param++], "-append");
+			strcpy(argv[param++], append_str);
+		}
 	}
 
-	strcpy(argv[param++], "-cpu");
-	strcpy(argv[param++], cpu_str);
+	if (cpu_str != NULL
+			&& strncmp(cpu_str, "Default", 7) != 0) {
+		strcpy(argv[param++], "-cpu");
+		strcpy(argv[param++], cpu_str);
+	}
 
 	strcpy(argv[param++], "-m");
 	strcpy(argv[param++], mem_str);
@@ -737,8 +761,11 @@ JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_start(
 		LOGV("Adding FDA");
 		strcpy(argv[param++], "-fda");
 		strcpy(argv[param++], fda_img_path_str);
+	}else {
+		strcpy(argv[param++], "-drive"); //Always define floppy
+		strcpy(argv[param++], "index=0,if=floppy");
 	}
-	if (fdb_img_path_str != NULL) {
+	if (fdb_img_path_str != NULL) { //Second floppy is optional
 		LOGV("Adding FDB");
 		strcpy(argv[param++], "-fdb");
 		strcpy(argv[param++], fdb_img_path_str);
@@ -786,6 +813,10 @@ JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_start(
 		LOGV("Adding Sound: %s", sound_card_str);
 		strcpy(argv[param++], "-soundhw");
 		strcpy(argv[param++], sound_card_str);
+	}
+	if (strncmp(arch_str, "arm", 3) == 0) {
+		strcpy(argv[param++], "-soundhw");
+		strcpy(argv[param++], "all");
 	}
 
 	if (snapshot_name_str != NULL && strcmp(snapshot_name_str, "") != 0) {
@@ -841,14 +872,13 @@ JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_start(
 	}
 
 	strcpy(argv[param++], "-smp");
-	strcpy(argv[param++], cpu_num_str);
+	strcpy(argv[param], "sockets=");
+	strcat(argv[param], cpu_num_str);
+	strcat(argv[param], ",cores=1");
+	strcat(argv[param++], ",threads=1");
 
 	strcpy(argv[param++], "-M");
-	if (strncmp(arch_str, "arm", 3) == 0) {
-		strcpy(argv[param++], "versatilepb");
-	} else {
-		strcpy(argv[param++], "pc");
-	}
+	strcpy(argv[param++], machine_type_str);
 
 	argv[param] = NULL;
 	int argc = params - 1;

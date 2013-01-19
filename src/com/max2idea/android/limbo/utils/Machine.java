@@ -57,6 +57,7 @@ public class Machine {
 	public int disableacpi = 0;
 	public int disablehpet = 0;
 	public int bluetoothmouse = 0;
+	
         public int enableqmp = 0;
         public int enablevnc = 1;
 	public int status = Const.STATUS_NULL;
@@ -64,6 +65,8 @@ public class Machine {
 	public String snapshot_name = "";
 
 	public int cpuNum =1;
+
+	public String machine_type ;
 
 	   public Machine(String machinename) {
 		   this.machinename = machinename;

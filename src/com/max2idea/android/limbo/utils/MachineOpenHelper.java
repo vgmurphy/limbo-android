@@ -38,7 +38,7 @@ import java.util.Iterator;
  */
 public class MachineOpenHelper extends SQLiteOpenHelper {
 
-	private static final int DATABASE_VERSION = 3;
+	private static final int DATABASE_VERSION = 4;
 	private static final String DATABASE_NAME = "LIMBO";
 	private static final String MACHINE_TABLE_NAME = "machines";
 	// COlumns
@@ -49,6 +49,7 @@ public class MachineOpenHelper extends SQLiteOpenHelper {
 	public static final String MEMORY = "MEMORY";
 	public static final String KERNEL = "KERNEL";
 	public static final String INITRD = "INITRD";
+	public static final String MACHINE_TYPE = "MACHINETYPE";
 	public static final String CDROM = "CDROM";
 	public static final String FDA = "FDA";
 	public static final String FDB = "FDB";
@@ -114,7 +115,11 @@ public class MachineOpenHelper extends SQLiteOpenHelper {
 			+ INITRD
 			+ " TEXT, "
 			+ CPUNUM
-			+ " INTEGER " + ");";
+			+ " INTEGER, " 
+			+ MACHINE_TYPE
+			+ " TEXT " 
+			+ ");";
+	
 	private final Activity activity;
 	private String TAG = "MachineOpenHelper";
 
@@ -142,11 +147,13 @@ public class MachineOpenHelper extends SQLiteOpenHelper {
 					+ this.INITRD + " TEXT;");
 
 		}
-		if (newVersion >= 9 && oldVersion <= 8) {
+		if (newVersion >= 4 && oldVersion <= 3) {
 			Log.w("machineOpenHelper", "Upgrading database from version "
 					+ oldVersion + " to " + newVersion);
 			db.execSQL("ALTER TABLE " + MACHINE_TABLE_NAME + " ADD COLUMN "
 					+ this.CPUNUM + " TEXT;");
+			db.execSQL("ALTER TABLE " + MACHINE_TABLE_NAME + " ADD COLUMN "
+					+ this.MACHINE_TYPE + " TEXT;");
 
 		}
 
@@ -179,6 +186,7 @@ public class MachineOpenHelper extends SQLiteOpenHelper {
 		stateValues.put(this.SOUNDCARD_CONFIG, myMachine.soundcard);
 		stateValues.put(this.KERNEL, myMachine.kernel);
 		stateValues.put(this.INITRD, myMachine.initrd);
+		stateValues.put(this.MACHINE_TYPE, myMachine.machine_type);
 
 		SimpleDateFormat dateFormat = new SimpleDateFormat(
 				"yyyy-MM-dd HH:mm:ss");
@@ -276,7 +284,7 @@ public class MachineOpenHelper extends SQLiteOpenHelper {
 				+ " , " + this.DISABLE_ACPI + " , " + this.DISABLE_HPET + " , "
 				+ this.ENABLE_USBMOUSE + " , " + this.SNAPSHOT_NAME + " , "
 				+ this.BOOT_CONFIG + " , " + this.KERNEL + " , " + this.INITRD
-				+ " , " + this.CPUNUM + " from " + this.MACHINE_TABLE_NAME
+				+ " , " + this.CPUNUM + " , " + this.MACHINE_TYPE + " from " + this.MACHINE_TABLE_NAME
 				+ " where " + this.STATUS + " in ( " + Const.STATUS_CREATED
 				+ " , " + Const.STATUS_PAUSED + " " + " ) " + " and "
 				+ this.MACHINE_NAME + "=\"" + machine + "\"" + " and "
@@ -309,6 +317,7 @@ public class MachineOpenHelper extends SQLiteOpenHelper {
 			String kernel = cur.getString(18);
 			String initrd = cur.getString(19);
 			int cpuNum = (int) cur.getInt(20);
+			String machineType = cur.getString(21);
 
 			// Log.v("DB", "Got Machine: " + machinename);
 			// Log.v("DB", "Got cpu: " + cpu);
@@ -333,6 +342,7 @@ public class MachineOpenHelper extends SQLiteOpenHelper {
 			myMachine.kernel = kernel;
 			myMachine.initrd = initrd;
 			myMachine.cpuNum = cpuNum;
+			myMachine.machine_type = machineType;
 
 			break;
 		}
@@ -419,7 +429,7 @@ public class MachineOpenHelper extends SQLiteOpenHelper {
 				+ " , " + this.DISABLE_ACPI + " , " + this.DISABLE_HPET + " , "
 				+ this.ENABLE_USBMOUSE + " , " + this.SNAPSHOT_NAME + " , "
 				+ this.BOOT_CONFIG + " , " + this.KERNEL + " , " + this.INITRD
-				+ " , " + this.CPUNUM + " from " + this.MACHINE_TABLE_NAME
+				+ " , " + this.CPUNUM + " , " + this.MACHINE_TYPE + " from " + this.MACHINE_TABLE_NAME
 				+ "; ";
 
 		String arrStr = "";

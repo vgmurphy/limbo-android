@@ -82,6 +82,7 @@ public class Const {
     public static boolean NOT_ICS = true;
 	public static String dnsServer = "8.8.8.8";
 	public static String ui = "VNC";
+	public static String append = "root=/dev/sda1";
     
     
     
