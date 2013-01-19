@@ -39,6 +39,9 @@ extern "C" {
 #define perror(...) __android_log_print(ANDROID_LOG_VERBOSE, __func__, __VA_ARGS__)
 #define sdl_logerr(...) __android_log_print(ANDROID_LOG_VERBOSE, __func__, __VA_ARGS__)
 #define dolog(...) __android_log_print(ANDROID_LOG_VERBOSE, __func__, __VA_ARGS__)
+#define error_report(...) __android_log_print(ANDROID_LOG_VERBOSE, __func__, __VA_ARGS__)
+#define error_printf(...) __android_log_print(ANDROID_LOG_VERBOSE, __func__, __VA_ARGS__)
+#define error_vprintf(...) __android_log_print(ANDROID_LOG_VERBOSE, __func__, __VA_ARGS__)
 
 //DEBUG
 //#define LOGD_AIO(...) __android_log_print(ANDROID_LOG_VERBOSE, __func__,__VA_ARGS__)
