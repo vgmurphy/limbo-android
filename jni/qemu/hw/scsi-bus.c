@@ -196,6 +196,7 @@ static int scsi_qdev_exit(DeviceState *qdev)
 SCSIDevice *scsi_bus_legacy_add_drive(SCSIBus *bus, BlockDriverState *bdrv,
                                       int unit, bool removable, int bootindex)
 {
+	LOGD_AIO("Add drive: %d", unit);
     const char *driver;
     DeviceState *dev;
 
@@ -454,6 +455,7 @@ static int32_t scsi_target_send_command(SCSIRequest *req, uint8_t *buf)
 
 static void scsi_target_read_data(SCSIRequest *req)
 {
+	LOGD_AIO("Read Data");
     SCSITargetReq *r = DO_UPCAST(SCSITargetReq, req, req);
     uint32_t n;
 
@@ -468,6 +470,7 @@ static void scsi_target_read_data(SCSIRequest *req)
 
 static uint8_t *scsi_target_get_buf(SCSIRequest *req)
 {
+	LOGD_AIO("TargetReq");
     SCSITargetReq *r = DO_UPCAST(SCSITargetReq, req, req);
 
     return r->buf;
@@ -1319,12 +1322,14 @@ void scsi_req_data(SCSIRequest *req, int len)
 {
     uint8_t *buf;
     if (req->io_canceled) {
+    	LOGD_AIO("Cancelled");
         trace_scsi_req_data_canceled(req->dev->id, req->lun, req->tag, len);
         return;
     }
     trace_scsi_req_data(req->dev->id, req->lun, req->tag, len);
     assert(req->cmd.mode != SCSI_XFER_NONE);
     if (!req->sg) {
+    	LOGD_AIO("Transfer");
         req->resid -= len;
         req->bus->info->transfer_data(req, len);
         return;
@@ -1338,10 +1343,13 @@ void scsi_req_data(SCSIRequest *req, int len)
 
     buf = scsi_req_get_buf(req);
     if (req->cmd.mode == SCSI_XFER_FROM_DEV) {
+    	LOGD_AIO("DMA read");
         req->resid = dma_buf_read(buf, len, req->sg);
     } else {
+    	LOGD_AIO("DMA write");
         req->resid = dma_buf_write(buf, len, req->sg);
     }
+    LOGD_AIO("Continue");
     scsi_req_continue(req);
 }
 

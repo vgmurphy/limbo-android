@@ -19,7 +19,7 @@
  * the host adapter emulator.
  */
 
-//#define DEBUG_SCSI
+///#define DEBUG_SCSI
 
 #ifdef DEBUG_SCSI
 #define DPRINTF(fmt, ...) \
@@ -1454,6 +1454,7 @@ static int32_t scsi_send_command(SCSIRequest *req, uint8_t *buf)
 
     default:
         if (s->tray_open || !bdrv_is_inserted(s->qdev.conf.bs)) {
+        	DPRINTF("BDRV not inserted tag=0x%x\n", req->tag);
             scsi_check_condition(r, SENSE_CODE(NO_MEDIUM));
             return 0;
         }
@@ -1479,6 +1480,7 @@ static int32_t scsi_send_command(SCSIRequest *req, uint8_t *buf)
     case MECHANISM_STATUS:
     case SERVICE_ACTION_IN_16:
     case REQUEST_SENSE:
+    	DPRINTF("REQUEST_SENSE tag=0x%x\n", req->tag);
         rc = scsi_disk_emulate_command(r);
         if (rc < 0) {
             return 0;
@@ -1488,6 +1490,7 @@ static int32_t scsi_send_command(SCSIRequest *req, uint8_t *buf)
         break;
     case SYNCHRONIZE_CACHE:
         /* The request is used as the AIO opaque value, so add a ref.  */
+    	DPRINTF("SYNCHRONIZE_CACHE tag=0x%x\n", req->tag);
         scsi_req_ref(&r->req);
         bdrv_acct_start(s->qdev.conf.bs, &r->acct, 0, BDRV_ACCT_FLUSH);
         r->req.aiocb = bdrv_aio_flush(s->qdev.conf.bs, scsi_flush_complete, r);
@@ -1547,9 +1550,11 @@ static int32_t scsi_send_command(SCSIRequest *req, uint8_t *buf)
         }
         break;
     case WRITE_SAME_10:
+    	DPRINTF("WRITE_SAME_10 tag=0x%x\n", req->tag);
         len = lduw_be_p(&buf[7]);
         goto write_same;
     case WRITE_SAME_16:
+    	DPRINTF("WRITE_SAME_16 tag=0x%x\n", req->tag);
         len = ldl_be_p(&buf[10]) & 0xffffffffULL;
     write_same:
 
@@ -1557,6 +1562,7 @@ static int32_t scsi_send_command(SCSIRequest *req, uint8_t *buf)
                 r->req.cmd.lba, len);
 
         if (r->req.cmd.lba > s->qdev.max_lba) {
+        	DPRINTF("Illigel lba tag=0x%x\n", req->tag);
             goto illegal_lba;
         }
 
@@ -1564,6 +1570,7 @@ static int32_t scsi_send_command(SCSIRequest *req, uint8_t *buf)
          * We only support WRITE SAME with the unmap bit set for now.
          */
         if (!(buf[1] & 0x8)) {
+        	DPRINTF("WRITE SAME unmap bit tag=0x%x\n", req->tag);
             goto fail;
         }
 
@@ -1571,6 +1578,7 @@ static int32_t scsi_send_command(SCSIRequest *req, uint8_t *buf)
                           r->req.cmd.lba * (s->qdev.blocksize / 512),
                           len * (s->qdev.blocksize / 512));
         if (rc < 0) {
+        	DPRINTF("ERROR tag=0x%x error=%d\n", req->tag, rc);
             /* XXX: better error code ?*/
             goto fail;
         }
@@ -1581,22 +1589,27 @@ static int32_t scsi_send_command(SCSIRequest *req, uint8_t *buf)
         scsi_check_condition(r, SENSE_CODE(INVALID_OPCODE));
         return 0;
     fail:
+    	DPRINTF("FAIL tag=0x%x\n", req->tag);
         scsi_check_condition(r, SENSE_CODE(INVALID_FIELD));
         return 0;
     illegal_lba:
+    	DPRINTF("Illegal LBA tag=0x%x\n", req->tag);
         scsi_check_condition(r, SENSE_CODE(LBA_OUT_OF_RANGE));
         return 0;
     }
     if (r->sector_count == 0 && r->iov.iov_len == 0) {
+    	DPRINTF("Req Complete tag=0x%x\n", req->tag);
         scsi_req_complete(&r->req, GOOD);
     }
     len = r->sector_count * 512 + r->iov.iov_len;
     if (r->req.cmd.mode == SCSI_XFER_TO_DEV) {
+    	DPRINTF("MODE =SCSI_XFER_TO_DEV tag=0x%x\n", req->tag);
         return -len;
     } else {
         if (!r->sector_count) {
             r->sector_count = -1;
         }
+        DPRINTF("RET tag=0x%x len=%d\n", len);
         return len;
     }
 }
@@ -1618,6 +1631,7 @@ static void scsi_disk_reset(DeviceState *dev)
 
 static void scsi_destroy(SCSIDevice *dev)
 {
+	DPRINTF("Destroy\n");
     SCSIDiskState *s = DO_UPCAST(SCSIDiskState, qdev, dev);
 
     scsi_device_purge_requests(&s->qdev, SENSE_CODE(NO_SENSE));
@@ -1772,6 +1786,7 @@ static const SCSIReqOps scsi_disk_reqops = {
 static SCSIRequest *scsi_new_request(SCSIDevice *d, uint32_t tag, uint32_t lun,
                                      uint8_t *buf, void *hba_private)
 {
+	DPRINTF("New Request\n");
     SCSIDiskState *s = DO_UPCAST(SCSIDiskState, qdev, d);
     SCSIRequest *req;
 

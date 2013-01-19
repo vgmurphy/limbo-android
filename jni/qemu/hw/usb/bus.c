@@ -4,6 +4,7 @@
 #include "sysemu.h"
 #include "monitor.h"
 #include "trace.h"
+#include "../../../logutils.h"
 
 static void usb_bus_dev_print(Monitor *mon, DeviceState *qdev, int indent);
 

@@ -17,6 +17,7 @@
 #include "monitor.h"
 #include "sysemu.h"
 #include "blockdev.h"
+#include "../../../logutils.h"
 
 //#define DEBUG_MSD
 

@@ -18,27 +18,27 @@
  * TODO should return int, so callers can calculate width, but that
  * requires surgery to monitor_vprintf().  Left for another day.
  */
-void error_vprintf(const char *fmt, va_list ap)
-{
-    if (cur_mon) {
-        monitor_vprintf(cur_mon, fmt, ap);
-    } else {
-        vfprintf(stderr, fmt, ap);
-    }
-}
+//void error_vprintf(const char *fmt, va_list ap)
+//{
+//    if (cur_mon) {
+//        monitor_vprintf(cur_mon, fmt, ap);
+//    } else {
+//        vfprintf(stderr, fmt, ap);
+//    }
+//}
 
 /*
  * Print to current monitor if we have one, else to stderr.
  * TODO just like error_vprintf()
  */
-void error_printf(const char *fmt, ...)
-{
-    va_list ap;
-
-    va_start(ap, fmt);
-    error_vprintf(fmt, ap);
-    va_end(ap);
-}
+//void error_printf(const char *fmt, ...)
+//{
+//    va_list ap;
+//
+//    va_start(ap, fmt);
+//    error_vprintf(fmt, ap);
+//    va_end(ap);
+//}
 
 void error_printf_unless_qmp(const char *fmt, ...)
 {
@@ -203,13 +203,13 @@ void error_print_loc(void)
  * Prepend the current location and append a newline.
  * It's wrong to call this in a QMP monitor.  Use qerror_report() there.
  */
-void error_report(const char *fmt, ...)
-{
-    va_list ap;
-
-    error_print_loc();
-    va_start(ap, fmt);
-    error_vprintf(fmt, ap);
-    va_end(ap);
-    error_printf("\n");
-}
+//void error_report(const char *fmt, ...)
+//{
+//    va_list ap;
+//
+//    error_print_loc();
+//    va_start(ap, fmt);
+//    error_vprintf(fmt, ap);
+//    va_end(ap);
+//    error_printf("\n");
+//}

@@ -13,6 +13,7 @@
 #include "hw/usb.h"
 #include "hw/usb/desc.h"
 #include "qemu-char.h"
+#include "../../../logutils.h"
 
 //#define DEBUG_Serial
 
