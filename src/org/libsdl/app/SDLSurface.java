@@ -299,7 +299,7 @@ public class SDLSurface extends GLSurfaceView implements
 		// "Action=" + event.getAction() + ", X,Y=" + event.getX() + ","
 		// + event.getY() + " P=" + event.getPressure());
 		if (!firstTouch) {
-			SDLActivity.onNativeTouch(0, 0, MotionEvent.ACTION_MOVE, 0, 0, 0);
+			SDLActivity.onNativeTouch(0, 0, MotionEvent.ACTION_MOVE, SDLActivity.vm_width/2, SDLActivity.vm_height/2, 0);
 			firstTouch = true;
 		}
 		if (event.getPointerCount() > 1) {

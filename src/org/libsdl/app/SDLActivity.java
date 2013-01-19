@@ -200,7 +200,7 @@ public class SDLActivity extends Activity {
 						MotionEvent.ACTION_DOWN, 0, 0, 0);
 				SDLActivity.singleClick(a, 0);
 				SDLActivity.onNativeMouseReset(0, 0, MotionEvent.ACTION_MOVE,
-						0, 0, 0);
+						vm_width / 2, vm_height / 2, 0);
 				SDLActivity.enablebluetoothmouse = 1;
 
 			}
@@ -504,7 +504,8 @@ public class SDLActivity extends Activity {
 		}
 	}
 
-	private static void setDriveAttr(String fileType, String file, boolean userPressed) {
+	private static void setDriveAttr(String fileType, String file,
+			boolean userPressed) {
 		// TODO Auto-generated method stub
 		addDriveToList(file, fileType);
 		if (fileType != null && fileType.startsWith("cd") && file != null
@@ -1050,49 +1051,14 @@ public class SDLActivity extends Activity {
 	}
 
 	private void promptMouse() {
-		// TODO Auto-generated method stub
-		final AlertDialog alertDialog;
-		alertDialog = new AlertDialog.Builder(activity).create();
-		alertDialog.setTitle("Enable Trackpad Mouse");
 
-		RelativeLayout mLayout = new RelativeLayout(this);
-		mLayout.setId(12222);
-
-		TextView imageNameView = new TextView(activity);
-		imageNameView.setVisibility(View.VISIBLE);
-		imageNameView.setId(201012010);
-		imageNameView
-				.setText("Step 1: Disable Mouse Acceleration inside the Guest OS.\n\tFor DSL use command: dsl@box:/>xset m 1\n"
-						+ "Step 2: Move your mouse pointer to all desktop corners inside the Guest OS to calibrate.\n");
-
-		RelativeLayout.LayoutParams searchViewParams = new RelativeLayout.LayoutParams(
-				RelativeLayout.LayoutParams.FILL_PARENT,
-				RelativeLayout.LayoutParams.WRAP_CONTENT);
-		mLayout.addView(imageNameView, searchViewParams);
-		alertDialog.setView(mLayout);
-
-		final Handler handler = this.handler;
-
-		// alertDialog.setMessage(body);
-		alertDialog.setButton("OK", new DialogInterface.OnClickListener() {
-			public void onClick(DialogInterface dialog, int which) {
-				MotionEvent a = MotionEvent.obtain(0, 0,
-						MotionEvent.ACTION_DOWN, 0, 0, 0);
-				SDLActivity.singleClick(a, 0);
-				SDLActivity.onNativeMouseReset(0, 0, MotionEvent.ACTION_MOVE,
-						0, 0, 0);
-
-			}
-		});
-		alertDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-			@Override
-			public void onCancel(DialogInterface dialog) {
-
-				return;
-
-			}
-		});
-		alertDialog.show();
+		MotionEvent a = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0,
+				0);
+		SDLActivity.singleClick(a, 0);
+		SDLActivity.onNativeMouseReset(0, 0, MotionEvent.ACTION_MOVE,
+				vm_width / 2, vm_height / 2, 0);
+		Toast.makeText(this.getApplicationContext(),
+				"Mouse Trackpad Mode enabled", Toast.LENGTH_LONG).show();
 	}
 
 	private void onCtrlAltDel() {
