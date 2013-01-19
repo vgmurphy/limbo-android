@@ -1,132 +1,168 @@
-/* Copyright (C) 1997, 1998, 1999, 2000  Free Software Foundation, Inc.
-   This file is part of the GNU C Library.
+#ifndef _SCSI_GENERIC_H
+#define _SCSI_GENERIC_H
 
-   The GNU C Library is free software; you can redistribute it and/or
-   modify it under the terms of the GNU Lesser General Public
-   License as published by the Free Software Foundation; either
-   version 2.1 of the License, or (at your option) any later version.
-
-   The GNU C Library is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-   Lesser General Public License for more details.
-
-   You should have received a copy of the GNU Lesser General Public
-   License along with the GNU C Library; if not, write to the Free
-   Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-   02111-1307 USA.  */
+#include <linux/compiler.h>
 
 /*
    History:
     Started: Aug 9 by Lawrence Foard (entropy@world.std.com), to allow user
      process control of SCSI devices.
     Development Sponsored by Killy Corp. NY NY
+Original driver (sg.h):
+*       Copyright (C) 1992 Lawrence Foard
+Version 2 and 3 extensions to driver:
+*       Copyright (C) 1998 - 2006 Douglas Gilbert
+
+    Version: 3.5.34 (20060920)
+    This version is for 2.6 series kernels.
+
+    For a full changelog see http://www.torque.net/sg
+
+Map of SG verions to the Linux kernels in which they appear:
+       ----------        ----------------------------------
+       original          all kernels < 2.2.6
+       2.1.40            2.2.20
+       3.0.x             optional version 3 sg driver for 2.2 series
+       3.1.17++          2.4.0++
+       3.5.30++          2.6.0++
+
+Major new features in SG 3.x driver (cf SG 2.x drivers)
+	- SG_IO ioctl() combines function if write() and read()
+	- new interface (sg_io_hdr_t) but still supports old interface
+	- scatter/gather in user space, direct IO, and mmap supported
+
+ The normal action of this driver is to use the adapter (HBA) driver to DMA
+ data into kernel buffers and then use the CPU to copy the data into the 
+ user space (vice versa for writes). That is called "indirect" IO due to 
+ the double handling of data. There are two methods offered to remove the
+ redundant copy: 1) direct IO and 2) using the mmap() system call to map
+ the reserve buffer (this driver has one reserve buffer per fd) into the
+ user space. Both have their advantages.
+ In terms of absolute speed mmap() is faster. If speed is not a concern, 
+ indirect IO should be fine. Read the documentation for more information.
+
+ ** N.B. To use direct IO 'echo 1 > /proc/scsi/sg/allow_dio' or
+         'echo 1 > /sys/module/sg/parameters/allow_dio' is needed.
+         That attribute is 0 by default. **
+ 
+ Historical note: this SCSI pass-through driver has been known as "sg" for 
+ a decade. In broader kernel discussions "sg" is used to refer to scatter
+ gather techniques. The context should clarify which "sg" is referred to.
+
+ Documentation
+ =============
+ A web site for the SG device driver can be found at:
+	http://www.torque.net/sg  [alternatively check the MAINTAINERS file]
+ The documentation for the sg version 3 driver can be found at:
+ 	http://www.torque.net/sg/p/sg_v3_ho.html
+ This is a rendering from DocBook source [change the extension to "sgml"
+ or "xml"]. There are renderings in "ps", "pdf", "rtf" and "txt" (soon).
+ The SG_IO ioctl is now found in other parts kernel (e.g. the block layer).
+ For more information see http://www.torque.net/sg/sg_io.html
+
+ The older, version 2 documents discuss the original sg interface in detail:
+	http://www.torque.net/sg/p/scsi-generic.txt
+	http://www.torque.net/sg/p/scsi-generic_long.txt
+ Also available: <kernel_source>/Documentation/scsi/scsi-generic.txt
+
+ Utility and test programs are available at the sg web site. They are 
+ packaged as sg3_utils (for the lk 2.4 and 2.6 series) and sg_utils
+ (for the lk 2.2 series).
 */
 
-#ifndef _SCSI_SG_H
-#define _SCSI_SG_H	1
-
-//#include <features.h>
-
+#ifdef __KERNEL__
+extern int sg_big_buff; /* for sysctl */
+#endif
 
 /* New interface introduced in the 3.x SG drivers follows */
 
-/* Same structure as used by readv() Linux system call. It defines one
-   scatter-gather element. */
-typedef struct sg_iovec
-{
-  void * iov_base;            /* Starting address  */
-  size_t iov_len;             /* Length in bytes  */
+typedef struct sg_iovec /* same structure as used by readv() Linux system */
+{                       /* call. It defines one scatter-gather element. */
+    void __user *iov_base;      /* Starting address  */
+    size_t iov_len;             /* Length in bytes  */
 } sg_iovec_t;
 
 
 typedef struct sg_io_hdr
 {
-  int interface_id;           /* [i] 'S' for SCSI generic (required) */
-  int dxfer_direction;        /* [i] data transfer direction  */
-  unsigned char cmd_len;      /* [i] SCSI command length ( <= 16 bytes) */
-  unsigned char mx_sb_len;    /* [i] max length to write to sbp */
-  unsigned short int iovec_count; /* [i] 0 implies no scatter gather */
-  unsigned int dxfer_len;     /* [i] byte count of data transfer */
-  void * dxferp;              /* [i], [*io] points to data transfer memory
-				 or scatter gather list */
-  unsigned char * cmdp;       /* [i], [*i] points to command to perform */
-  unsigned char * sbp;        /* [i], [*o] points to sense_buffer memory */
-  unsigned int timeout;       /* [i] MAX_UINT->no timeout (unit: millisec) */
-  unsigned int flags;         /* [i] 0 -> default, see SG_FLAG... */
-  int pack_id;                /* [i->o] unused internally (normally) */
-  void * usr_ptr;             /* [i->o] unused internally */
-  unsigned char status;       /* [o] scsi status */
-  unsigned char masked_status;/* [o] shifted, masked scsi status */
-  unsigned char msg_status;   /* [o] messaging level data (optional) */
-  unsigned char sb_len_wr;    /* [o] byte count actually written to sbp */
-  unsigned short int host_status; /* [o] errors from host adapter */
-  unsigned short int driver_status;/* [o] errors from software driver */
-  int resid;                  /* [o] dxfer_len - actual_transferred */
-  unsigned int duration;      /* [o] time taken by cmd (unit: millisec) */
-  unsigned int info;          /* [o] auxiliary information */
-} sg_io_hdr_t;
+    int interface_id;           /* [i] 'S' for SCSI generic (required) */
+    int dxfer_direction;        /* [i] data transfer direction  */
+    unsigned char cmd_len;      /* [i] SCSI command length ( <= 16 bytes) */
+    unsigned char mx_sb_len;    /* [i] max length to write to sbp */
+    unsigned short iovec_count; /* [i] 0 implies no scatter gather */
+    unsigned int dxfer_len;     /* [i] byte count of data transfer */
+    void __user *dxferp;	/* [i], [*io] points to data transfer memory
+					      or scatter gather list */
+    unsigned char __user *cmdp; /* [i], [*i] points to command to perform */
+    void __user *sbp;		/* [i], [*o] points to sense_buffer memory */
+    unsigned int timeout;       /* [i] MAX_UINT->no timeout (unit: millisec) */
+    unsigned int flags;         /* [i] 0 -> default, see SG_FLAG... */
+    int pack_id;                /* [i->o] unused internally (normally) */
+    void __user * usr_ptr;      /* [i->o] unused internally */
+    unsigned char status;       /* [o] scsi status */
+    unsigned char masked_status;/* [o] shifted, masked scsi status */
+    unsigned char msg_status;   /* [o] messaging level data (optional) */
+    unsigned char sb_len_wr;    /* [o] byte count actually written to sbp */
+    unsigned short host_status; /* [o] errors from host adapter */
+    unsigned short driver_status;/* [o] errors from software driver */
+    int resid;                  /* [o] dxfer_len - actual_transferred */
+    unsigned int duration;      /* [o] time taken by cmd (unit: millisec) */
+    unsigned int info;          /* [o] auxiliary information */
+} sg_io_hdr_t;  /* 64 bytes long (on i386) */
 
+#define SG_INTERFACE_ID_ORIG 'S'
 
-/* Use negative values to flag difference from original sg_header structure.  */
-#define SG_DXFER_NONE -1        /* e.g. a SCSI Test Unit Ready command */
-#define SG_DXFER_TO_DEV -2      /* e.g. a SCSI WRITE command */
-#define SG_DXFER_FROM_DEV -3    /* e.g. a SCSI READ command */
-#define SG_DXFER_TO_FROM_DEV -4 /* treated like SG_DXFER_FROM_DEV with the
+/* Use negative values to flag difference from original sg_header structure */
+#define SG_DXFER_NONE (-1)      /* e.g. a SCSI Test Unit Ready command */
+#define SG_DXFER_TO_DEV (-2)    /* e.g. a SCSI WRITE command */
+#define SG_DXFER_FROM_DEV (-3)  /* e.g. a SCSI READ command */
+#define SG_DXFER_TO_FROM_DEV (-4) /* treated like SG_DXFER_FROM_DEV with the
 				   additional property than during indirect
 				   IO the user buffer is copied into the
 				   kernel buffers before the transfer */
-
+#define SG_DXFER_UNKNOWN (-5)   /* Unknown data direction */
 
 /* following flag values can be "or"-ed together */
 #define SG_FLAG_DIRECT_IO 1     /* default is indirect IO */
-#define SG_FLAG_LUN_INHIBIT 2   /* default is to put device's lun into */
-				/* the 2nd byte of SCSI command */
+#define SG_FLAG_UNUSED_LUN_INHIBIT 2   /* default is overwrite lun in SCSI */
+				/* command block (when <= SCSI_2) */
+#define SG_FLAG_MMAP_IO 4       /* request memory mapped IO */
 #define SG_FLAG_NO_DXFER 0x10000 /* no transfer of kernel buffers to/from */
 				/* user space (debug indirect IO) */
 
-/* The following 'info' values are "or"-ed together.  */
-#define SG_INFO_OK_MASK	0x1
-#define SG_INFO_OK	0x0	/* no sense, host nor driver "noise" */
-#define SG_INFO_CHECK	0x1     /* something abnormal happened */
+/* following 'info' values are "or"-ed together */
+#define SG_INFO_OK_MASK 0x1
+#define SG_INFO_OK 0x0          /* no sense, host nor driver "noise" */
+#define SG_INFO_CHECK 0x1       /* something abnormal happened */
 
-#define SG_INFO_DIRECT_IO_MASK	0x6
-#define SG_INFO_INDIRECT_IO 	0x0	/* data xfer via kernel buffers (or no xfer) */
-#define SG_INFO_DIRECT_IO 	0x2	/* direct IO requested and performed */
-#define SG_INFO_MIXED_IO 	0x4	/* part direct, part indirect IO */
+#define SG_INFO_DIRECT_IO_MASK 0x6
+#define SG_INFO_INDIRECT_IO 0x0 /* data xfer via kernel buffers (or no xfer) */
+#define SG_INFO_DIRECT_IO 0x2   /* direct IO requested and performed */
+#define SG_INFO_MIXED_IO 0x4    /* part direct, part indirect IO */
 
 
-/* Request information about a specific SG device, used by
-   SG_GET_SCSI_ID ioctl ().  */
-struct sg_scsi_id {
-  /* Host number as in "scsi<n>" where 'n' is one of 0, 1, 2 etc.  */
-  int host_no;
-  int channel;
-  /* SCSI id of target device.  */
-  int scsi_id;
-  int lun;
-  /* TYPE_... defined in <scsi/scsi.h>.  */
-  int scsi_type;
-  /* Host (adapter) maximum commands per lun.  */
-  short int h_cmd_per_lun;
-  /* Device (or adapter) maximum queue length.  */
-  short int d_queue_depth;
-  /* Unused, set to 0 for now.  */
-  int unused[2];
-};
+typedef struct sg_scsi_id { /* used by SG_GET_SCSI_ID ioctl() */
+    int host_no;        /* as in "scsi<n>" where 'n' is one of 0, 1, 2 etc */
+    int channel;
+    int scsi_id;        /* scsi id of target device */
+    int lun;
+    int scsi_type;      /* TYPE_... defined in scsi/scsi.h */
+    short h_cmd_per_lun;/* host (adapter) maximum commands per lun */
+    short d_queue_depth;/* device (or adapter) maximum queue length */
+    int unused[2];      /* probably find a good use, set 0 for now */
+} sg_scsi_id_t; /* 32 bytes long on i386 */
 
-/* Used by SG_GET_REQUEST_TABLE ioctl().  */
-typedef struct sg_req_info {
+typedef struct sg_req_info { /* used by SG_GET_REQUEST_TABLE ioctl() */
     char req_state;     /* 0 -> not used, 1 -> written, 2 -> ready to read */
     char orphan;        /* 0 -> normal request, 1 -> from interruped SG_IO */
     char sg_io_owned;   /* 0 -> complete with read(), 1 -> owned by SG_IO */
     char problem;       /* 0 -> no problem detected, 1 -> error to report */
     int pack_id;        /* pack_id associated with request */
-    void * usr_ptr;     /* user provided pointer (in new interface) */
+    void __user *usr_ptr;     /* user provided pointer (in new interface) */
     unsigned int duration; /* millisecs elapsed since written (req_state==1)
 			      or request duration (req_state==2) */
     int unused;
-} sg_req_info_t;
+} sg_req_info_t; /* 20 bytes long on i386 */
 
 
 /* IOCTLs: Those ioctls that are relevant to the SG 3.x drivers follow.
@@ -169,10 +205,11 @@ typedef struct sg_req_info {
 /* Returns -EBUSY if occupied. 3rd argument pointer to int (see next) */
 #define SG_SCSI_RESET 0x2284
 /* Associated values that can be given to SG_SCSI_RESET follow */
-#define SG_SCSI_RESET_NOTHING	0
-#define SG_SCSI_RESET_DEVICE	1
-#define SG_SCSI_RESET_BUS	2
-#define SG_SCSI_RESET_HOST	3
+#define		SG_SCSI_RESET_NOTHING	0
+#define		SG_SCSI_RESET_DEVICE	1
+#define		SG_SCSI_RESET_BUS	2
+#define		SG_SCSI_RESET_HOST	3
+#define		SG_SCSI_RESET_TARGET	4
 
 /* synchronous SCSI command ioctl, (only in version 3 interface) */
 #define SG_IO 0x2285   /* similar effect as write() followed by read() */
@@ -183,16 +220,18 @@ typedef struct sg_req_info {
 #define SG_SET_KEEP_ORPHAN 0x2287 /* 1 -> hold for read(), 0 -> drop (def) */
 #define SG_GET_KEEP_ORPHAN 0x2288
 
+/* yields scsi midlevel's access_count for this SCSI device */
+#define SG_GET_ACCESS_COUNT 0x2289  
 
-#define SG_SCATTER_SZ (8 * 4096)  /* PAGE_SIZE not available to user */
+
+#define SG_SCATTER_SZ (8 * 4096)
 /* Largest size (in bytes) a single scatter-gather list element can have.
-   The value must be a power of 2 and <= (PAGE_SIZE * 32) [131072 bytes on
-   i386]. The minimum value is PAGE_SIZE. If scatter-gather not supported
-   by adapter then this value is the largest data block that can be
-   read/written by a single scsi command. The user can find the value of
-   PAGE_SIZE by calling getpagesize() defined in unistd.h . */
+   The value used by the driver is 'max(SG_SCATTER_SZ, PAGE_SIZE)'.
+   This value should be a power of 2 (and may be rounded up internally).
+   If scatter-gather is not supported by adapter then this value is the
+   largest data block that can be read/written by a single scsi command. */
 
-#define SG_DEFAULT_RETRIES 1
+#define SG_DEFAULT_RETRIES 0
 
 /* Defaults, commented if they differ from original sg driver */
 #define SG_DEF_FORCE_LOW_DMA 0  /* was 1 -> memory below 16MB on i386 */
@@ -219,57 +258,54 @@ typedef struct sg_req_info Sg_req_info;
 #define SG_MAX_SENSE 16   /* this only applies to the sg_header interface */
 
 struct sg_header
- {
-   /* Length of incoming packet (including header).  */
-   int pack_len;
-   /* Maximal length of expected reply.  */
-   int reply_len;
-   /* Id number of packet.  */
-   int pack_id;
-   /* 0==ok, otherwise error number.  */
-   int result;
-   /* Force 12 byte command length for group 6 & 7 commands.  */
-   unsigned int twelve_byte:1;
-   /* SCSI status from target.  */
-   unsigned int target_status:5;
-   /* Host status (see "DID" codes).  */
-   unsigned int host_status:8;
-   /* Driver status+suggestion.  */
-   unsigned int driver_status:8;
-   /* Unused.  */
-   unsigned int other_flags:10;
-   /* Output in 3 cases:
-      when target_status is CHECK_CONDITION or
-      when target_status is COMMAND_TERMINATED or
-      when (driver_status & DRIVER_SENSE) is true.  */
-   unsigned char sense_buffer[SG_MAX_SENSE];
- };
+{
+    int pack_len;    /* [o] reply_len (ie useless), ignored as input */
+    int reply_len;   /* [i] max length of expected reply (inc. sg_header) */
+    int pack_id;     /* [io] id number of packet (use ints >= 0) */
+    int result;      /* [o] 0==ok, else (+ve) Unix errno (best ignored) */
+    unsigned int twelve_byte:1;
+	/* [i] Force 12 byte command length for group 6 & 7 commands  */
+    unsigned int target_status:5;   /* [o] scsi status from target */
+    unsigned int host_status:8;     /* [o] host status (see "DID" codes) */
+    unsigned int driver_status:8;   /* [o] driver status+suggestion */
+    unsigned int other_flags:10;    /* unused */
+    unsigned char sense_buffer[SG_MAX_SENSE]; /* [o] Output in 3 cases:
+	   when target_status is CHECK_CONDITION or
+	   when target_status is COMMAND_TERMINATED or
+	   when (driver_status & DRIVER_SENSE) is true. */
+};      /* This structure is 36 bytes long on i386 */
 
 
 /* IOCTLs: The following are not required (or ignored) when the sg_io_hdr_t
 	   interface is used. They are kept for backward compatibility with
 	   the original and version 2 drivers. */
 
-#define SG_SET_TIMEOUT		0x2201	/* Set timeout; *(int *)arg==timeout.  */
-#define SG_GET_TIMEOUT		0x2202	/* Get timeout; return timeout.  */
+#define SG_SET_TIMEOUT 0x2201  /* unit: jiffies (10ms on i386) */
+#define SG_GET_TIMEOUT 0x2202  /* yield timeout as _return_ value */
 
-/* Get/set command queuing state per fd (default is SG_DEF_COMMAND_Q). */
-#define SG_GET_COMMAND_Q	0x2270	/* Yields 0 (queuing off) or 1 (on).  */
-#define SG_SET_COMMAND_Q 	0x2271	/* Change queuing state with 0 or 1.  */
+/* Get/set command queuing state per fd (default is SG_DEF_COMMAND_Q.
+   Each time a sg_io_hdr_t object is seen on this file descriptor, this
+   command queuing flag is set on (overriding the previous setting). */
+#define SG_GET_COMMAND_Q 0x2270   /* Yields 0 (queuing off) or 1 (on) */
+#define SG_SET_COMMAND_Q 0x2271   /* Change queuing state with 0 or 1 */
 
-/* Turn on error sense trace (1..8), dump this device to log/console (9)
-   or dump all sg device states ( >9 ) to log/console.  */
-#define SG_SET_DEBUG		0x227e	/* 0 -> turn off debug */
+/* Turn on/off error sense trace (1 and 0 respectively, default is off).
+   Try using: "# cat /proc/scsi/sg/debug" instead in the v3 driver */
+#define SG_SET_DEBUG 0x227e    /* 0 -> turn off debug */
 
-#define SG_NEXT_CMD_LEN		0x2283	/* Override SCSI command length with given
-					   number on the next write() on this file
-					   descriptor.  */
+#define SG_NEXT_CMD_LEN 0x2283  /* override SCSI command length with given
+		   number on the next write() on this file descriptor */
+
 
 /* Defaults, commented if they differ from original sg driver */
-#define SG_DEFAULT_TIMEOUT (60*HZ) /* HZ == 'jiffies in 1 second' */
+#ifdef __KERNEL__
+#define SG_DEFAULT_TIMEOUT_USER	(60*USER_HZ) /* HZ == 'jiffies in 1 second' */
+#else
+#define SG_DEFAULT_TIMEOUT	(60*HZ)	     /* HZ == 'jiffies in 1 second' */
+#endif
+
 #define SG_DEF_COMMAND_Q 0     /* command queuing is always on when
 				  the new interface is used */
 #define SG_DEF_UNDERRUN_FLAG 0
 
-
-#endif	/* scsi/sg.h */
+#endif
