@@ -1,3 +1,9 @@
+<br>
+ =============== INSTRUCTIONS ==========
+<br><br>
+	For instructions, compatibility, and other details visit:
+<a href>http://code.google.com/p/limbo-android/wiki/LimboAndroid</a>
+<br><br>
  =============== LICENSE ===============
 <br> <br>
     This program is free software: you can redistribute it and/or modify
@@ -16,12 +22,11 @@
 
  =============== DESCRIPTION ===============
  <br><br>
- <font color="red">=> INSTRUCTIONS </font><br>
+ <font color="red">=> What is Limbo? </font><br>
  Limbo is a software emulator for Android devices. Currently it emulates 
  Intel 32bit and 64bit architectures for a variety of CPUs and peripheral devices.
- Emulation speed varies depending on your Android device. For a list of compatible OSes 
- and instructions visit the Limbo wiki:
- <a href="http://code.google.com/p/limbo-android/wiki/LimboAndroid">http://code.google.com/p/limbo-android/wiki/LimboAndroid</a><br>
+ Emulation speed varies depending on your Android device.
+
  <br><br>
  <font color="red">=> RECOMMENDED </font><br>
  To fully take advantage of Limbo you'll need to install a QWERTY keyboard for your Android device:
@@ -100,23 +105,22 @@ Limbo v0.9.1b (Aug 13, 2012)<br>
 <br><br>
 
  =============== THANKS ===============
+ <br><br>
  "And so, I captured this fancy, where all that we see, or seem, 
  is but a dream within a dream."   -- Edgar Allan Poe
 <br><br>
 <font color="red"> Thanks To:</font><br>
-<pre>
-    Fabrice Bellard <a href="http://bellard.org"></a>
-	Qemu team <a href="http://wiki.qemu.org/Main_Page"></a>
-	Glib team <a href="http://developer.gnome.org/glib"></a>
-	Iconv team <a href="http://www.gnu.org/software/libiconv"></a>
-	Libsdl team <a href="http://www.libsdl.org"></a>
-	Libjpeg team <a href="http://libjpeg.sourceforge.net"></a>
-	Libpng team <a href="http://www.libpng.org"></a>
-	Mikmod team <a href="http://mikmod.shlomifish.org"></a>
-	Libtremor team <a href="http://xiph.org/vorbis"></a>
-	Freetype team <a href="http://www.freetype.org"></a>
-	Android-vnc-viewer team <a href="http://code.google.com/p/android-vnc-viewer"></a>
-</pre>
+    Fabrice Bellard <a href>http://bellard.org</a><br>
+	Qemu team <a href>http://wiki.qemu.org/Main_Page></a><br>
+	Glib team <a href>http://developer.gnome.org/glib></a><br>
+	Iconv team <a href>http://www.gnu.org/software/libiconv></a><br>
+	Libsdl team <a href>http://www.libsdl.org></a><br>
+	Libjpeg team <a href>http://libjpeg.sourceforge.net></a><br>
+	Libpng team <a href>http://www.libpng.org></a><br>
+	Mikmod team <a href>http://mikmod.shlomifish.org></a><br>
+	Libtremor team <a href>http://xiph.org/vorbis></a><br>
+	Freetype team <a href>http://www.freetype.org></a><br>
+	Android-vnc-viewer team <a href>http://code.google.com/p/android-vnc-viewer></a><br>
 <br>
  =============== SOURCE CODE ===============
 <br>
