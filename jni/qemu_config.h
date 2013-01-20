@@ -17,3 +17,4 @@
  *
  */
 #include "../limbo-host-config.h"
+#define CONFIG_PROFILER 1

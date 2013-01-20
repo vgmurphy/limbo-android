@@ -1,6 +1,6 @@
 
 ### CONFIGURATIONS
-ARCH_CFLAGS = \
+ARCH_CFLAGS += \
 -std=gnu99 \
 -march=armv7-a \
 -mcpu=arm7 \

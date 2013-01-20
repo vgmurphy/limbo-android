@@ -27,4 +27,6 @@ obj/local/armeabi/libSDL2.so \
 obj/local/armeabi/libSDL2_mixer.so \
 obj/local/armeabi/libSDL2_image.so
 
+LOCAL_CFLAGS += $(ARCH_CFLAGS)
+
 include $(BUILD_SHARED_LIBRARY)

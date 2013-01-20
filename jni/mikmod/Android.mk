@@ -61,5 +61,7 @@ LOCAL_SRC_FILES := \
 	posix/strcasecmp.c \
 	posix/strdup.c \
 	posix/strstr.c
+	
+LOCAL_CFLAGS += $(ARCH_CFLAGS)
 
 include $(BUILD_SHARED_LIBRARY)

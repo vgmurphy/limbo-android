@@ -16,4 +16,6 @@ LOCAL_SRC_FILES := $(notdir $(filter-out %/playmus.c %/playwave.c, $(wildcard $(
 LOCAL_SHARED_LIBRARIES := SDL2 mikmod
 LOCAL_STATIC_LIBRARIES := tremor
 
+LOCAL_CFLAGS += $(ARCH_CFLAGS)
+
 include $(BUILD_SHARED_LIBRARY)

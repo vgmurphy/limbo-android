@@ -63,7 +63,8 @@ SYSTEM_INCLUDE = \
     -include $(LIMBO_JNI_ROOT)/logutils.h
 
 ANDROID_DEBUG_FLAGS = -g 
-OPTIM_CFLAGS =-O3
+OPTIM_CFLAGS =-O2
+ANDROID_CFLAGS = 
 
 ## Use of NDK_DEBUG=1 fails with png lib
 ifeq ($(NDK_DEBUG),1)
