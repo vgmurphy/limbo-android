@@ -4,11 +4,10 @@
           android:versionCode="9"
           android:versionName="0.9.5-TEST-A"
 >
-	<uses-feature android:glEsVersion="0x00020000"></uses-feature>
     <uses-sdk android:minSdkVersion="8" android:targetSdkVersion="8" />
     <application android:label="Limbo" android:icon="@drawable/limbo"
     debuggable="true"
-    android:hardwareAccelerated="true" android:largeHeap="true">
+    android:hardwareAccelerated="true" >
         <activity android:name=".LimboActivity"
                   android:label="Limbo PC Emulator"
                   android:screenOrientation="landscape"
