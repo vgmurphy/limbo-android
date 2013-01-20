@@ -115,7 +115,7 @@ public class FileUtils {
 				String [] machineAttrNames= { "MACHINE_NAME","CPU","MEMORY","CDROM","FDA","FDB","HDA","HDB",
 						"NETCONFIG","NICCONFIG","VGA","SOUNDCARD","HDCONFIG","DISABLE_ACPI",
 						"DISABLE_HPET","ENABLE_USBMOUSE","SNAPSHOT_NAME","BOOT_CONFIG",
-						"KERNEL","INITRD"};
+						"KERNEL","INITRD","CPUNUM","MACHINETYPE"};
 				
 				// read every line of the file into the line-variable, on line
 				// at the time
