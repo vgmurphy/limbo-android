@@ -4,10 +4,17 @@ Limbo PC Emulator (QEMU x86) for Android
 is but a dream within a dream." Edgar Allan Poe
 
 A Big Thanks to:
-Fabrice Bellard http://bellard.org/ and the Qemu team http://wiki.qemu.org/Main_Page
-glib team http://developer.gnome.org/glib/
-iconv team http://www.gnu.org/software/libiconv/
-android-vnc-viewer team http://code.google.com/p/android-vnc-viewer/
+Fabrice Bellard http://bellard.org
+Qemu team http://wiki.qemu.org/Main_Page
+Glib team http://developer.gnome.org/glib
+Iconv team http://www.gnu.org/software/libiconv
+Libsdl team http://www.libsdl.org
+Libjpeg team http://libjpeg.sourceforge.net
+Libpng team http://www.libpng.org
+Mikmod team http://mikmod.shlomifish.org
+Libtremor team http://xiph.org/vorbis
+Freetype team http://www.freetype.org
+Android-vnc-viewer team http://code.google.com/p/android-vnc-viewer
 
 Special contributions:
 Yair Lifshitz (port for x86 phones)
@@ -90,7 +97,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ===============================================================================
 Changelog:
 
-Limbo v0.9.4 (Jan 6, 2012)
+Limbo v0.9.5 (Jan 19, 2013)
+- Fixed Mouse relative position
+- Enabled SMP mode (multi-core emulation)
+
+Limbo v0.9.4 (Jan 6, 2013)
 - Increased RAM Memory to 1GB.
 - New SDL User Interface.
 - Enabled External Mouse (Bluetooth)
