@@ -1,7 +1,7 @@
 <br>
  =============== INSTRUCTIONS ==========
 <br><br>
-	For instructions, compatibility, and other details visit:
+	For instructions, compatibility, and other details please visit:<br>
 <a href>http://code.google.com/p/limbo-android/wiki/LimboAndroid</a>
 <br><br>
  =============== LICENSE ===============
@@ -36,6 +36,12 @@
  
 =============== CHANGELOG ===============
 <br><br>
+Limbo v0.9.5 (Jan 19, 2013)<br>
+<br>
+- Fixed Mouse relative position for SDL.<br>
+- Enabled SMP mode (multi-core emulation).<br>
+<br>
+
 Limbo v0.9.4 (Jan 6, 2012)<br>
 <br>
 - Increased RAM Memory to 1GB.<br>
