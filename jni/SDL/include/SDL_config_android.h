@@ -134,4 +134,5 @@
 #define SDL_POWER_ANDROID 1
 
 #include "../logutils.h"
+#include "../../sdl-config.h"
 #endif /* _SDL_config_android_h */
