@@ -1294,6 +1294,11 @@ public class LimboActivity extends Activity {
 						mInitrd.setEnabled(true);
 						mAppend.setEnabled(true);
 						mMachineType.setEnabled(true);
+					}else {
+						mKernel.setEnabled(false);
+						mInitrd.setEnabled(false);
+						mAppend.setEnabled(false);
+						mMachineType.setEnabled(false);
 					}
 				}
 				userPressedCPU = true;
@@ -2890,7 +2895,7 @@ public class LimboActivity extends Activity {
 	private void populateCPUNum() {
 		this.userPressedCPUNum = false;
 
-		String[] arraySpinner = new String[128];
+		String[] arraySpinner = new String[4];
 
 		for (int i = 0; i < arraySpinner.length; i++) {
 			arraySpinner[i] = (i + 1) + "";
