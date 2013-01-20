@@ -122,7 +122,5 @@ liblimbo:
 install: liblimbo
 	mkdir -p ../libs/$(TARGET_ARCH_ABI)
 	cp $(LIBLIMBO) ./../libs/$(TARGET_ARCH_ABI)
-	$(STRIP) --strip-unneeded ../libs/$(TARGET_ARCH_ABI)/$(LIBLIMBO)
-	ls -l ../libs/$(TARGET_ARCH_ABI)/$(LIBLIMBO)
 	
 ### end of qemu

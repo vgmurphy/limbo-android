@@ -176,11 +176,9 @@ qemu-img.so: qemu-img.o $(tools-obj-y) $(block-obj-y)
 	-llog -lm -lz \
 	$(P_THREAD) \
 	-o ./libqemu-img.so
-	cp libqemu-img.so ../	
+	cp libqemu-img.so ../
 	mkdir -p ../../libs/$(TARGET_ARCH_ABI)
 	cp libqemu-img.so ../../libs/$(TARGET_ARCH_ABI)/
-	$(STRIP) --strip-unneeded ../../libs/$(TARGET_ARCH_ABI)/libqemu-img.so
-
 	
 qemu-nbd$(EXESUF): qemu-nbd.o $(tools-obj-y) $(block-obj-y)
 	$(AR) rcs qemu-nbd.a qemu-nbd.o $(tools-obj-y) $(block-obj-y)

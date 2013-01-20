@@ -455,7 +455,6 @@ $(QEMU_PROG): $(obj-y) $(obj-$(TARGET_BASE_ARCH)-y)
 	cp lib$(QEMU_PROG).so ../../	
 	mkdir -p ../../../libs/$(TARGET_ARCH_ABI)
 	cp lib$(QEMU_PROG).so ../../../libs/$(TARGET_ARCH_ABI)/
-	$(STRIP) --strip-unneeded ../../../libs/$(TARGET_ARCH_ABI)/lib$(QEMU_PROG).so
 
 endif
 

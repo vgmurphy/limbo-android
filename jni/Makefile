@@ -1,14 +1,19 @@
 .PHONY: glib sdl
 
-sdlbuild=cd .. && ndk-build V=1 TARGET_ARCH=arm
+include android-toolchain.mak
+
+sdlbuild=cd .. && ndk-build V=1 TARGET_ARCH=arm 
+
+ifneq ($(NDK_DEBUG),1)
+	STRIP_LIBS=$(STRIP) --strip-unneeded ../libs/$(TARGET_ARCH_ABI)/*
+endif
 
 ifeq ($(TARGET_ARCH),x86)
 	sdlbuild=
-else
-	sdlbuild=cd .. && ndk-build V=1 TARGET_ARCH=arm
 endif
-
-all: config glib sdl limbo qemu  
+	
+all: config glib sdl limbo qemu
+	$(STRIP_LIBS) 
 
 glib:
 	$(MAKE) -f Makefile.glib V=1
@@ -39,11 +44,14 @@ release-arm:
 	$(MAKE) ultraclean
 	$(MAKE) config TARGET_ARCH=arm
 	$(MAKE) all TARGET_ARCH=arm
+	$(STRIP_LIBS) 
+	
 
 release-x86:
 	$(MAKE) ultraclean
 	$(MAKE) config TARGET_ARCH=x86
 	$(MAKE) all TARGET_ARCH=x86
+	$(STRIP_LIBS) 
 	
 release: release-x86 release-arm
 
@@ -65,6 +73,7 @@ ultraclean: distclean veryclean clean
 	-find . -name "*.d" -exec rm -rf {} \;
 	-find . -name "*.a" -exec rm -rf {} \;
 	-find . -name "*.so" -exec rm -rf {} \;
+
 	
 
 

@@ -27,7 +27,7 @@ OPTIM = \
 #   with Android libraries (soft)
 # ANDROID NDK: Still SLOWWWWWWWWWWWWWWW
 # LINARO Android toolchain supports VFP
-ARCH_CFLAGS += \
+ARCH_CFLAGS = \
 -std=gnu99 \
 -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__  \
 -march=armv5te -mtune=xscale -msoft-float

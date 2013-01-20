@@ -2,8 +2,8 @@
 # This is the only part of the file you need to change before when compiling.
 
 TARGET_ARCH ?= arm
-
 NDK_ROOT = /home/dev/tools/android-ndk-r8b
+MAKE += 
 
 ################ No modifications below this line are necessary #####################
 
@@ -64,12 +64,15 @@ SYSTEM_INCLUDE = \
 
 ANDROID_DEBUG_FLAGS = -g 
 OPTIM_CFLAGS =-O2
-ANDROID_CFLAGS = 
+ANDROID_CFLAGS =
 
 ## Use of NDK_DEBUG=1 fails with png lib
 ifeq ($(NDK_DEBUG),1)
 	# no optimization
-    ANDROID_CFLAGS += -O0
+    # ANDROID_CFLAGS += -O0
+    
+    # keep optimization
+    ANDROID_CFLAGS += $(OPTIM_CFLAGS)
     # enable debugging
     ANDROID_CFLAGS +=$(ANDROID_DEBUG_FLAGS)
 else
