@@ -2027,7 +2027,12 @@ static void dump_op_count(void)
 {
     int i;
     FILE *f;
-    f = fopen("/sdcard/limbox/tmp/op.log", "w");
+    LOGV("Opening log file for gprof\n" );
+    f = fopen("/sdcard/limbo/op.log", "w");
+    if(f==NULL){
+    	LOGV("Opening log file for gprof failed\n" );
+    	return;
+    }
     for(i = INDEX_op_end; i < NB_OPS; i++) {
         fprintf(f, "%s %" PRId64 "\n", tcg_op_defs[i].name, tcg_table_op_count[i]);
     }
