@@ -79,7 +79,6 @@ public class VMExecutor {
 	private String machine_type;
 	public boolean libLoaded = false;
 
-
 	/**
      */
 	public VMExecutor(Machine machine) {
@@ -97,10 +96,7 @@ public class VMExecutor {
 		this.kernel = machine.kernel;
 		this.initrd = machine.initrd;
 		this.cpu = machine.cpu;
-		
-		
 
-		
 		if (machine.cpu.endsWith("(arm)")) {
 			this.libqemu = FileUtils.getDataDir()
 					+ "/lib/libqemu-system-arm.so";
@@ -155,7 +151,16 @@ public class VMExecutor {
 		if (this.arch.equals("arm")) {
 			this.bootdevice = null;
 			this.append = "\"root=/dev/sda1\"";
+		} else if (machine.bootdevice.equals("Default")) {
+			this.bootdevice = null;
+		} else if (machine.bootdevice.equals("CD Rom")) {
+			this.bootdevice = "d";
+		} else if (machine.bootdevice.equals("Floppy")) {
+			this.bootdevice = "a";
+		} else if (machine.bootdevice.equals("Hard Disk")) {
+			this.bootdevice = "c";
 		}
+
 		if (machine.net_cfg == null || machine.net_cfg.equals("None")) {
 			this.net_cfg = "none";
 			this.nic_driver = null;
@@ -191,14 +196,13 @@ public class VMExecutor {
 		// FIXME: use standard load without the hardcoded path
 		// loadNativeLib(this., FileUtils.getDataDir() + "/lib");
 		System.loadLibrary("limbo");
-		
-		if(arch.equals("x86") || arch.equals("x86_64")){
+
+		if (arch.equals("x86") || arch.equals("x86_64")) {
 			System.loadLibrary("qemu-system-x86_64");
-		}else if(arch.equals("arm")){
+		} else if (arch.equals("arm")) {
 			System.loadLibrary("qemu-system-arm");
 		}
-		libLoaded=true;
-		
+		libLoaded = true;
 
 	}
 
