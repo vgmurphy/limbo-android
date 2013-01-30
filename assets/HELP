@@ -36,6 +36,11 @@
  
 =============== CHANGELOG ===============
 <br><br>
+
+Limbo v0.9.6 (Jan 30, 2013)<br>
+- Fixed Boot parameters<br>
+<br>
+
 Limbo v0.9.5 (Jan 19, 2013)<br>
 <br>
 - Fixed Mouse relative position for SDL.<br>
