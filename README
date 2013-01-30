@@ -98,8 +98,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 Changelog:
 
 Limbo v0.9.6 (Jan 30, 2013)
-- Fixed Mouse relative position for SDL
-- Enabled SMP mode (multi-core emulation)
+- Fixed Boot Params
 
 
 Limbo v0.9.5 (Jan 19, 2013)
