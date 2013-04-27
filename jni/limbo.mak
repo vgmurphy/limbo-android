@@ -80,7 +80,7 @@ OBJS=$(CFILES:%.c=%.o)
 
 LIMBO_OBJS=$(LIMBO_CFILES:%.c=%.o)
 
-LIBLIMBO = liblimbo.so
+LIBLIMBO = ../obj/local/$(TARGET_ARCH_ABI)/liblimbo.so
 
 all: $(OBJS) \
 	$(LIMBO_OBJS) \
@@ -116,6 +116,6 @@ liblimbo:
 	$(USR_LIB) \
 	-llog   \
     -ldl \
-	-o ../obj/local/$(TARGET_ARCH_ABI)/$(LIBLIMBO)
+	-o $(LIBLIMBO)
 
 ### end of qemu
