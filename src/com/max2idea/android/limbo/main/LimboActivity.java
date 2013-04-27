@@ -2347,26 +2347,27 @@ public class LimboActivity extends Activity {
 		setPlusParams.addRule(RelativeLayout.BELOW, imageNameView.getId());
 		mLayout.addView(size, setPlusParams);
 
-		final TextView preallocText = new TextView(this);
-		preallocText.setText("Preallocate? ");
-		preallocText.setTextSize(15);
-		RelativeLayout.LayoutParams preallocTParams = new RelativeLayout.LayoutParams(
-				RelativeLayout.LayoutParams.WRAP_CONTENT,
-				RelativeLayout.LayoutParams.WRAP_CONTENT);
-		preallocTParams.addRule(RelativeLayout.BELOW, size.getId());
-		mLayout.addView(preallocText, preallocTParams);
-		preallocText.setId(64512044);
-
-		final CheckBox prealloc = new CheckBox(this);
-		RelativeLayout.LayoutParams preallocParams = new RelativeLayout.LayoutParams(
-				RelativeLayout.LayoutParams.WRAP_CONTENT,
-				RelativeLayout.LayoutParams.WRAP_CONTENT);
-		preallocParams.addRule(RelativeLayout.BELOW, size.getId());
-		preallocParams.addRule(RelativeLayout.RIGHT_OF, preallocText.getId());
-		preallocParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT,
-				preallocText.getId());
-		mLayout.addView(prealloc, preallocParams);
-		prealloc.setId(64512344);
+		//TODO: Not working for now
+//		final TextView preallocText = new TextView(this);
+//		preallocText.setText("Preallocate? ");
+//		preallocText.setTextSize(15);
+//		RelativeLayout.LayoutParams preallocTParams = new RelativeLayout.LayoutParams(
+//				RelativeLayout.LayoutParams.WRAP_CONTENT,
+//				RelativeLayout.LayoutParams.WRAP_CONTENT);
+//		preallocTParams.addRule(RelativeLayout.BELOW, size.getId());
+//		mLayout.addView(preallocText, preallocTParams);
+//		preallocText.setId(64512044);
+//
+//		final CheckBox prealloc = new CheckBox(this);
+//		RelativeLayout.LayoutParams preallocParams = new RelativeLayout.LayoutParams(
+//				RelativeLayout.LayoutParams.WRAP_CONTENT,
+//				RelativeLayout.LayoutParams.WRAP_CONTENT);
+//		preallocParams.addRule(RelativeLayout.BELOW, size.getId());
+//		preallocParams.addRule(RelativeLayout.RIGHT_OF, preallocText.getId());
+//		preallocParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT,
+//				preallocText.getId());
+//		mLayout.addView(prealloc, preallocParams);
+//		prealloc.setId(64512344);
 
 		alertDialog.setView(mLayout);
 
@@ -2387,8 +2388,10 @@ public class LimboActivity extends Activity {
 				EditText a = (EditText) alertDialog.findViewById(201012010);
 				progDialog = ProgressDialog.show(activity, "Please Wait",
 						"Creating HD Image...", true);
+//				CreateImage createImg = new CreateImage(a.getText().toString(),
+//						hd_string, sizeInt, prealloc.isChecked());
 				CreateImage createImg = new CreateImage(a.getText().toString(),
-						hd_string, sizeInt, prealloc.isChecked());
+				hd_string, sizeInt, false);
 				createImg.execute();
 
 			}
