@@ -13,11 +13,12 @@ import android.widget.ImageView;
 import com.max2idea.android.limbo.main.Const;
 
 /**
- * Abstract interface between the VncCanvas and the bitmap and pixel data buffers that actually contain
- * the data.
- * This allows for implementations that use smaller bitmaps or buffers to save memory. 
+ * Abstract interface between the VncCanvas and the bitmap and pixel data
+ * buffers that actually contain the data. This allows for implementations that
+ * use smaller bitmaps or buffers to save memory.
+ * 
  * @author Michael A. MacDonald
- *
+ * 
  */
 abstract class AbstractBitmapData {
 	int framebufferwidth;
@@ -32,141 +33,171 @@ abstract class AbstractBitmapData {
 	VncCanvas vncCanvas;
 	private AbstractBitmapDrawable drawable;
 
-	AbstractBitmapData( RfbProto p, VncCanvas c)
-	{
-		rfb=p;
+	AbstractBitmapData(RfbProto p, VncCanvas c) {
+		rfb = p;
 		vncCanvas = c;
-		framebufferwidth=rfb.framebufferWidth;
-		framebufferheight=rfb.framebufferHeight;
+		framebufferwidth = rfb.framebufferWidth;
+		framebufferheight = rfb.framebufferHeight;
 	}
-	
-	synchronized void doneWaiting()
-	{
-		waitingForInput=false;
+
+	synchronized void doneWaiting() {
+		waitingForInput = false;
 	}
-	
-	final void invalidateMousePosition()
-	{
-		if (vncCanvas.connection.getUseLocalCursor())
-		{
-			if (drawable==null)
+
+	final void invalidateMousePosition() {
+		if (vncCanvas.connection.getUseLocalCursor()) {
+			if (drawable == null)
 				drawable = createDrawable();
-			drawable.setCursorRect(vncCanvas.mouseX,vncCanvas.mouseY);
+			drawable.setCursorRect(vncCanvas.mouseX, vncCanvas.mouseY);
 			vncCanvas.invalidate(drawable.cursorRect);
 		}
 	}
-	
+
 	/**
 	 * 
-	 * @return The smallest scale supported by the implementation; the scale at which
-	 * the bitmap would be smaller than the screen
+	 * @return The smallest scale supported by the implementation; the scale at
+	 *         which the bitmap would be smaller than the screen
 	 */
-	float getMinimumScale()
-	{
+	float getMinimumScale() {
 		double scale = 0.75;
 		int displayWidth = vncCanvas.getWidth();
 		int displayHeight = vncCanvas.getHeight();
-		for (; scale >= 0; scale -= 0.25)
-		{
-			if (scale * bitmapwidth < displayWidth || scale * bitmapheight < displayHeight)
+		for (; scale >= 0; scale -= 0.25) {
+			if (scale * bitmapwidth < displayWidth
+					|| scale * bitmapheight < displayHeight)
 				break;
 		}
-		return (float)(scale + 0.25);
+		return (float) (scale + 0.25);
 	}
-	
+
 	/**
-	 * Send a request through the protocol to get the data for the currently held bitmap
-	 * @param incremental True if we want incremental update; false for full update
+	 * Send a request through the protocol to get the data for the currently
+	 * held bitmap
+	 * 
+	 * @param incremental
+	 *            True if we want incremental update; false for full update
 	 */
-	abstract void writeFullUpdateRequest( boolean incremental) throws IOException;
-	
+	abstract void writeFullUpdateRequest(boolean incremental)
+			throws IOException;
+
 	/**
-	 * Determine if a rectangle in full-frame coordinates can be drawn in the existing buffer
-	 * @param x Top left x
-	 * @param y Top left y
-	 * @param w width (pixels)
-	 * @param h height (pixels)
-	 * @return True if entire rectangle fits into current screen buffer, false otherwise
+	 * Determine if a rectangle in full-frame coordinates can be drawn in the
+	 * existing buffer
+	 * 
+	 * @param x
+	 *            Top left x
+	 * @param y
+	 *            Top left y
+	 * @param w
+	 *            width (pixels)
+	 * @param h
+	 *            height (pixels)
+	 * @return True if entire rectangle fits into current screen buffer, false
+	 *         otherwise
 	 */
-	abstract boolean validDraw( int x, int y, int w, int h);
-	
+	abstract boolean validDraw(int x, int y, int w, int h);
+
 	/**
-	 * Return an offset in the bitmapPixels array of a point in full-frame coordinates
+	 * Return an offset in the bitmapPixels array of a point in full-frame
+	 * coordinates
+	 * 
 	 * @param x
 	 * @param y
 	 * @return Offset in bitmapPixels array of color data for that point
 	 */
-	abstract int offset( int x, int y);
-	
+	abstract int offset(int x, int y);
+
 	/**
-	 * Update pixels in the bitmap with data from the bitmapPixels array, positioned
-	 * in full-frame coordinates
-	 * @param x Top left x
-	 * @param y Top left y
-	 * @param w width (pixels)
-	 * @param h height (pixels)
+	 * Update pixels in the bitmap with data from the bitmapPixels array,
+	 * positioned in full-frame coordinates
+	 * 
+	 * @param x
+	 *            Top left x
+	 * @param y
+	 *            Top left y
+	 * @param w
+	 *            width (pixels)
+	 * @param h
+	 *            height (pixels)
 	 */
-	abstract void updateBitmap( int x, int y, int w, int h);
-	
+	abstract void updateBitmap(int x, int y, int w, int h);
+
 	/**
 	 * Create drawable appropriate for this data
+	 * 
 	 * @return drawable
 	 */
 	abstract AbstractBitmapDrawable createDrawable();
-	
+
 	/**
 	 * Call in UI thread; tell ImageView we've changed
-	 * @param v ImageView displaying bitmap data
+	 * 
+	 * @param v
+	 *            ImageView displaying bitmap data
 	 */
-	void updateView(ImageView v)
-	{
-		if (drawable==null)
+	void updateView(ImageView v) {
+		if (drawable == null)
 			drawable = createDrawable();
 		v.setImageDrawable(drawable);
 		v.invalidate();
 	}
-	
+
 	/**
 	 * Copy a rectangle from one part of the bitmap to another
-	 * @param src Rectangle in full-frame coordinates to be copied
-	 * @param dest Destination rectangle in full-frame coordinates
-	 * @param paint Paint specifier
+	 * 
+	 * @param src
+	 *            Rectangle in full-frame coordinates to be copied
+	 * @param dest
+	 *            Destination rectangle in full-frame coordinates
+	 * @param paint
+	 *            Paint specifier
 	 */
-	abstract void copyRect( Rect src, Rect dest, Paint paint);
-	
+	abstract void copyRect(Rect src, Rect dest, Paint paint);
+
 	/**
 	 * Draw a rectangle in the bitmap with coordinates given in full frame
-	 * @param x Top left x
-	 * @param y Top left y
-	 * @param w width (pixels)
-	 * @param h height (pixels)
-	 * @param paint How to draw
+	 * 
+	 * @param x
+	 *            Top left x
+	 * @param y
+	 *            Top left y
+	 * @param w
+	 *            width (pixels)
+	 * @param h
+	 *            height (pixels)
+	 * @param paint
+	 *            How to draw
 	 */
-	abstract void drawRect( int x, int y, int w, int h, Paint paint);
-	
+	abstract void drawRect(int x, int y, int w, int h, Paint paint);
+
 	/**
 	 * Scroll position has changed.
 	 * <p>
-	 * This method is called in the UI thread-- it updates internal status, but does
-	 * not change the bitmap data or send a network request until syncScroll is called
-	 * @param newx Position of left edge of visible part in full-frame coordinates
-	 * @param newy Position of top edge of visible part in full-frame coordinates
+	 * This method is called in the UI thread-- it updates internal status, but
+	 * does not change the bitmap data or send a network request until
+	 * syncScroll is called
+	 * 
+	 * @param newx
+	 *            Position of left edge of visible part in full-frame
+	 *            coordinates
+	 * @param newy
+	 *            Position of top edge of visible part in full-frame coordinates
 	 */
-	abstract void scrollChanged( int newx, int newy);
-	
+	abstract void scrollChanged(int newx, int newy);
+
 	/**
-	 * Sync scroll -- called from network thread; copies scroll changes from UI to network state
+	 * Sync scroll -- called from network thread; copies scroll changes from UI
+	 * to network state
 	 */
 	abstract void syncScroll();
 
 	/**
 	 * Release resources
 	 */
-	void dispose()
-	{
-            if(Const.NOT_ICS)
-		if ( mbitmap!=null )
-			mbitmap.recycle();
+	void dispose() {
+		if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH)
+			if (mbitmap != null)
+				mbitmap.recycle();
 		memGraphics = null;
 		bitmapPixels = null;
 	}

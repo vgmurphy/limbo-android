@@ -39,7 +39,7 @@ public class Const {
 	public static boolean debug = false;
 	public static boolean enable_SDL = true;
 	public static boolean enable_sound = true;
-	public static boolean enableAds = true;
+	public static boolean enableAds = false;
 	
 	public static String DBFile = Environment.getExternalStorageDirectory() + "/limbo/machines.csv";
     public static String APP_NAME = "Limbo PC Emulator (QEMU)";
@@ -79,7 +79,6 @@ public class Const {
     public static int VM_NO_INITRD = 1018;
     public static final int VM_EXPORT = 1019;
     public static final int VM_IMPORT = 1020;
-    public static boolean NOT_ICS = true;
 	public static String dnsServer = "8.8.8.8";
 	public static String ui = "VNC";
 	public static String append = "root=/dev/sda1";

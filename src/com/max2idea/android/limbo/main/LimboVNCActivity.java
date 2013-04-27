@@ -144,7 +144,7 @@ public class LimboVNCActivity extends android.androidVNC.VncCanvasActivity {
 		} else if (item.getItemId() == R.id.itemCenterMouse) {
 			return onMouse();
 		}
-		this.vncCanvas.requestFocus();
+//		this.vncCanvas.requestFocus();
 		return true;
 	}
 
@@ -278,10 +278,8 @@ public class LimboVNCActivity extends android.androidVNC.VncCanvasActivity {
 
 		@Override
 		protected void onPostExecute(Void test) {
-			try {
+			if (progDialog.isShowing()) {
 				progDialog.dismiss();
-			} catch (Exception e) {
-				e.printStackTrace();
 			}
 
 		}

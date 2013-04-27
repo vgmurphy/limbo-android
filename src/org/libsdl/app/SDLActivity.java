@@ -804,7 +804,7 @@ public class SDLActivity extends Activity {
 		Log.v("initEGL", "Version: " + majorVersion + "." + minorVersion);
 		EGL10 egl1 = (EGL10) EGLContext.getEGL();
 		if (mEGLDisplay != null && mEGLContext != null) {
-			Log.v("LimboEGL", "Destroying EGL Context");
+			Log.v("initEGL", "Destroying EGL Context");
 			egl1.eglMakeCurrent(mEGLDisplay, EGL10.EGL_NO_SURFACE,
 					EGL10.EGL_NO_SURFACE, EGL10.EGL_NO_CONTEXT);
 			egl1.eglDestroyContext(mEGLDisplay, mEGLContext);
@@ -812,17 +812,17 @@ public class SDLActivity extends Activity {
 		}
 
 		if (mEGLDisplay != null && mEGLSurface != null) {
-			Log.v("LimboEGL", "Destroying Surface");
+			Log.v("initEGL", "Destroying Surface");
 			egl1.eglDestroySurface(mEGLDisplay, mEGLSurface);
 			mEGLSurface = null;
 
 		}
 
-		Log.v("LimboEGL", "Destroying Display");
+		Log.v("initEGL", "Destroying Display");
 		SDLActivity.mEGLDisplay = null;
 
 		if (SDLActivity.mEGLDisplay == null) {
-			Log.v("SDL", "Starting up OpenGL ES " + majorVersion + "."
+			Log.v("initEGL", "Starting up OpenGL ES " + majorVersion + "."
 					+ minorVersion);
 
 			try {
@@ -849,7 +849,7 @@ public class SDLActivity extends Activity {
 				int[] num_config = new int[1];
 				if (!egl.eglChooseConfig(dpy, configSpec, configs, 1,
 						num_config) || num_config[0] == 0) {
-					Log.e("SDL", "No EGL config available");
+					Log.e("initEGL", "No EGL config available");
 					return false;
 				}
 				EGLConfig config = configs[0];
@@ -871,17 +871,17 @@ public class SDLActivity extends Activity {
 
 				SDLActivity.createEGLSurface();
 			} catch (Exception e) {
-				Log.v("SDL", e + "");
+				Log.v("initEGL", e + "");
 				for (StackTraceElement s : e.getStackTrace()) {
-					Log.v("SDL", s.toString());
+					Log.v("initEGL", s.toString());
 				}
 			}
 		} else
 			SDLActivity.createEGLSurface();
 
 		// Set Fit to Screen by Default
-		if (fitToScreen)
-			SDLActivity.setFitToScreen();
+//		if (fitToScreen)
+//			SDLActivity.setFitToScreen();
 
 		return true;
 	}
@@ -894,7 +894,7 @@ public class SDLActivity extends Activity {
 		SDLActivity.mEGLContext = egl.eglCreateContext(SDLActivity.mEGLDisplay,
 				SDLActivity.mEGLConfig, EGL10.EGL_NO_CONTEXT, contextAttrs);
 		if (SDLActivity.mEGLContext == EGL10.EGL_NO_CONTEXT) {
-			Log.e("SDL", "Couldn't create context");
+			Log.e("createEGLContext", "Couldn't create context");
 			return false;
 		}
 		return true;
@@ -906,23 +906,23 @@ public class SDLActivity extends Activity {
 			if (SDLActivity.mEGLContext == null)
 				createEGLContext();
 
-			Log.v("SDL", "Creating new EGL Surface");
+			Log.v("createEGLSurface", "Creating new EGL Surface");
 			EGLSurface surface = egl.eglCreateWindowSurface(
 					SDLActivity.mEGLDisplay, SDLActivity.mEGLConfig,
 					SDLActivity.mSurface, null);
 			if (surface == EGL10.EGL_NO_SURFACE) {
-				Log.e("SDL", "Couldn't create surface");
+				Log.e("createEGLSurface", "Couldn't create surface");
 				return false;
 			}
-			Log.v("SDL", "Making Current");
+			Log.v("createEGLSurface", "Making Current");
 			if (!egl.eglMakeCurrent(SDLActivity.mEGLDisplay, surface, surface,
 					SDLActivity.mEGLContext)) {
-				Log.e("SDL",
+				Log.e("createEGLSurface",
 						"Old EGL Context doesnt work, trying with a new one");
 				createEGLContext();
 				if (!egl.eglMakeCurrent(SDLActivity.mEGLDisplay, surface,
 						surface, SDLActivity.mEGLContext)) {
-					Log.e("SDL", "Failed making EGL Context current");
+					Log.e("createEGLSurface", "Failed making EGL Context current");
 					return false;
 				}
 			}
@@ -949,9 +949,9 @@ public class SDLActivity extends Activity {
 			egl.eglSwapBuffers(SDLActivity.mEGLDisplay, SDLActivity.mEGLSurface);
 
 		} catch (Exception e) {
-			Log.v("SDL", "flipEGL(): " + e);
+			Log.v("flipEGL", "Exception: " + e);
 			for (StackTraceElement s : e.getStackTrace()) {
-				Log.v("SDL", s.toString());
+				Log.v("flipEGL", s.toString());
 			}
 		}
 	}
@@ -1018,7 +1018,7 @@ public class SDLActivity extends Activity {
 				this.onMonitor();
 			}
 		} else if (item.getItemId() == R.id.itemExternalMouse) {
-			if (LimboActivity.ICS) {
+			if (android.os.Build.VERSION.SDK_INT == android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
 				this.promptBluetoothMouse(activity);
 			} else {
 				Toast.makeText(this.getApplicationContext(),
@@ -1259,24 +1259,24 @@ public class SDLActivity extends Activity {
 		// menu.findItem(vncCanvas.scaling.getId()).setChecked(true);
 		// }
 
-		if (this.monitorMode) {
-			menu.findItem(R.id.itemMonitor).setTitle("VM Console");
-
-		} else {
-			menu.findItem(R.id.itemMonitor).setTitle("Monitor Console");
-
-		}
-
-		// Menu inputMenu = menu.findItem(R.id.itemInputMode).getSubMenu();
-
-		if (this.mouseOn) { // Panning is disable for now
-			menu.findItem(R.id.itemMouse).setTitle("Pan (Mouse Off)");
-			menu.findItem(R.id.itemMouse).setIcon(R.drawable.pan);
-		} else {
-			menu.findItem(R.id.itemMouse).setTitle("Enable Mouse");
-			menu.findItem(R.id.itemMouse).setIcon(R.drawable.mouse);
-
-		}
+//		if (this.monitorMode) {
+//			menu.findItem(R.id.itemMonitor).setTitle("VM Console");
+//
+//		} else {
+//			menu.findItem(R.id.itemMonitor).setTitle("Monitor Console");
+//
+//		}
+//
+//		// Menu inputMenu = menu.findItem(R.id.itemInputMode).getSubMenu();
+//
+//		if (this.mouseOn) { // Panning is disable for now
+//			menu.findItem(R.id.itemMouse).setTitle("Pan (Mouse Off)");
+//			menu.findItem(R.id.itemMouse).setIcon(R.drawable.pan);
+//		} else {
+//			menu.findItem(R.id.itemMouse).setTitle("Enable Mouse");
+//			menu.findItem(R.id.itemMouse).setIcon(R.drawable.mouse);
+//
+//		}
 
 		return true;
 
@@ -1396,7 +1396,9 @@ public class SDLActivity extends Activity {
 		@Override
 		protected void onPostExecute(Void test) {
 			try {
-				progDialog.dismiss();
+				if (progDialog.isShowing()) {
+					progDialog.dismiss();
+				}
 				monitorMode = false;
 				sendCtrlAtlKey(KeyEvent.KEYCODE_1);
 			} catch (Exception e) {
@@ -1484,10 +1486,11 @@ public class SDLActivity extends Activity {
 		// Log.v("SDL", "onCreate()");
 		super.onCreate(savedInstanceState);
 
+		Log.v("SDL", "Max Mem = " + Runtime.getRuntime().maxMemory());
 		this.handler = commandHandler;
 		this.activity1 = this;
 
-		if (Const.NOT_ICS) {
+		if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
 			requestWindowFeature(Window.FEATURE_NO_TITLE);
 		}
 
@@ -1501,7 +1504,7 @@ public class SDLActivity extends Activity {
 
 		// Set up the surface
 		mSurface = getSDLSurface();
-		mSurface.setRenderer(new ClearRenderer());
+//		mSurface.setRenderer(new ClearRenderer());
 		// setContentView(mSurface);
 		createUI(0, 0);
 		SurfaceHolder holder = mSurface.getHolder();

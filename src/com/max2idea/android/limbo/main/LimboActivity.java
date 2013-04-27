@@ -40,6 +40,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -91,8 +92,7 @@ import com.max2idea.android.limbo.utils.FileInstaller;
 import com.max2idea.android.limbo.utils.FileUtils;
 import com.max2idea.android.limbo.utils.Machine;
 import com.max2idea.android.limbo.utils.MachineOpenHelper;
-import com.mopub.mobileads.MoPubView;
-import com.mopub.mobileads.MoPubView.OnAdLoadedListener;
+
 import java.io.File;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -226,8 +226,7 @@ public class LimboActivity extends Activity {
 	public static FavOpenHelper favDB;
 	public static MachineOpenHelper machineDB;
 	// ADS
-	private MoPubView mAdView;
-	public static boolean ICS = false;
+	
 
 	public static void quit() {
 		activity.finish();
@@ -240,12 +239,11 @@ public class LimboActivity extends Activity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		if (Const.NOT_ICS) {
-			requestWindowFeature(Window.FEATURE_NO_TITLE);
-		}
+//		requestWindowFeature(Window.FEATURE_NO_TITLE);
 
-		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-				WindowManager.LayoutParams.FLAG_FULLSCREEN);
+//
+//		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+//				WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
 		// Declare an instance variable for your MoPubView.
 
@@ -255,10 +253,6 @@ public class LimboActivity extends Activity {
 		favDB = new FavOpenHelper(activity);
 		machineDB = new MachineOpenHelper(activity);
 
-		// Setup UI
-		if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-			this.ICS = true;
-		}
 		this.setContentView(R.layout.main);
 		this.setupWidgets();
 		this.enableOptions(false);
@@ -426,10 +420,10 @@ public class LimboActivity extends Activity {
 			// Get files from last dir
 			onInstall();
 
-			try {
+			if (progDialog.isShowing()) {
 				progDialog.dismiss();
-			} catch (Exception e) {
 			}
+			
 			return null;
 		}
 
@@ -536,7 +530,9 @@ public class LimboActivity extends Activity {
 			if (messageType != null && messageType == Const.IMG_CREATED) {
 				String hdValue = (String) b.get("hd");
 				String imageValue = (String) b.get("image_name");
-				progDialog.dismiss();
+				if (progDialog.isShowing()) {
+					progDialog.dismiss();
+				}
 				Toast.makeText(activity,
 						"Image Created: " + imageValue + ".qcow2",
 						Toast.LENGTH_SHORT).show();
@@ -582,13 +578,17 @@ public class LimboActivity extends Activity {
 				}
 			}
 			if (messageType != null && messageType == Const.VM_EXPORT) {
-				progDialog.dismiss();
+				if (progDialog.isShowing()) {
+					progDialog.dismiss();
+				}
 				Toast.makeText(activity,
 						"Machines are exported in " + Const.DBFile,
 						Toast.LENGTH_LONG).show();
 			}
 			if (messageType != null && messageType == Const.VM_IMPORT) {
-				progDialog.dismiss();
+				if (progDialog.isShowing()) {
+					progDialog.dismiss();
+				}
 				Toast.makeText(activity,
 						" Machines have been imported from " + Const.DBFile,
 						Toast.LENGTH_LONG).show();
@@ -765,6 +765,11 @@ public class LimboActivity extends Activity {
 	}
 
 	private void onDeleteMachine() {
+		if(this.currMachine == null)
+		{
+			Toast.makeText(this, "Select a machine first!",
+					Toast.LENGTH_SHORT).show();
+		}
 		this.machineDB.deleteMachine(currMachine);
 		this.resetUserPressed();
 		this.populateAttributes();
@@ -935,24 +940,6 @@ public class LimboActivity extends Activity {
 	}
 
 	private void setupAds() {
-		mAdView = (MoPubView) findViewById(R.id.adview);
-		FileUtils fileutils = new FileUtils();
-		String adunit = "";
-		try {
-			adunit = fileutils.LoadFile(activity, "ADUNIT", false);
-		} catch (IOException ex) {
-			Logger.getLogger(LimboActivity.class.getName()).log(Level.SEVERE,
-					null, ex);
-		}
-		mAdView.setAdUnitId(adunit); // Enter your Ad Unit ID from www.mopub.com
-		mAdView.loadAd();
-
-		mAdView.setOnAdLoadedListener(new OnAdLoadedListener() {
-			public void OnAdLoaded(MoPubView mpv) {
-				// Toast.makeText(getApplicationContext(),
-				// "Ad successfully loaded.", Toast.LENGTH_SHORT).show();
-			}
-		});
 
 	}
 
@@ -1027,7 +1014,7 @@ public class LimboActivity extends Activity {
 		// Global settings
 		vmexecutor.dns_addr = mDNS.getText().toString();
 		vmexecutor.append = mAppend.getText().toString();
-		if (ICS && this.mMultiAIO.isChecked()) {
+		if (this.mMultiAIO.isChecked()) {
 			vmexecutor.aiomaxthreads = Const.MAX_AIO_THREADS;
 		} else {
 			vmexecutor.aiomaxthreads = Const.MIN_AIO_THREADS;
@@ -1737,6 +1724,26 @@ public class LimboActivity extends Activity {
 				}
 
 				userPressedNetCfg = true;
+				ApplicationInfo pInfo = null;
+
+				try {
+					pInfo = activity.getPackageManager().getApplicationInfo(
+							activity.getClass().getPackage().getName(),
+							PackageManager.GET_META_DATA);
+					Toast.makeText(getApplicationContext(),
+							"UserID = " + pInfo.uid,
+							Toast.LENGTH_LONG).show();
+				} catch (NameNotFoundException e) {
+					e.printStackTrace();
+				}
+				if (netfcg.equals("tap")){
+					try {
+						Process p = Runtime.getRuntime().exec("su");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
 				// Log.v("Net CFG List", "reset userPressed = "
 				// + userPressedNetCfg);
 
@@ -2182,13 +2189,13 @@ public class LimboActivity extends Activity {
 	}
 
 	public void promptMultiAIO(final Activity activity) {
-		if (!ICS) {
-			Toast.makeText(getApplicationContext(),
-					"Multithread AIO supported only for ICS and above!",
-					Toast.LENGTH_SHORT).show();
-			this.mMultiAIO.setChecked(false);
-			return;
-		}
+//		if (!ICS) {
+//			Toast.makeText(getApplicationContext(),
+//					"Multithread AIO supported only for ICS and above!",
+//					Toast.LENGTH_SHORT).show();
+//			this.mMultiAIO.setChecked(false);
+//			return;
+//		}
 		final AlertDialog alertDialog;
 		alertDialog = new AlertDialog.Builder(activity).create();
 		alertDialog.setTitle("Warning!");
@@ -2680,9 +2687,6 @@ public class LimboActivity extends Activity {
 		// this.releaseLocks();
 		super.onDestroy();
 		this.stopTimeListener();
-		if (mAdView != null) {
-			mAdView.destroy();
-		}
 
 	}
 
@@ -2715,7 +2719,7 @@ public class LimboActivity extends Activity {
 	private void startsdl() {
 		Log.v("LimboSDL", "Starting SDL");
 		Intent intent = null;
-		if (this.ICS) {
+		if (android.os.Build.VERSION.SDK_INT == android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
 			intent = new Intent(this, SDLActivityCompatibility.class);
 		} else {
 			intent = new Intent(this, SDLActivity.class);
@@ -2953,7 +2957,7 @@ public class LimboActivity extends Activity {
 
 	// Set Net Cfg
 	private void populateNet() {
-		String[] arraySpinner = { "None", "User" };
+		String[] arraySpinner = { "None", "User","TAP" };
 		netAdapter = new ArrayAdapter(this,
 				android.R.layout.simple_spinner_item, arraySpinner);
 		netAdapter
@@ -3025,7 +3029,7 @@ public class LimboActivity extends Activity {
 			userPressedMachine = true;
 			// Log.v("Mach", "reset userPressed = " + userPressedMachine);
 		}
-		mStart.requestFocus();
+//		mStart.requestFocus();
 	}
 
 	// Set Hard Disk
@@ -3344,7 +3348,7 @@ public class LimboActivity extends Activity {
 			mSnapshot.setSelection(0);
 			// Log.v("NET", "reset userPressed = " + this.userPressedBootDev);
 		}
-		mStart.requestFocus();
+//		mStart.requestFocus();
 	}
 
 	private void setNicDevice(String nic, boolean userPressed) {
@@ -3387,9 +3391,9 @@ public class LimboActivity extends Activity {
 				"kvm64 (64Bit)"
 
 				// arm
-//				,"Default (arm)",
-//				"arm926 (arm)", 
-//				"arm946 (arm)", "arm1026 (arm)",
+				,"Default (arm)",
+				"arm926 (arm)", 
+				"arm946 (arm)", "arm1026 (arm)",
 //				"arm1136 (arm)", "arm1136-r2 (arm)", "arm1176 (arm)",
 //				"arm11mpcore (arm)", "cortex-m3 (arm)", "cortex-a8 (arm)",
 //				"cortex-a8-r2 (arm)", "cortex-a9 (arm)", "cortex-a15 (arm)",
@@ -3412,6 +3416,7 @@ public class LimboActivity extends Activity {
 		this.userPressedMachineType = false;
 
 		String[] arraySpinner = {
+				"None",
 //				"beagle - Beagle board (OMAP3530)",
 //				"beaglexm - Beagle board XM (OMAP3630)",
 //				"collie - Collie PDA (SA-1110)",
@@ -3751,6 +3756,7 @@ public class LimboActivity extends Activity {
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
 		menu.clear();
+		
 
 		menu.add(0, INSTALL, 0, "Install Roms").setIcon(
 				android.R.drawable.ic_menu_agenda);

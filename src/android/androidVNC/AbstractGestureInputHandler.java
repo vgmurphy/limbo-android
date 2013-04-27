@@ -32,6 +32,10 @@ abstract class AbstractGestureInputHandler extends GestureDetector.SimpleOnGestu
 
 	@Override
 	public boolean onTouchEvent(MotionEvent evt) {
+		//MK
+		if(evt.getAction()==MotionEvent.ACTION_CANCEL)
+			return true;
+		
 		return gestures.onTouchEvent(evt);
 	}
 

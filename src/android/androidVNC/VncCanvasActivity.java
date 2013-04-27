@@ -209,6 +209,10 @@ public class VncCanvasActivity extends Activity {
 		 */
 		@Override
 		public boolean onTouchEvent(MotionEvent e) {
+			//MK
+			if(e.getAction()==MotionEvent.ACTION_CANCEL)
+				return true;
+			
 			if (dragMode) {
 				vncCanvas.changeTouchCoordinatesToFullFrame(e);
 				if (e.getAction() == MotionEvent.ACTION_UP) {
@@ -461,6 +465,11 @@ public class VncCanvasActivity extends Activity {
 		@Override
 		public boolean onTouchEvent(MotionEvent e) {
 
+			//MK
+			if(e.getAction()==MotionEvent.ACTION_CANCEL)
+				return true;
+			
+			
 			if (e.getPointerCount() > 1) {
 				// Log.v("Limbo", "Detected 2 finger tap in onTouchEvent");
 				rightClick(e);
@@ -676,7 +685,7 @@ public class VncCanvasActivity extends Activity {
 
 		super.onCreate(icicle);
 		activity = this;
-		if (Const.NOT_ICS) {
+		if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
 			requestWindowFeature(Window.FEATURE_NO_TITLE);
 
 		}
@@ -1098,6 +1107,10 @@ public class VncCanvasActivity extends Activity {
 
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
+		//MK
+		if(event.getAction()==MotionEvent.ACTION_CANCEL)
+			return true;
+		
 		return inputHandler.onTouchEvent(event);
 	}
 
@@ -1126,7 +1139,9 @@ public class VncCanvasActivity extends Activity {
 		list.setOnItemClickListener(new OnItemClickListener() {
 			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,
 					long arg3) {
+				if (dialog.isShowing()) {
 				dialog.dismiss();
+				}
 				COLORMODEL cm = COLORMODEL.values()[arg2];
 				vncCanvas.setColorModel(cm);
 				connection.setColorModel(cm.nameString());
@@ -1201,6 +1216,10 @@ public class VncCanvasActivity extends Activity {
 	}
 
 	boolean trackballMouse(MotionEvent evt) {
+		//MK
+		if(evt.getAction()==MotionEvent.ACTION_CANCEL)
+			return false;
+		
 		int dx = convertTrackballDelta(evt.getX());
 		int dy = convertTrackballDelta(evt.getY());
 
@@ -1254,6 +1273,10 @@ public class VncCanvasActivity extends Activity {
 			// DPAD KeyDown events are move MotionEvents in Panning Mode
 			final int dPos = 100;
 			boolean result = false;
+			//MK
+			if(evt.getAction()==MotionEvent.ACTION_CANCEL)
+				return true;
+			
 			switch (keyCode) {
 			case KeyEvent.KEYCODE_DPAD_CENTER:
 				result = true;
@@ -1331,6 +1354,10 @@ public class VncCanvasActivity extends Activity {
 		 */
 		@Override
 		public boolean onTouchEvent(MotionEvent event) {
+			//MK
+			if(event.getAction()==MotionEvent.ACTION_CANCEL)
+				return true;
+			
 			return touchPan(event);
 		}
 
@@ -1410,6 +1437,10 @@ public class VncCanvasActivity extends Activity {
 		 */
 		@Override
 		public boolean onTouchEvent(MotionEvent evt) {
+			//MK
+			if(evt.getAction()==MotionEvent.ACTION_CANCEL)
+				return true;
+			
 			return touchPan(evt);
 		}
 
@@ -1497,6 +1528,10 @@ public class VncCanvasActivity extends Activity {
 		 */
 		@Override
 		public boolean onTouchEvent(MotionEvent evt) {
+			//MK
+			if(evt.getAction()==MotionEvent.ACTION_CANCEL)
+				return true;
+			
 			return false;
 		}
 
@@ -1585,6 +1620,11 @@ public class VncCanvasActivity extends Activity {
 			// Mouse Pointer Control Mode
 			// Pointer event is absolute coordinates.
 
+			//MK
+			if(event.getAction()==MotionEvent.ACTION_CANCEL)
+				return true;
+			
+			
 			vncCanvas.changeTouchCoordinatesToFullFrame(event);
 			if (vncCanvas.processPointerEvent(event, true)) {
 				return true;
@@ -1739,6 +1779,11 @@ public class VncCanvasActivity extends Activity {
 			// Mouse Pointer Control Mode
 			// Pointer event is absolute coordinates.
 
+			//MK
+			if(event.getAction()==MotionEvent.ACTION_CANCEL)
+				return true;
+			
+			
 			vncCanvas.changeTouchCoordinatesToFullFrame(event);
 			if (vncCanvas.processPointerEvent(event, true)) {
 				return true;

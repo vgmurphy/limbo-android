@@ -3,20 +3,8 @@
     android:id="@+id/main_layout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical" >
-
-    <LinearLayout
-        android:id="@+id/adsl"
-        android:layout_width="320dip"
-        android:layout_height="50dip"
-        android:layout_gravity="center" >
-
-        <com.mopub.mobileads.MoPubView
-            android:id="@+id/adview"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            android:layout_gravity="center" />
-    </LinearLayout>
+    android:orientation="vertical"
+    android:keepScreenOn = "true" >
 
     <LinearLayout
         android:id="@+id/scroll_layout"

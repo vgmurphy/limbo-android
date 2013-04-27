@@ -17,6 +17,7 @@ import android.view.GestureDetector;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.View;
 
 import com.max2idea.android.limbo.main.Const;
@@ -27,7 +28,7 @@ import com.max2idea.android.limbo.main.Const;
  * 
  * Because of this, that's where we set up the SDL thread
  */
-public class SDLSurface extends GLSurfaceView implements
+public class SDLSurface extends SurfaceView implements
 		SurfaceHolder.Callback, View.OnKeyListener, View.OnTouchListener,
 		SensorEventListener {
 
@@ -154,11 +155,11 @@ public class SDLSurface extends GLSurfaceView implements
 	// Startup
 	public SDLSurface(Context context) {
 		super(context);
-		setEGLContextClientVersion(2);
+//		setEGLContextClientVersion(2);
 		getHolder().addCallback(this);
 		setFocusable(true);
 		setFocusableInTouchMode(true);
-		requestFocus();
+//		requestFocus();
 		setOnKeyListener(this);
 		setOnTouchListener(this);
 		// this.setOnGenericMotionListener(this);
@@ -298,6 +299,11 @@ public class SDLSurface extends GLSurfaceView implements
 		// Log.v("onTouchEvent",
 		// "Action=" + event.getAction() + ", X,Y=" + event.getX() + ","
 		// + event.getY() + " P=" + event.getPressure());
+		//MK
+		if(event.getAction()==MotionEvent.ACTION_CANCEL)
+			return true;
+		
+		
 		if (!firstTouch) {
 			SDLActivity.onNativeTouch(0, 0, MotionEvent.ACTION_MOVE, SDLActivity.vm_width/2, SDLActivity.vm_height/2, 0);
 			firstTouch = true;
