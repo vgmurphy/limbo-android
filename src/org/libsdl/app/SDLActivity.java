@@ -879,9 +879,10 @@ public class SDLActivity extends Activity {
 		} else
 			SDLActivity.createEGLSurface();
 
-		// Set Fit to Screen by Default
-//		if (fitToScreen)
-//			SDLActivity.setFitToScreen();
+		// Set Fit to Screen by Default for smaller devices
+	   // so it doesn't crash
+		if (fitToScreen)
+			SDLActivity.setFitToScreen();
 
 		return true;
 	}
