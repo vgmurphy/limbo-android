@@ -84,8 +84,7 @@ LIBLIMBO = liblimbo.so
 
 all: $(OBJS) \
 	$(LIMBO_OBJS) \
-	liblimbo \
-        install
+	liblimbo
 
 # Target specific variable to use different flags
 $(LIMBO_OBJS): EXTRA_FLAGS:= $(LOCAL_QEMU_CUSTOM_CFLAGS) $(LOCAL_LIMBO_CFLAGS)
@@ -117,10 +116,6 @@ liblimbo:
 	$(USR_LIB) \
 	-llog   \
     -ldl \
-	-o ./$(LIBLIMBO)
+	-o ../obj/local/$(TARGET_ARCH_ABI)/$(LIBLIMBO)
 
-install: liblimbo
-	mkdir -p ../libs/$(TARGET_ARCH_ABI)
-	cp $(LIBLIMBO) ./../libs/$(TARGET_ARCH_ABI)
-	
 ### end of qemu

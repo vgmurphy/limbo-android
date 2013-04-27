@@ -445,16 +445,13 @@ $(QEMU_PROG): $(obj-y) $(obj-$(TARGET_BASE_ARCH)-y)
 	$(sort $(obj-y)) \
 	$(obj-$(TARGET_BASE_ARCH)-y) \
 	$(GCC_STATIC) \
-	../../libglib.a \
-	../../libiconv.a \
+	../../../obj/local/$(TARGET_ARCH_ABI)/libglib.a \
+	../../../obj/local/$(TARGET_ARCH_ABI)/libiconv.a \
 	$(sdllibs) \
 	$(USR_LIB) \
 	-llog -lm -lz -lstdc++ -lc -dl \
     $(P_THREAD) \
-	-o ./lib$(QEMU_PROG).so
-	cp lib$(QEMU_PROG).so ../../	
-	mkdir -p ../../../libs/$(TARGET_ARCH_ABI)
-	cp lib$(QEMU_PROG).so ../../../libs/$(TARGET_ARCH_ABI)/
+	-o ../../../obj/local/$(TARGET_ARCH_ABI)/lib$(QEMU_PROG).so
 
 endif
 

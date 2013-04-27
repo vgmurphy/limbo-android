@@ -4,6 +4,10 @@ include android-toolchain.mak
 
 sdlbuild=cd .. && ndk-build V=1 TARGET_ARCH=arm 
 
+INSTALL_LIBS=cp -f ../obj/local/$(TARGET_ARCH_ABI)/*.so ../libs/$(TARGET_ARCH_ABI)/
+RENAME_TUNCTL=mv -f ../libs/$(TARGET_ARCH_ABI)/tunctl ../libs/$(TARGET_ARCH_ABI)/libtunctl.so
+RENAME_PARPROUTED=mv -f ../libs/$(TARGET_ARCH_ABI)/parprouted ../libs/$(TARGET_ARCH_ABI)/libparprouted.so
+
 ifneq ($(NDK_DEBUG),1)
 	STRIP_LIBS=$(STRIP) --strip-unneeded ../libs/$(TARGET_ARCH_ABI)/*
 endif
@@ -12,23 +16,26 @@ ifeq ($(TARGET_ARCH),x86)
 	sdlbuild=
 endif
 	
-all: config glib sdl limbo qemu
+all: sdl config qemu glib limbo
+	$(INSTALL_LIBS)
+	$(RENAME_TUNCTL)
+	$(RENAME_PARPROUTED)
 	$(STRIP_LIBS) 
 
 glib:
-	$(MAKE) -f Makefile.glib V=1
+	$(MAKE) -f glib.mak V=1
 
 sdl:
 	$(sdlbuild)
 
 qemu: glib sdl
-	$(MAKE) -f Makefile.qemu all V=1
+	$(MAKE) -f qemu.mak all V=1
 	
 limbo: qemu glib sdl
-	$(MAKE) -f Makefile.limbo all V=1
+	$(MAKE) -f limbo.mak all V=1
 	
 config:
-	$(MAKE) -f Makefile.config V=1
+	$(MAKE) -f qemu.config.mak V=1
 
 debug-arm:
 	$(MAKE) ultraclean
@@ -57,14 +64,15 @@ release: release-x86 release-arm
 
 clean:
 	-cd .. && ndk-build clean
-	$(MAKE) -f Makefile.glib clean V=1
-	$(MAKE) -f Makefile.qemu clean V=1
-	$(MAKE) -f Makefile.limbo clean V=1
+	$(MAKE) -f glib.mak clean V=1
+	$(MAKE) -f qemu.mak clean V=1
+	$(MAKE) -f limbo.mak clean V=1
 
 veryclean:
-	$(MAKE) -f Makefile.glib veryclean V=1
-	$(MAKE) -f Makefile.qemu veryclean V=1
-	$(MAKE) -f Makefile.limbo veryclean V=1
+	$(MAKE) -f glib.mak veryclean V=1
+	$(MAKE) -f qemu.mak veryclean V=1
+	$(MAKE) -f limbo.mak veryclean V=1
+	-rm -rf ../obj/local/
 
 distclean: 
 	cd qemu && $(MAKE) distclean

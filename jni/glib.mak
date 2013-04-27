@@ -258,9 +258,8 @@ GLIB_OBJS=$(GLIB_CFILES:%.c=%.o)
 ICONV_OBJS=$(ICONV_CFILES:%.c=%.o)
 
 
-LIBGLIB = libglib.a
-LIBICONV = libiconv.a
-
+LIBGLIB = ../obj/local/$(TARGET_ARCH_ABI)/libglib.a
+LIBICONV = ../obj/local/$(TARGET_ARCH_ABI)/libiconv.a
 
 all: $(OBJS) \
 	$(GLIB_OBJS) \

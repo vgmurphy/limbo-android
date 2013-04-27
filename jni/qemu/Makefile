@@ -164,21 +164,19 @@ tools-obj-$(CONFIG_POSIX) += compatfd.o
 qemu-img$(EXESUF): qemu-img.o $(tools-obj-y) $(block-obj-y)
 	$(AR) rcs qemu-img.a qemu-img.o $(tools-obj-y) $(block-obj-y)
 
+#TODO: create executable instead so it won't fail while loading the libs.
 qemu-img.so: qemu-img.o $(tools-obj-y) $(block-obj-y)
 	$(LNK)     \
 	-shared $(SYS_ROOT) \
 	$(GCC_STATIC) \
 	qemu-img.o \
 	$(sort $(tools-obj-y) $(block-obj-y)) \
-	../libglib.a \
-	../libiconv.a \
+	../../obj/local/$(TARGET_ARCH_ABI)/libglib.a \
+	../../obj/local/$(TARGET_ARCH_ABI)/libiconv.a \
 	$(USR_LIB) \
 	-llog -lm -lz \
 	$(P_THREAD) \
-	-o ./libqemu-img.so
-	cp libqemu-img.so ../
-	mkdir -p ../../libs/$(TARGET_ARCH_ABI)
-	cp libqemu-img.so ../../libs/$(TARGET_ARCH_ABI)/
+	-o ../../obj/local/$(TARGET_ARCH_ABI)/libqemu-img.so
 	
 qemu-nbd$(EXESUF): qemu-nbd.o $(tools-obj-y) $(block-obj-y)
 	$(AR) rcs qemu-nbd.a qemu-nbd.o $(tools-obj-y) $(block-obj-y)

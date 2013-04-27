@@ -1,14 +1,19 @@
 include android-toolchain.mak
 
-TARGET_LIST = x86_64-softmmu
 
 #x86 and ARM devices support
+TARGET_LIST = x86_64-softmmu
 #TARGET_LIST = arm-softmmu,x86_64-softmmu
 
+#use coroutine
+# gthread, ucontext, sigaltstack, windows
+COROUTINE= --with-coroutine=ucontext
+ 
 #Enable Internal profiler
-CONFIG_PROFILER = --enable-gprof
+#CONFIG_PROFILER = --enable-gprof
 
 CONFIG_EXTRA = --enable-sdl --audio-drv-list=sdl --enable-mixemu --enable-vnc-jpeg  --enable-vnc-png
+#CONFIG_EXTRA =
 
 ifeq ($(TARGET_ARCH), arm)
     QEMU_TARGET_CPU = armv4b
@@ -28,7 +33,7 @@ config:
 			--disable-vhost-net --disable-spice --disable-smartcard-nss --disable-uuid \
 			--enable-vnc-thread --disable-attr \
 			--disable-linux-aio --disable-pie --disable-smartcard --disable-smartcard-nss \
-			--disable-nptl --disable-opengl --disable-zlib-test --with-coroutine=sigaltstack \
+			--disable-nptl --disable-opengl --disable-zlib-test $(COROUTINE) \
 			$(CONFIG_EXTRA) \
 			$(CONFIG_PROFILER) \
 			--disable-guest-agent --android --less-warnings --cpu=$(QEMU_TARGET_CPU) \

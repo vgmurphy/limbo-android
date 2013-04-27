@@ -2,19 +2,22 @@
 # This is the only part of the file you need to change before when compiling.
 
 TARGET_ARCH ?= arm
-NDK_ROOT = /home/dev/tools/android-ndk-r8b
+NDK_ROOT = /home/dev/tools/android-ndk-r8e
 MAKE += 
+#GCC_VERSION = 4.4.3
+#GCC_VERSION = 4.6
+GCC_VERSION = 4.7
 
 ################ No modifications below this line are necessary #####################
 
 NDK_PLATFORM = platforms/android-14
 
 ifeq ($(TARGET_ARCH),arm)
-    EABI = arm-linux-androideabi-4.6
+    EABI = arm-linux-androideabi-$(GCC_VERSION)
     TARGET_ARCH_ABI = armeabi
     TOOLCHAIN_PREFIX = arm-linux-androideabi-
 else
-    EABI = x86-4.4.3
+    EABI = x86-$(GCC_VERSION)
     TARGET_ARCH_ABI = x86
     TOOLCHAIN_PREFIX = i686-linux-android-
 endif
@@ -63,21 +66,15 @@ SYSTEM_INCLUDE = \
     -include $(LIMBO_JNI_ROOT)/logutils.h
 
 ANDROID_DEBUG_FLAGS = -g 
-OPTIM_CFLAGS =-O2
 ANDROID_CFLAGS =
 
 ## Use of NDK_DEBUG=1 fails with png lib
 ifeq ($(NDK_DEBUG),1)
 	# no optimization
-    # ANDROID_CFLAGS += -O0
-    
-    # keep optimization
-    ANDROID_CFLAGS += $(OPTIM_CFLAGS)
+    ANDROID_CFLAGS += -O0
+
     # enable debugging
     ANDROID_CFLAGS +=$(ANDROID_DEBUG_FLAGS)
-else
-	#Set optimization
-	ANDROID_CFLAGS += $(OPTIM_CFLAGS)
 endif
 
 
