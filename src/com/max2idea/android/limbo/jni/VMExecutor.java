@@ -18,6 +18,8 @@
  */
 package com.max2idea.android.limbo.jni;
 
+import java.io.IOException;
+
 import com.max2idea.android.limbo.utils.FileUtils;
 import com.max2idea.android.limbo.utils.Machine;
 
@@ -166,6 +168,9 @@ public class VMExecutor {
 			this.nic_driver = null;
 		} else if (machine.net_cfg.equals("User")) {
 			this.net_cfg = "user";
+			this.nic_driver = machine.nic_driver;
+		} else if (machine.net_cfg.equals("TAP")) {
+			this.net_cfg = "tap";
 			this.nic_driver = machine.nic_driver;
 		}
 
