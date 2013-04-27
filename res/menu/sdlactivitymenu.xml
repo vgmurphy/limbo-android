@@ -1,14 +1,14 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:id="@+id/itemKeyboard" android:title="@string/showkbd_label" android:icon="@drawable/keyboard" android:showAsAction="ifRoom|withText" android:focusable="false"/>
-    <item android:id="@+id/itemMouse" android:title="@string/center_mouse" android:icon="@drawable/mouse" android:showAsAction="ifRoom|withText" android:focusable="false"/>    
-    <item android:id="@+id/itemSaveState" android:title="@string/save_state" android:icon="@drawable/diskette" android:showAsAction="ifRoom|withText" android:focusable="false"/>
-    <item android:id="@+id/itemMonitor" android:title="@string/monitor" android:icon="@drawable/icon" android:showAsAction="ifRoom|withText" android:focusable="false"></item>
-    <item android:id="@+id/itemDevices" android:title="@string/devices" android:icon="@drawable/spintop" android:showAsAction="ifRoom|withText" android:focusable="false"></item>
-    <item android:id="@+id/itemExternalMouse" android:title="@string/external_mouse" android:icon="@drawable/mouse" android:showAsAction="ifRoom|withText" android:focusable="false"></item>    
-    <item android:id="@+id/itemCtrlAltDel" android:title="@string/ctrl_alt_del" android:icon="@android:drawable/ic_menu_share" android:showAsAction="ifRoom|withText" android:focusable="false"/>
-    <item android:id="@+id/itemCtrlC" android:title="@string/ctrl_c" android:icon="@android:drawable/ic_menu_share" android:showAsAction="ifRoom|withText" android:focusable="false"/>
-    <item android:id="@+id/itemShutdown" android:title="@string/shutdown" android:icon="@android:drawable/ic_menu_share" android:showAsAction="ifRoom|withText" android:focusable="false"/>
-    <item android:id="@+id/itemScaling" android:title="@string/scaling" android:icon="@android:drawable/ic_menu_zoom"  android:showAsAction="ifRoom|withText" android:focusable="false">
+    <item android:id="@+id/itemKeyboard" android:title="@string/showkbd_label" android:icon="@drawable/keyboard"  android:focusable="false"/>
+    <item android:id="@+id/itemMouse" android:title="@string/center_mouse" android:icon="@drawable/mouse"  android:focusable="false"/>    
+    <item android:id="@+id/itemSaveState" android:title="@string/save_state" android:icon="@drawable/diskette"  android:focusable="false"/>
+    <item android:id="@+id/itemMonitor" android:title="@string/monitor" android:icon="@drawable/icon"  android:focusable="false"></item>
+    <item android:id="@+id/itemDevices" android:title="@string/devices" android:icon="@drawable/spintop"  android:focusable="false"></item>
+    <item android:id="@+id/itemExternalMouse" android:title="@string/external_mouse" android:icon="@drawable/mouse"  android:focusable="false"></item>    
+    <item android:id="@+id/itemCtrlAltDel" android:title="@string/ctrl_alt_del" android:icon="@android:drawable/ic_menu_share"  android:focusable="false"/>
+    <item android:id="@+id/itemCtrlC" android:title="@string/ctrl_c" android:icon="@android:drawable/ic_menu_share"  android:focusable="false"/>
+    <item android:id="@+id/itemShutdown" android:title="@string/shutdown" android:icon="@android:drawable/ic_menu_share"  android:focusable="false"/>
+    <item android:id="@+id/itemScaling" android:title="@string/scaling" android:icon="@android:drawable/ic_menu_zoom"   android:focusable="false">
         <menu>
             <group android:id="@+id/groupScaling" android:checkableBehavior="single">
                 <item android:id="@+id/itemOneToOne" android:title="@string/one_to_one"/>

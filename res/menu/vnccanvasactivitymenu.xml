@@ -1,16 +1,16 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:id="@+id/itemKeyboard" android:title="@string/showkbd_label" android:icon="@drawable/keyboard" android:showAsAction="ifRoom|withText" android:focusable="false"/>
-    <item android:id="@+id/itemCenterMouse" android:title="@string/center_mouse" android:icon="@drawable/mouse" android:showAsAction="ifRoom|withText" android:focusable="false"/>    
-    <item android:id="@+id/itemSaveState" android:title="@string/save_state" android:icon="@drawable/diskette" android:showAsAction="ifRoom|withText" android:focusable="false"/>
-    <item android:id="@+id/itemMonitor" android:title="@string/monitor" android:icon="@drawable/icon" android:showAsAction="ifRoom|withText" android:focusable="false"></item>
-    <item android:id="@+id/itemDisconnect" android:title="@string/disconnect" android:icon="@drawable/spintop" android:showAsAction="ifRoom|withText" android:focusable="false"></item>    
-    <item android:id="@+id/itemCtrlAltDel" android:title="@string/ctrl_alt_del" android:icon="@android:drawable/ic_menu_share" android:showAsAction="ifRoom|withText" android:focusable="false"/>
-    <item android:id="@+id/itemCtrlC" android:title="@string/ctrl_c" android:icon="@android:drawable/ic_menu_share" android:showAsAction="ifRoom|withText" android:focusable="false"/>
-    <item android:id="@+id/itemSpecialKeys" android:title="@string/special_keys" android:icon="@android:drawable/ic_dialog_dialer" android:showAsAction="ifRoom|withText" android:focusable="false"/>    
-    <item android:id="@+id/itemSendKeyAgain" android:title="@string/send_key_again" android:showAsAction="ifRoom|withText" android:focusable="false"/>
-    <item android:id="@+id/itemEnterText" android:alphabeticShortcut="e" android:title="@string/enter_text" android:icon="@android:drawable/ic_menu_edit" android:showAsAction="ifRoom|withText" android:focusable="false"/>
-    <item android:id="@+id/itemColorMode" android:title="@string/color_mode" android:icon="@android:drawable/ic_menu_preferences"  android:showAsAction="ifRoom|withText" android:focusable="false"></item>
-    <item android:id="@+id/itemInputMode" android:title="@string/input_mode" android:icon="@android:drawable/ic_input_get" android:showAsAction="ifRoom|withText" android:focusable="false">
+    <item android:id="@+id/itemKeyboard" android:title="@string/showkbd_label" android:icon="@drawable/keyboard"  android:focusable="false"/>
+    <item android:id="@+id/itemCenterMouse" android:title="@string/center_mouse" android:icon="@drawable/mouse"  android:focusable="false"/>    
+    <item android:id="@+id/itemSaveState" android:title="@string/save_state" android:icon="@drawable/diskette"  android:focusable="false"/>
+    <item android:id="@+id/itemMonitor" android:title="@string/monitor" android:icon="@drawable/icon"  android:focusable="false"></item>
+    <item android:id="@+id/itemDisconnect" android:title="@string/disconnect" android:icon="@drawable/spintop"  android:focusable="false"></item>    
+    <item android:id="@+id/itemCtrlAltDel" android:title="@string/ctrl_alt_del" android:icon="@android:drawable/ic_menu_share"  android:focusable="false"/>
+    <item android:id="@+id/itemCtrlC" android:title="@string/ctrl_c" android:icon="@android:drawable/ic_menu_share"  android:focusable="false"/>
+    <item android:id="@+id/itemSpecialKeys" android:title="@string/special_keys" android:icon="@android:drawable/ic_dialog_dialer"  android:focusable="false"/>    
+    <item android:id="@+id/itemSendKeyAgain" android:title="@string/send_key_again"  android:focusable="false"/>
+    <item android:id="@+id/itemEnterText" android:alphabeticShortcut="e" android:title="@string/enter_text" android:icon="@android:drawable/ic_menu_edit"  android:focusable="false"/>
+    <item android:id="@+id/itemColorMode" android:title="@string/color_mode" android:icon="@android:drawable/ic_menu_preferences"   android:focusable="false"></item>
+    <item android:id="@+id/itemInputMode" android:title="@string/input_mode" android:icon="@android:drawable/ic_input_get"  android:focusable="false">
 <menu>
     <group android:checkableBehavior="single" >
         <item
@@ -39,7 +39,7 @@
 </menu>
 
 </item>
-    <item android:id="@+id/itemScaling" android:title="@string/scaling" android:icon="@android:drawable/ic_menu_zoom"  android:showAsAction="ifRoom|withText" android:focusable="false">
+    <item android:id="@+id/itemScaling" android:title="@string/scaling" android:icon="@android:drawable/ic_menu_zoom"   android:focusable="false">
         <menu>
             <group android:id="@+id/groupScaling" android:checkableBehavior="single">
                 <item android:id="@+id/itemZoomable" android:title="@string/scaling_zoomable" />
