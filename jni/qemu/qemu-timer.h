@@ -267,6 +267,7 @@ static inline int64_t cpu_get_real_ticks(void)
     }
 
     MIPS_RDHWR("$2", count);
+
     return (int64_t)(count * cyc_per_count);
 }
 
@@ -282,7 +283,20 @@ static inline int64_t cpu_get_real_ticks(void)
     ofs = cc >> 32;
     return cur - ofs;
 }
+//MK
+#elif defined(__ANDROID__)
+static inline int64_t cpu_get_real_ticks(void)
+{
+    struct timeval tv;
+    static int64_t ticks = 0;
 
+    if ( gettimeofday(&tv, NULL) != -1 )
+        ticks = tv.tv_usec + tv.tv_sec*1000000;
+    	ticks *=1000;
+//    LOGV("Ticks=%" PRId64 "", ticks);
+    return ticks;
+
+}
 #else
 /* The host CPU doesn't have an easily accessible cycle counter.
    Just return a monotonically increasing value.  This will be

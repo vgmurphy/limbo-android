@@ -244,41 +244,30 @@ typedef struct x86_def_t {
 
 #define I486_FEATURES (CPUID_FP87 | CPUID_VME | CPUID_PSE)
 
-//#define PENTIUM_FEATURES (I486_FEATURES | CPUID_DE | CPUID_TSC | \
-//          CPUID_MSR | CPUID_MCE | CPUID_CX8 | CPUID_MMX | CPUID_APIC)
+#define PENTIUM_FEATURES (I486_FEATURES | CPUID_DE | CPUID_TSC | \
+          CPUID_MSR | CPUID_MCE | CPUID_CX8 | CPUID_MMX | CPUID_APIC)
 
-#define PENTIUM_FEATURES (I486_FEATURES | CPUID_DE | \
-		CPUID_MSR | CPUID_MCE | CPUID_CX8 | CPUID_MMX | CPUID_APIC)
+//#define PENTIUM_FEATURES (I486_FEATURES | CPUID_DE | \
+//		CPUID_MSR | CPUID_MCE | CPUID_CX8 | CPUID_MMX | CPUID_APIC)
 #define PENTIUM2_FEATURES (PENTIUM_FEATURES | CPUID_PAE | CPUID_SEP | \
           CPUID_MTRR | CPUID_PGE | CPUID_MCA | CPUID_CMOV | CPUID_PAT | \
           CPUID_PSE36 | CPUID_FXSR)
 #define PENTIUM3_FEATURES (PENTIUM2_FEATURES | CPUID_SSE)
 
 //TK Removing CPUID_TSC for now since VM fails at boot
-//#define PPRO_FEATURES (CPUID_FP87 | CPUID_DE | CPUID_PSE | CPUID_TSC | \
-//          CPUID_MSR | CPUID_MCE | CPUID_CX8 | CPUID_PGE | CPUID_CMOV | \
-//          CPUID_PAT | CPUID_FXSR | CPUID_MMX | CPUID_SSE | CPUID_SSE2 | \
-//          CPUID_PAE | CPUID_SEP | CPUID_APIC)
-#define PPRO_FEATURES (CPUID_FP87 | CPUID_DE | CPUID_PSE | \
+#define PPRO_FEATURES (CPUID_FP87 | CPUID_DE | CPUID_PSE | CPUID_TSC | \
           CPUID_MSR | CPUID_MCE | CPUID_CX8 | CPUID_PGE | CPUID_CMOV | \
           CPUID_PAT | CPUID_FXSR | CPUID_MMX | CPUID_SSE | CPUID_SSE2 | \
           CPUID_PAE | CPUID_SEP | CPUID_APIC)
+//#define PPRO_FEATURES (CPUID_FP87 | CPUID_DE | CPUID_PSE | \
+//          CPUID_MSR | CPUID_MCE | CPUID_CX8 | CPUID_PGE | CPUID_CMOV | \
+//          CPUID_PAT | CPUID_FXSR | CPUID_MMX | CPUID_SSE | CPUID_SSE2 | \
+//          CPUID_PAE | CPUID_SEP | CPUID_APIC)
 
 
 #define EXT2_FEATURE_MASK 0x0183F3FF
 
-//#define TCG_FEATURES (CPUID_FP87 | CPUID_PSE | CPUID_TSC | CPUID_MSR | \
-//          CPUID_PAE | CPUID_MCE | CPUID_CX8 | CPUID_APIC | CPUID_SEP | \
-//          CPUID_MTRR | CPUID_PGE | CPUID_MCA | CPUID_CMOV | CPUID_PAT | \
-//          CPUID_PSE36 | CPUID_CLFLUSH | CPUID_ACPI | CPUID_MMX | \
-//          CPUID_FXSR | CPUID_SSE | CPUID_SSE2 | CPUID_SS)
-//          /* partly implemented:
-//          CPUID_MTRR, CPUID_MCA, CPUID_CLFLUSH (needed for Win64)
-//          CPUID_PSE36 (needed for Solaris) */
-//          /* missing:
-//          CPUID_VME, CPUID_DTS, CPUID_SS, CPUID_HT, CPUID_TM, CPUID_PBE */
-//TK remove CPUID_TSC
-#define TCG_FEATURES (CPUID_FP87 | CPUID_PSE | CPUID_MSR | \
+#define TCG_FEATURES (CPUID_FP87 | CPUID_PSE | CPUID_TSC | CPUID_MSR | \
           CPUID_PAE | CPUID_MCE | CPUID_CX8 | CPUID_APIC | CPUID_SEP | \
           CPUID_MTRR | CPUID_PGE | CPUID_MCA | CPUID_CMOV | CPUID_PAT | \
           CPUID_PSE36 | CPUID_CLFLUSH | CPUID_ACPI | CPUID_MMX | \
@@ -288,6 +277,17 @@ typedef struct x86_def_t {
           CPUID_PSE36 (needed for Solaris) */
           /* missing:
           CPUID_VME, CPUID_DTS, CPUID_SS, CPUID_HT, CPUID_TM, CPUID_PBE */
+//TK remove CPUID_TSC
+//#define TCG_FEATURES (CPUID_FP87 | CPUID_PSE | CPUID_MSR | \
+//          CPUID_PAE | CPUID_MCE | CPUID_CX8 | CPUID_APIC | CPUID_SEP | \
+//          CPUID_MTRR | CPUID_PGE | CPUID_MCA | CPUID_CMOV | CPUID_PAT | \
+//          CPUID_PSE36 | CPUID_CLFLUSH | CPUID_ACPI | CPUID_MMX | \
+//          CPUID_FXSR | CPUID_SSE | CPUID_SSE2 | CPUID_SS)
+//          /* partly implemented:
+//          CPUID_MTRR, CPUID_MCA, CPUID_CLFLUSH (needed for Win64)
+//          CPUID_PSE36 (needed for Solaris) */
+//          /* missing:
+//          CPUID_VME, CPUID_DTS, CPUID_SS, CPUID_HT, CPUID_TM, CPUID_PBE */
 #define TCG_EXT_FEATURES (CPUID_EXT_SSE3 | CPUID_EXT_MONITOR | \
           CPUID_EXT_CX16 | CPUID_EXT_POPCNT | \
           CPUID_EXT_HYPERVISOR)
@@ -893,6 +893,7 @@ static void x86_cpuid_get_tsc_freq(Object *obj, Visitor *v, void *opaque,
     int64_t value;
 
     value = cpu->env.tsc_khz * 1000;
+    LOGV("Get CPU freq=%ld", value);
     visit_type_int(v, &value, name, errp);
 }
 
@@ -908,6 +909,7 @@ static void x86_cpuid_set_tsc_freq(Object *obj, Visitor *v, void *opaque,
     if (error_is_set(errp)) {
         return;
     }
+    LOGV("Set CPU freq= %ld, max=%ld, min=%ld", value, max, min);
     if (value < min || value > max) {
         error_set(errp, QERR_PROPERTY_VALUE_OUT_OF_RANGE, "",
                   name ? name : "null", value, min, max);
@@ -954,6 +956,7 @@ static int cpu_x86_find_by_name(x86_def_t *x86_cpu_def, const char *cpu_model)
     featurestr = strtok(NULL, ",");
 
     while (featurestr) {
+    	LOGV("featurestr= %s", featurestr);
         char *val;
         if (featurestr[0] == '+') {
             add_flagname_to_bitmaps(featurestr + 1, &plus_features,
@@ -1037,6 +1040,7 @@ static int cpu_x86_find_by_name(x86_def_t *x86_cpu_def, const char *cpu_model)
                     fprintf(stderr, "bad numerical value %s\n", val);
                     goto error;
                 }
+                LOGV("Found CPU tsc_khz=%ld", tsc_freq);
                 x86_cpu_def->tsc_khz = tsc_freq / 1000;
             } else if (!strcmp(featurestr, "hv_spinlocks")) {
                 char *err;
@@ -1218,8 +1222,9 @@ int cpu_x86_register(X86CPU *cpu, const char *cpu_model)
     env->cpuid_ext4_features = def->ext4_features;
     env->cpuid_7_0_ebx = def->cpuid_7_0_ebx_features;
     env->cpuid_xlevel2 = def->xlevel2;
+    LOGV("Property set CPU tsc_khz=%ld", (int64_t)def->tsc_khz );
     object_property_set_int(OBJECT(cpu), (int64_t)def->tsc_khz * 1000,
-                            "tsc-frequency", &error);
+                                "tsc-frequency", &error);
     if (!kvm_enabled()) {
         env->cpuid_features &= TCG_FEATURES;
         env->cpuid_ext_features &= TCG_EXT_FEATURES;
