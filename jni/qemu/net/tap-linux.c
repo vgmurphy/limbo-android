@@ -42,7 +42,7 @@ int tap_open(char *ifname, int ifname_size, int *vnet_hdr, int vnet_hdr_required
 
     TFR(fd = open(PATH_NET_TUN, O_RDWR));
     if (fd < 0) {
-        error_report("could not open %s: %m", PATH_NET_TUN);
+        error_report("could not open %s: error=%d %s", PATH_NET_TUN, errno, strerror( errno ) );
         return -1;
     }
     memset(&ifr, 0, sizeof(ifr));
@@ -74,9 +74,9 @@ int tap_open(char *ifname, int ifname_size, int *vnet_hdr, int vnet_hdr_required
     ret = ioctl(fd, TUNSETIFF, (void *) &ifr);
     if (ret != 0) {
         if (ifname[0] != '\0') {
-            error_report("could not configure %s (%s): %m", PATH_NET_TUN, ifr.ifr_name);
+            error_report("could not configure %s (%s): %d %s", PATH_NET_TUN, ifr.ifr_name,errno,strerror(errno));
         } else {
-            error_report("could not configure %s: %m", PATH_NET_TUN);
+            error_report("could not configure %s: %d %s", PATH_NET_TUN,errno,strerror(errno));
         }
         close(fd);
         return -1;
