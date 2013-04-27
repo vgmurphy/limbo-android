@@ -807,7 +807,7 @@ JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_start(
 			strcpy(argv[param], "none");
 		} else {
 			LOGV("Unknown iface: %s", net_str);
-			return;
+			strcpy(argv[param], "none");
 		}
 		//FIXME: NOT WORKING setting DNS workaround below
 //        LOGV("DNS=%s",dns_addr_str);
