@@ -123,8 +123,9 @@ JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_save(
 	jfieldID fid = (*env)->GetFieldID(env, c, "snapshot_name",
 			"Ljava/lang/String;");
 	jstring snapshot_name = (*env)->GetObjectField(env, thiz, fid);
-	const char *snapshot_name_str = (*env)->GetStringUTFChars(env,
-			snapshot_name, 0);
+	const char *snapshot_name_str = NULL;
+	if (snapshot_name != NULL)
+		snapshot_name_str = (*env)->GetStringUTFChars(env, snapshot_name, 0);
 
 	LOGV("Saving VM State: %s\n", snapshot_name_str);
 
@@ -156,7 +157,10 @@ JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_vncchan
 	jfieldID fid = (*env)->GetFieldID(env, c, "vnc_passwd",
 			"Ljava/lang/String;");
 	jstring jvnc_passwd = (*env)->GetObjectField(env, thiz, fid);
-	const char *vnc_passwd_str = (*env)->GetStringUTFChars(env, jvnc_passwd, 0);
+
+	const char *vnc_passwd_str = NULL;
+	if (jvnc_passwd != NULL)
+		vnc_passwd_str = (*env)->GetStringUTFChars(env, jvnc_passwd, 0);
 
 	typedef void (*vnc_change_pwd_t)();
 	dlerror();
@@ -204,8 +208,8 @@ JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_dnschan
 	}
 
 	if (!handle) {
-		sprintf(res_msg, "%s: Error opening lib: %s :%s", __func__,
-				lib_path_str, dlerror());
+		sprintf(res_msg, "%s: Error opening lib: %s :%s",
+				__func__, lib_path_str, dlerror());
 		LOGV(res_msg);
 		return (*env)->NewStringUTF(env, res_msg);
 	}
@@ -238,11 +242,15 @@ JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_changed
 	jclass c = (*env)->GetObjectClass(env, thiz);
 	jfieldID fid = (*env)->GetFieldID(env, c, "qemu_dev", "Ljava/lang/String;");
 	jstring jdev = (*env)->GetObjectField(env, thiz, fid);
-	const char *dev = (*env)->GetStringUTFChars(env, jdev, 0);
+	const char *dev = NULL;
+	if (jdev != NULL)
+		dev = (*env)->GetStringUTFChars(env, jdev, 0);
 
 	fid = (*env)->GetFieldID(env, c, "qemu_dev_value", "Ljava/lang/String;");
 	jstring jdev_value = (*env)->GetObjectField(env, thiz, fid);
-	const char *dev_value = (*env)->GetStringUTFChars(env, jdev_value, 0);
+	const char *dev_value = NULL;
+	if (jdev_value != NULL)
+		dev_value = (*env)->GetStringUTFChars(env, jdev_value, 0);
 
 	typedef void (*change_dev_t)();
 	dlerror();
@@ -274,7 +282,9 @@ JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_ejectde
 	jclass c = (*env)->GetObjectClass(env, thiz);
 	jfieldID fid = (*env)->GetFieldID(env, c, "qemu_dev", "Ljava/lang/String;");
 	jstring jdev = (*env)->GetObjectField(env, thiz, fid);
-	const char *dev = (*env)->GetStringUTFChars(env, jdev, 0);
+	const char *dev = NULL;
+	if (jdev != NULL)
+		dev = (*env)->GetStringUTFChars(env, jdev, 0);
 
 	typedef void (*eject_dev_t)();
 	dlerror();
@@ -412,14 +422,17 @@ JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_start(
 	jclass c = (*env)->GetObjectClass(env, thiz);
 	jfieldID fid = (*env)->GetFieldID(env, c, "cpu", "Ljava/lang/String;");
 	jstring jcpu = (*env)->GetObjectField(env, thiz, fid);
-	const char *cpu_str = (*env)->GetStringUTFChars(env, jcpu, 0);
+	const char *cpu_str = NULL;
+	if (jcpu != NULL)
+		cpu_str = (*env)->GetStringUTFChars(env, jcpu, 0);
 
 	LOGV("CPU= %s", cpu_str);
 
 	fid = (*env)->GetFieldID(env, c, "machine_type", "Ljava/lang/String;");
 	jstring jmachine_type = (*env)->GetObjectField(env, thiz, fid);
-	const char *machine_type_str = (*env)->GetStringUTFChars(env, jmachine_type,
-			0);
+	const char *machine_type_str = NULL;
+	if (jmachine_type != NULL)
+		machine_type_str = (*env)->GetStringUTFChars(env, jmachine_type, 0);
 
 	LOGV("Machine Type= %s", machine_type_str);
 
@@ -455,11 +468,9 @@ JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_start(
 
 	fid = (*env)->GetFieldID(env, c, "hda_img_path", "Ljava/lang/String;");
 	jstring jhda_img_path = (*env)->GetObjectField(env, thiz, fid);
-	LOGV("HDA jstring= %s", jhda_img_path);
 	const char * hda_img_path_str = NULL;
 	if (jhda_img_path != NULL)
 		hda_img_path_str = (*env)->GetStringUTFChars(env, jhda_img_path, 0);
-
 	LOGV("HDA= %s", hda_img_path_str);
 
 	fid = (*env)->GetFieldID(env, c, "hdb_img_path", "Ljava/lang/String;");
@@ -581,7 +592,7 @@ JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_start(
 
 	LOGV("Finished getting Java fields");
 
-	int params = 6;
+	int params = 4;
 
 	if (cpu_str != NULL && strcmp(cpu_str, "Default") != 0) {
 		params += 2;
@@ -597,15 +608,18 @@ JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_start(
 		params += 2;
 	}
 	//if (fda_img_path_str != NULL) { //Always define a diskette drive
-		params += 2;
+	params += 2;
 	//}
 	if (fdb_img_path_str != NULL) {
 		params += 2;
 	}
-	if (net_str != NULL && strcmp(net_str, "none") != 0) {
+	if (net_str != NULL) {
 		params += 2;
-	} else {
-		nic_driver_str = NULL;
+	}
+
+	if (nic_driver_str != NULL) {
+		LOGV("Adding params for NIC driver");
+		params += 2;
 	}
 	if (boot_dev_str != NULL) {
 		params += 2;
@@ -687,8 +701,7 @@ JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_start(
 		}
 	}
 
-	if (cpu_str != NULL
-			&& strncmp(cpu_str, "Default", 7) != 0) {
+	if (cpu_str != NULL && strncmp(cpu_str, "Default", 7) != 0) {
 		strcpy(argv[param++], "-cpu");
 		strcpy(argv[param++], cpu_str);
 	}
@@ -761,7 +774,7 @@ JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_start(
 		LOGV("Adding FDA");
 		strcpy(argv[param++], "-fda");
 		strcpy(argv[param++], fda_img_path_str);
-	}else {
+	} else {
 		strcpy(argv[param++], "-drive"); //Always define floppy
 		strcpy(argv[param++], "index=0,if=floppy");
 	}
@@ -786,7 +799,16 @@ JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_start(
 	if (net_str != NULL) {
 		LOGV("Adding Net: %s", net_str);
 		strcpy(argv[param++], "-net");
-		strcpy(argv[param], net_str);
+		if (strcmp(net_str, "user") == 0) {
+			strcpy(argv[param], net_str);
+		} else if (strcmp(net_str, "tap") == 0) {
+			strcpy(argv[param], "tap,vlan=0,ifname=tap0,script=no");
+		} else if (strcmp(net_str, "none") == 0) {
+			strcpy(argv[param], "none");
+		} else {
+			LOGV("Unknown iface: %s", net_str);
+			return;
+		}
 		//FIXME: NOT WORKING setting DNS workaround below
 //        LOGV("DNS=%s",dns_addr_str);
 //        if(dns_addr_str!=NULL){
@@ -803,8 +825,11 @@ JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_start(
 		if (strncmp(arch_str, "arm", 3) == 0) {
 			strcpy(argv[param], "nic");
 			param++;
-		} else {
+		} else if (strcmp(net_str, "user") == 0) {
 			strcpy(argv[param], "nic,model=");
+			strcat(argv[param++], nic_driver_str);
+		} else if (strcmp(net_str, "tap") == 0) {
+			strcpy(argv[param], "nic,vlan=0,model=");
 			strcat(argv[param++], nic_driver_str);
 		}
 	}
