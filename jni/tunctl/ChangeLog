@@ -1,0 +1,15 @@
+Version 1.5
+	- Imported updated version from uml_utilities_20070815.tar.bz2
+	- Imported fixes from OpenSUSE
+	  o -n option for point-to-point TUN devices
+	  o -p option for TAP device
+	  default is autodetection, using TUN if the device starts with tun*,
+	  TAP otherwise
+
+Version 1.4
+
+	- Packaged as a package. Identical to tunctl.c revision 1.4 from
+	  the User Mode Linux CVS repository.
+	- Imported tunctl.sgml revision 238 from Debian SVN repository
+	- Makefile & spec file updated/added loosely based on the UML and
+	  Fedora versions

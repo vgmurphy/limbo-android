@@ -1,0 +1,224 @@
+<!doctype refentry PUBLIC "-//OASIS//DTD DocBook V4.1//EN" [
+
+<!-- Process this file with docbook-to-man to generate an nroff manual
+     page: `docbook-to-man manpage.sgml > manpage.1'.  You may view
+     the manual page with: `docbook-to-man manpage.sgml | nroff -man |
+     less'.  A typical entry in a Makefile or Makefile.am is:
+
+manpage.1: manpage.sgml
+	docbook-to-man $< > $@
+  -->
+
+  <!-- Fill in your name for FIRSTNAME and SURNAME. -->
+  <!ENTITY dhfirstname "<firstname>Matt</firstname>">
+  <!ENTITY dhsurname   "<surname>Zimmerman</surname>">
+  <!-- Please adjust the date whenever revising the manpage. -->
+  <!ENTITY dhdate      "<date>July  9, 2008</date>">
+  <!-- SECTION should be 1-8, maybe w/ subsection other parameters are
+       allowed: see man(7), man(1). -->
+  <!ENTITY dhsection   "<manvolnum>8</manvolnum>">
+  <!ENTITY dhemail     "<email>mdz@debian.org</email>">
+  <!ENTITY dhusername  "Matt Zimmerman">
+  <!ENTITY hnusername  "Henrik Nordstrom">
+  <!ENTITY hnemail     "<email>henrik@henriknordstrom.net</email>">
+  <!ENTITY dhucpackage "<refentrytitle>tunctl</refentrytitle>">
+  <!ENTITY dhpackage   "tunctl">
+
+  <!ENTITY debian      "<productname>Debian GNU/Linux</productname>">
+  <!ENTITY gnu         "<acronym>GNU</acronym>">
+]>
+
+<refentry>
+  <refentryinfo>
+    <address>
+      &dhemail;
+    </address>
+    <author>
+      &dhfirstname;
+      &dhsurname;
+    </author>
+    <copyright>
+      <year>2001</year>
+      <holder>&dhusername;</holder>
+    </copyright>
+    &dhdate;
+  </refentryinfo>
+  <refmeta>
+    &dhucpackage;
+
+    &dhsection;
+  </refmeta>
+  <refnamediv>
+    <refname>&dhpackage;</refname>
+
+    <refpurpose>create and manage persistent TUN/TAP interfaces</refpurpose>
+  </refnamediv>
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      
+      <command>&dhpackage;</command>
+
+      <arg choice=opt>OPTIONS</arg>
+      <arg><option>-u</option> <replaceable>owner</replaceable></arg>
+      <arg><option>-t</option> <replaceable>device-name</replaceable></arg>
+
+    </cmdsynopsis>
+
+    <cmdsynopsis>
+      <command>&dhpackage;</command>
+
+      <arg choice=req><option>-d</option> <replaceable>device-name</replaceable></arg>
+    </cmdsynopsis>
+
+  </refsynopsisdiv>
+  <refsect1>
+    <title>DESCRIPTION</title>
+
+    <para><command>&dhpackage;</command> allows the host sysadmin to
+    preconfigure a TUN/TAP network interface for use by a particular user.
+    That user may open and use the network/write side of the interface,
+    but may not change any aspects of the host side of the interface.</para>
+
+  </refsect1>
+
+  <refsect1>
+    <title>OPTIONS</title>
+    <variablelist>
+      <varlistentry>
+	<term>-b</term>
+	<listitem><para>Brief output, prints just the interface name</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+	<term>-n</term>
+	<listitem><para>
+	  Create a point-to-point TUN interface without Ethernet header.
+	  Automatically enabled if the desired interface name starts with "tun".
+	</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+	<term>-p</term>
+	<listitem><para>
+	  Create a TAP type interface with Ethernet header. Automatically selected
+	  if the desired interface starts with "tap" or if no interface name is given.
+	</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+	<term>-f <replaceable class="parameter">tun-clone-device</replaceable></term>
+	<listitem><para>
+	  Specifies the tun clone device name. The default is /dev/net/tun, but some systems use /dev/misc/net/tun instead.
+	</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+	<term>-d <replaceable class="parameter">interfacename</replaceable></term>
+	<listitem><para>
+	  Delete the specified interfacename (set it to non-persistent)
+	</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+	<term>-u <replaceable class="parameter">user</replaceable></term>
+	<listitem><para>
+	  Specifies the owner of the interface. This user is allowed to attach
+	  to the "network/wire" side.
+	</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+	<term>-g <replaceable class="parameter">group</replaceable></term>
+	<listitem><para>
+	  Specifies the group of the interface. This group is allowed to attach
+	  to the "network/wire" side of the interface.
+	</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+	<term>-t <replaceable class="parameter">interface</replaceable></term>
+	<listitem><para>
+	  Specifies the desired interface name.
+	</para></listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1>
+    <title>USAGE</title>
+
+    <para>To create an interface for use by a particular user, invoke
+    tunctl without the -d option:</para>
+
+    <informalexample>
+      <screen>
+        <prompt>#</prompt> <userinput>tunctl -u someuser</userinput>
+
+        Set 'tap0' persistent and owned by 'someuser'
+      </screen>
+    </informalexample>
+
+    <para>Then, configure the interface as normal:</para>
+
+    <informalexample>
+      <screen>
+        <prompt>#</prompt> <userinput>ifconfig tap0 192.168.0.254 up</userinput>
+
+        <prompt>#</prompt> <userinput>route add -host 192.168.0.253 dev tap0</userinput>
+
+        <prompt>#</prompt> <userinput>bash -c 'echo 1 > /proc/sys/net/ipv4/conf/tap0/proxy_arp'</userinput>
+
+        <prompt>#</prompt> <userinput>arp -Ds 192.168.0.253 eth0 pub</userinput>
+      </screen>
+    </informalexample>
+
+    <para>To delete the interface, use the -d option:</para>
+
+    <informalexample>
+      <screen>
+        <prompt>#</prompt> <userinput>tunctl -d tap0</userinput>
+
+        Set 'tap0' nonpersistent
+      </screen>
+    </informalexample>
+  </refsect1>
+
+  <refsect1>
+    <title>SEE ALSO</title>
+
+    <para>The <ulink
+    url="http://user-mode-linux.sourceforge.net/old/UserModeLinux-HOWTO.html"
+    type=alternate>UserModeLinux-HOWTO</ulink></para>
+  </refsect1>
+  <refsect1>
+    <title>AUTHOR</title>
+
+    <para>&dhpackage; was originally written by Jeff Dike
+    <email>jdike@karaya.com</email> as part of the User Mode Linux tools.
+    Current version is maintained as a separate package
+    by &hnusername; &hnemail;.</para>
+
+    <para>This manual page was originally written by &dhusername; &dhemail; for
+      the &debian; system, based on examples from Jeff Dike. Extended by
+      &hnusername; &hnemail; to cover all options supported.</para>
+
+
+  </refsect1>
+</refentry>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: sgml
+sgml-omittag:t
+sgml-shorttag:t
+sgml-minimize-attributes:nil
+sgml-always-quote-attributes:t
+sgml-indent-step:2
+sgml-indent-data:t
+sgml-parent-document:nil
+sgml-default-dtd-file:nil
+sgml-exposed-tags:nil
+sgml-local-catalogs:nil
+sgml-local-ecat-files:nil
+End:
+-->
