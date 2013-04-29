@@ -189,18 +189,20 @@ public class SettingsManager extends PreferenceActivity {
 //    }
 
     
-    static boolean getUSBMouse(Activity activity) {
+    public static boolean getOrientationReverse(Activity activity) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
-        return prefs.getBoolean("USBMouse", false);
+        return prefs.getBoolean("OrientationReverse", false);
     }
 
-    public static void setUSBMouse(Activity activity, boolean flag) {
+    public static void setOrientationReverse(Activity activity, boolean flag) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
         SharedPreferences.Editor edit = prefs.edit();
-        edit.putBoolean("USBMouse", flag);
+        edit.putBoolean("OrientationReverse", flag);
         edit.commit();
 //        UIUtils.log("Setting First time: ");
     }
+    
+    
     
     static boolean getPrio(Activity activity) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);

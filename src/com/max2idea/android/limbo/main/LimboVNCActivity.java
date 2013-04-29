@@ -24,6 +24,7 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.pm.ActivityInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -55,6 +56,11 @@ public class LimboVNCActivity extends android.androidVNC.VncCanvasActivity {
 	@Override
 	public void onCreate(Bundle b) {
 		super.onCreate(b);
+
+		if(SettingsManager.getOrientationReverse(this))
+			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
+		
+		
 		Toast toast = Toast.makeText(activity,
 				"2-Finger Long Press for Right Click", Toast.LENGTH_LONG);
 		toast.setGravity(Gravity.TOP | Gravity.CENTER, 0, 0);

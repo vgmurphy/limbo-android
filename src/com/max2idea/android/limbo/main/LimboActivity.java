@@ -40,6 +40,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -217,6 +218,7 @@ public class LimboActivity extends Activity {
 	private CheckBox mVNCAllowExternal;
 	private CheckBox mMultiAIO;
 	private CheckBox mPrio;
+	private CheckBox mReverseLandscape;
 	private Spinner mSnapshot;
 	private Button mStart;
 	private Button mStop;
@@ -239,6 +241,9 @@ public class LimboActivity extends Activity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
+		if(SettingsManager.getOrientationReverse(this))
+			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
+		
 //		requestWindowFeature(Window.FEATURE_NO_TITLE);
 
 //
@@ -1181,6 +1186,9 @@ public class LimboActivity extends Activity {
 		this.mPrio = (CheckBox) findViewById(R.id.prioval); //
 		mPrio.setChecked(SettingsManager.getPrio(activity));
 
+		this.mReverseLandscape = (CheckBox) findViewById(R.id.reverselval); //
+		mReverseLandscape.setChecked(SettingsManager.getOrientationReverse(activity));
+
 		this.mMultiAIO = (CheckBox) findViewById(R.id.enableMultiThreadval); // No
 																				// external
 																				// connections
@@ -1995,6 +2003,18 @@ public class LimboActivity extends Activity {
 				} else {
 					SettingsManager.setPrio(activity, false);
 				}
+			}
+
+			public void onNothingSelected(AdapterView<?> parentView) {
+				// your code here
+				// Log.v(TAG, "Nothing selected");
+			}
+		});
+		
+		mReverseLandscape.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+			public void onCheckedChanged(CompoundButton viewButton,
+					boolean isChecked) {
+					SettingsManager.setOrientationReverse(activity, isChecked);
 			}
 
 			public void onNothingSelected(AdapterView<?> parentView) {

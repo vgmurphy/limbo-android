@@ -3,8 +3,8 @@
     android:id="@+id/main_layout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:keepScreenOn = "true" >
+    android:keepScreenOn="true"
+    android:orientation="vertical" >
 
     <LinearLayout
         android:id="@+id/scroll_layout"
@@ -482,8 +482,6 @@
                         android:textSize="15dip" />
                 </LinearLayout>
 
-                
-
                 <LinearLayout
                     android:id="@+id/advancedl"
                     android:layout_width="fill_parent"
@@ -598,7 +596,7 @@
                         android:text=""
                         android:textSize="15dip" />
                 </LinearLayout>
-                
+
                 <LinearLayout
                     android:id="@+id/hdcfgl"
                     android:layout_width="fill_parent"
@@ -763,6 +761,31 @@
 
                             <CheckBox
                                 android:id="@+id/prioval"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="right|center_vertical"
+                                android:gravity="right|center_vertical" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/reversel"
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="right|center_vertical"
+                            android:gravity="right|center_vertical"
+                            android:orientation="horizontal" >
+
+                            <TextView
+                                android:id="@+id/reverselStr"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="right|center_vertical"
+                                android:gravity="right|center_vertical"
+                                android:text="Reverse Display"
+                                android:textSize="15dip" />
+
+                            <CheckBox
+                                android:id="@+id/reverselval"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_gravity="right|center_vertical"

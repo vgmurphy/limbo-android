@@ -4,11 +4,11 @@
     android:versionCode="11"
     android:versionName="0.9.7a" >
 
-    <uses-feature  >
+    <uses-feature>
     </uses-feature>
 
     <uses-sdk
-        android:minSdkVersion="8"
+        android:minSdkVersion="9"
         android:targetSdkVersion="17" />
 
     <uses-permission android:name="android.permission.INTERNET" />
@@ -18,10 +18,10 @@
 
     <application
         android:allowBackup="true"
-        android:hardwareAccelerated="false"
+        android:hardwareAccelerated="true"
         android:icon="@drawable/limbo"
         android:label="Limbo"
-        android:largeHeap="false" 
+        android:largeHeap="true" 
         >
         <activity
             android:name=".LimboActivity"
