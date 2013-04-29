@@ -1,9 +1,10 @@
-.PHONY: glib sdl
+.PHONY: createdirs glib sdl qemu glib limbo
 
 include android-toolchain.mak
 
 sdlbuild=cd .. && ndk-build V=1 TARGET_ARCH=arm
 
+CREATE_DIRS=mkdir -p ../obj/local/$(TARGET_ARCH_ABI)/
 INSTALL_LIBS=cp -f ../obj/local/$(TARGET_ARCH_ABI)/*.so ../libs/$(TARGET_ARCH_ABI)/
 RENAME_TUNCTL=mv -f ../libs/$(TARGET_ARCH_ABI)/tunctl ../libs/$(TARGET_ARCH_ABI)/libtunctl.so
 RENAME_PARPROUTED=mv -f ../libs/$(TARGET_ARCH_ABI)/parprouted ../libs/$(TARGET_ARCH_ABI)/libparprouted.so
@@ -16,11 +17,14 @@ ifeq ($(TARGET_ARCH),x86)
 	sdlbuild=
 endif
 	
-all: sdl config qemu glib limbo
+all: createdirs sdl config qemu glib limbo
 	$(INSTALL_LIBS)
 	$(RENAME_TUNCTL)
 	$(RENAME_PARPROUTED)
 	$(STRIP_LIBS) 
+	
+createdirs:
+	$(CREATE_DIRS)
 
 glib:
 	$(MAKE) -f glib.mak V=1
