@@ -2,7 +2,7 @@
 
 include android-toolchain.mak
 
-sdlbuild=cd .. && ndk-build V=1 TARGET_ARCH=arm 
+sdlbuild=cd .. && ndk-build V=1 TARGET_ARCH=arm
 
 INSTALL_LIBS=cp -f ../obj/local/$(TARGET_ARCH_ABI)/*.so ../libs/$(TARGET_ARCH_ABI)/
 RENAME_TUNCTL=mv -f ../libs/$(TARGET_ARCH_ABI)/tunctl ../libs/$(TARGET_ARCH_ABI)/libtunctl.so

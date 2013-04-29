@@ -35,6 +35,7 @@ LOCAL_CFLAGS += -DAVOID_TABLES
 LOCAL_CFLAGS += -O3 -fstrict-aliasing -fprefetch-loop-arrays
 #LOCAL_CFLAGS += -march=armv6j
 LOCAL_CFLAGS += $(ARCH_CFLAGS)
+LOCAL_ARM_MODE := $(ARM_MODE)
 
 LOCAL_MODULE:= jpeg
 

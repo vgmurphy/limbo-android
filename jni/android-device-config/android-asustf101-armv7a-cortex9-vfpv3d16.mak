@@ -7,9 +7,12 @@ ARCH_CFLAGS += \
 -mfloat-abi=softfp -mfpu=vfpv3-d16 \
 -mtune=cortex-a9
 
+# Possible values: arm, thumb
+ARM_MODE=arm
+
 # Suppress some warnings
 ARCH_CFLAGS += -Wno-psabi
-ARCH_CFLAGS += -O2
+ARCH_CFLAGS += -O3
 
 # Smaller code generation for shared libraries, usually faster
 # if doesn't work use -fPIC

@@ -4,7 +4,7 @@ NDK_TOOLCHAIN_VERSION=4.7
 APP_ABI := armeabi
 
 ifeq ($(TARGET_ARCH),arm)
-	APP_ABI=armeabi
+	APP_ABI=$(TARGET_ARCH_ABI)
 else
 	APP_ABI=x86
 endif

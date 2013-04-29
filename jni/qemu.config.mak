@@ -2,8 +2,9 @@ include android-toolchain.mak
 
 
 #x86 and ARM devices support
-#TARGET_LIST = x86_64-softmmu
-TARGET_LIST = arm-softmmu,x86_64-softmmu
+#ARM is currently very slow
+#Possible Values=arm-softmmu,x86_64-softmmu
+TARGET_LIST = x86_64-softmmu
 
 #use coroutine
 #ucontext is deprecated and also not avail in Bionic

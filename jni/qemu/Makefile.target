@@ -430,11 +430,11 @@ else
 ifeq ($(TARGET_ARCH),x86)
 	sdllibs=
 else
-	sdllibs=../../../obj/local/armeabi/libpng.a \
-	../../../obj/local/armeabi/libjpeg.a \
-	../../../obj/local/armeabi/libSDL2.so \
-	../../../obj/local/armeabi/libSDL2_image.so \
-	../../../obj/local/armeabi/libSDL2_mixer.so
+	sdllibs=../../../obj/local/$(TARGET_ARCH_ABI)/libpng.a \
+	../../../obj/local/$(TARGET_ARCH_ABI)/libjpeg.a \
+	../../../obj/local/$(TARGET_ARCH_ABI)/libSDL2.so \
+	../../../obj/local/$(TARGET_ARCH_ABI)/libSDL2_image.so \
+	../../../obj/local/$(TARGET_ARCH_ABI)/libSDL2_mixer.so
 endif
 
 $(QEMU_PROG): $(obj-y) $(obj-$(TARGET_BASE_ARCH)-y)

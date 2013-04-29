@@ -32,6 +32,9 @@ ARCH_CFLAGS = \
 -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__  \
 -march=armv5te -mtune=xscale -msoft-float
 
+# Possible values: arm, thumb
+ARM_MODE=arm
+
 # Suppress some warnings
 ARCH_CFLAGS += -Wno-psabi
 ARCH_CFLAGS += -O3

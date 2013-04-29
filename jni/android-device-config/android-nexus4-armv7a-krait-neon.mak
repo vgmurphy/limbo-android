@@ -33,6 +33,9 @@ ARCH_CFLAGS = \
 -mfloat-abi=softfp -mfpu=neon \
 -mtune=arm7
 
+# Possible values: arm, thumb
+ARM_MODE=arm
+
 # Suppress some warnings
 ARCH_CFLAGS += -Wno-psabi
 ARCH_CFLAGS += -O2

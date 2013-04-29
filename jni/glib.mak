@@ -262,9 +262,9 @@ LIBGLIB = ../obj/local/$(TARGET_ARCH_ABI)/libglib.a
 LIBICONV = ../obj/local/$(TARGET_ARCH_ABI)/libiconv.a
 
 all: $(OBJS) \
-	$(GLIB_OBJS) \
 	$(ICONV_OBJS) \
 	libiconv \
+	$(GLIB_OBJS) \
 	libglib 
 
 # Target specific variable to use different flags

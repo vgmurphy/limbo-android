@@ -20,13 +20,11 @@ LOCAL_CFLAGS := \
 LOCAL_SRC_FILES := $(SDL_PATH)/src/main/android/SDL_android_main.cpp 
 
 
-LOCAL_SHARED_LIBRARIES := SDL SDL_image SDL_mixer SDL_ttf
+LOCAL_SHARED_LIBRARIES := SDL2 SDL2_image SDL2_mixer SDL_ttf
 
-LOCAL_LDLIBS := -lGLESv1_CM -llog \
-obj/local/armeabi/libSDL2.so \
-obj/local/armeabi/libSDL2_mixer.so \
-obj/local/armeabi/libSDL2_image.so
+LOCAL_LDLIBS := -lGLESv1_CM -llog
 
 LOCAL_CFLAGS += $(ARCH_CFLAGS)
+LOCAL_ARM_MODE := $(ARM_MODE)
 
 include $(BUILD_SHARED_LIBRARY)

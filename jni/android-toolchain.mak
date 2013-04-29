@@ -7,14 +7,17 @@ MAKE +=
 #GCC_VERSION = 4.4.3
 #GCC_VERSION = 4.6
 GCC_VERSION = 4.7
+NDK_PLATFORM = platforms/android-14
+
+#For ARM only
+#Possible values:armeabi, armeabi-v7a
+ARMEABI=armeabi-v7a
 
 ################ No modifications below this line are necessary #####################
 
-NDK_PLATFORM = platforms/android-14
-
 ifeq ($(TARGET_ARCH),arm)
     EABI = arm-linux-androideabi-$(GCC_VERSION)
-    TARGET_ARCH_ABI = armeabi
+    TARGET_ARCH_ABI := $(ARMEABI)
     TOOLCHAIN_PREFIX = arm-linux-androideabi-
 else
     EABI = x86-$(GCC_VERSION)
