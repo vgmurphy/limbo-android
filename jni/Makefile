@@ -4,7 +4,8 @@ include android-toolchain.mak
 
 sdlbuild=cd .. && ndk-build V=1 TARGET_ARCH=arm
 
-CREATE_DIRS=mkdir -p ../obj/local/$(TARGET_ARCH_ABI)/
+CREATE_OBJDIR=mkdir -p ../obj/local/$(TARGET_ARCH_ABI)/
+CREATE_LIBSDIR=mkdir -p ../libs/$(TARGET_ARCH_ABI)/
 INSTALL_LIBS=cp -f ../obj/local/$(TARGET_ARCH_ABI)/*.so ../libs/$(TARGET_ARCH_ABI)/
 RENAME_TUNCTL=mv -f ../libs/$(TARGET_ARCH_ABI)/tunctl ../libs/$(TARGET_ARCH_ABI)/libtunctl.so
 RENAME_PARPROUTED=mv -f ../libs/$(TARGET_ARCH_ABI)/parprouted ../libs/$(TARGET_ARCH_ABI)/libparprouted.so
@@ -14,7 +15,10 @@ ifneq ($(NDK_DEBUG),1)
 endif
 
 ifeq ($(TARGET_ARCH),x86)
+	#TODO: Enable SDL, tunctl, parprouted for x86, for now we suppress
 	sdlbuild=
+	RENAME_TUNCTL=
+	RENAME_PARPROUTED=
 endif
 	
 all: createdirs sdl config qemu glib limbo
@@ -24,7 +28,8 @@ all: createdirs sdl config qemu glib limbo
 	$(STRIP_LIBS) 
 	
 createdirs:
-	$(CREATE_DIRS)
+	$(CREATE_OBJDIR)
+	$(CREATE_LIBSDIR)
 
 glib:
 	$(MAKE) -f glib.mak V=1

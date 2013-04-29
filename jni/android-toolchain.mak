@@ -20,6 +20,8 @@ ifeq ($(TARGET_ARCH),arm)
     TARGET_ARCH_ABI := $(ARMEABI)
     TOOLCHAIN_PREFIX = arm-linux-androideabi-
 else
+	#GCC 4.7 fails so switching to 4.6 for x86
+	GCC_VERSION = 4.4.3
     EABI = x86-$(GCC_VERSION)
     TARGET_ARCH_ABI = x86
     TOOLCHAIN_PREFIX = i686-linux-android-
