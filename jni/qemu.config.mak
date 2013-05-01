@@ -14,8 +14,16 @@ COROUTINE=sigaltstack
 #Enable Internal profiler
 #CONFIG_PROFILER = --enable-gprof
 
-CONFIG_EXTRA = --enable-sdl --audio-drv-list=sdl --enable-mixemu --enable-vnc-jpeg  --enable-vnc-png
-#CONFIG_EXTRA =
+#ENABLE SDL
+CONFIG_EXTRA = --enable-sdl
+
+#ENABLE JPEG PNG ENCODING
+CONFIG_EXTRA += --enable-vnc-jpeg --enable-vnc-png 
+#CONFIG_EXTRA += --disable-vnc-jpeg --disable-vnc-png 
+
+#ENABLE SOUND VIA SDL
+CONFIG_EXTRA += --audio-drv-list=sdl --enable-mixemu
+#CONFIG_EXTRA += --audio-card-list= --audio-drv-list=
 
 ifeq ($(TARGET_ARCH), arm)
     QEMU_TARGET_CPU = armv4b
