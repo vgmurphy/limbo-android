@@ -74,7 +74,7 @@ public class Const {
     public static int UIUTILS_SHOWALERT_HTML = 1013;    
     public static int VM_NO_QCOW2 = 1014;
     public static int STATUS_CHANGED = 1015;
-    public static int UIUTILS_SHOWALERT_HELP = 1016;
+    public static int UIUTILS_SHOWALERT_LICENSE = 1016;
     public static int VM_NO_KERNEL = 1017;
     public static int VM_NO_INITRD = 1018;
     public static final int VM_EXPORT = 1019;
