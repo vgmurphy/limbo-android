@@ -881,7 +881,7 @@ public class SDLActivity extends Activity {
 			SDLActivity.createEGLSurface();
 
 		// Set Fit to Screen by Default for smaller devices
-	   // so it doesn't crash
+		// so it doesn't crash
 		if (fitToScreen)
 			SDLActivity.setFitToScreen();
 
@@ -924,7 +924,8 @@ public class SDLActivity extends Activity {
 				createEGLContext();
 				if (!egl.eglMakeCurrent(SDLActivity.mEGLDisplay, surface,
 						surface, SDLActivity.mEGLContext)) {
-					Log.e("createEGLSurface", "Failed making EGL Context current");
+					Log.e("createEGLSurface",
+							"Failed making EGL Context current");
 					return false;
 				}
 			}
@@ -1261,24 +1262,24 @@ public class SDLActivity extends Activity {
 		// menu.findItem(vncCanvas.scaling.getId()).setChecked(true);
 		// }
 
-//		if (this.monitorMode) {
-//			menu.findItem(R.id.itemMonitor).setTitle("VM Console");
-//
-//		} else {
-//			menu.findItem(R.id.itemMonitor).setTitle("Monitor Console");
-//
-//		}
-//
-//		// Menu inputMenu = menu.findItem(R.id.itemInputMode).getSubMenu();
-//
-//		if (this.mouseOn) { // Panning is disable for now
-//			menu.findItem(R.id.itemMouse).setTitle("Pan (Mouse Off)");
-//			menu.findItem(R.id.itemMouse).setIcon(R.drawable.pan);
-//		} else {
-//			menu.findItem(R.id.itemMouse).setTitle("Enable Mouse");
-//			menu.findItem(R.id.itemMouse).setIcon(R.drawable.mouse);
-//
-//		}
+		// if (this.monitorMode) {
+		// menu.findItem(R.id.itemMonitor).setTitle("VM Console");
+		//
+		// } else {
+		// menu.findItem(R.id.itemMonitor).setTitle("Monitor Console");
+		//
+		// }
+		//
+		// // Menu inputMenu = menu.findItem(R.id.itemInputMode).getSubMenu();
+		//
+		// if (this.mouseOn) { // Panning is disable for now
+		// menu.findItem(R.id.itemMouse).setTitle("Pan (Mouse Off)");
+		// menu.findItem(R.id.itemMouse).setIcon(R.drawable.pan);
+		// } else {
+		// menu.findItem(R.id.itemMouse).setTitle("Enable Mouse");
+		// menu.findItem(R.id.itemMouse).setIcon(R.drawable.mouse);
+		//
+		// }
 
 		return true;
 
@@ -1499,9 +1500,9 @@ public class SDLActivity extends Activity {
 		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
 				WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
-		if(SettingsManager.getOrientationReverse(this))
+		if (SettingsManager.getOrientationReverse(this))
 			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
-		
+
 		setParams(LimboActivity.currMachine);
 
 		// So we can call stuff from static callbacks
@@ -1509,7 +1510,7 @@ public class SDLActivity extends Activity {
 
 		// Set up the surface
 		mSurface = getSDLSurface();
-//		mSurface.setRenderer(new ClearRenderer());
+		// mSurface.setRenderer(new ClearRenderer());
 		// setContentView(mSurface);
 		createUI(0, 0);
 		SurfaceHolder holder = mSurface.getHolder();

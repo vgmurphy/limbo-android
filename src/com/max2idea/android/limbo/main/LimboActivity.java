@@ -139,6 +139,8 @@ public class LimboActivity extends Activity {
 	private static final int DELETE = 3;
 	private static final int EXPORT = 4;
 	private static final int IMPORT = 5;
+	private static final int CHANGELOG = 6;
+	private static final int LICENSE = 7;
 	private ImageView mStatus;
 	private EditText mDNS;
 	private EditText mAppend;
@@ -227,8 +229,8 @@ public class LimboActivity extends Activity {
 	// private Button mResume;
 	public static FavOpenHelper favDB;
 	public static MachineOpenHelper machineDB;
+
 	// ADS
-	
 
 	public static void quit() {
 		activity.finish();
@@ -241,14 +243,16 @@ public class LimboActivity extends Activity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		if(SettingsManager.getOrientationReverse(this))
-			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
-		
-//		requestWindowFeature(Window.FEATURE_NO_TITLE);
+		OShandler = this.handler;
 
-//
-//		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-//				WindowManager.LayoutParams.FLAG_FULLSCREEN);
+		if (SettingsManager.getOrientationReverse(this))
+			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
+
+		// requestWindowFeature(Window.FEATURE_NO_TITLE);
+
+		//
+		// getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+		// WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
 		// Declare an instance variable for your MoPubView.
 
@@ -331,7 +335,7 @@ public class LimboActivity extends Activity {
 	}
 
 	public void onFirstLaunch() {
-		this.onHelp();
+		onLicense();
 	}
 
 	static protected boolean isFirstLaunch() {
@@ -428,7 +432,7 @@ public class LimboActivity extends Activity {
 			if (progDialog.isShowing()) {
 				progDialog.dismiss();
 			}
-			
+
 			return null;
 		}
 
@@ -557,10 +561,10 @@ public class LimboActivity extends Activity {
 
 			}
 			if (messageType != null
-					&& messageType == Const.UIUTILS_SHOWALERT_HELP) {
+					&& messageType == Const.UIUTILS_SHOWALERT_LICENSE) {
 				String title = (String) b.get("title");
 				String body = (String) b.get("body");
-				UIAlertHelp(title, body, activity);
+				UIAlertLicense(title, body, activity);
 			}
 			if (messageType != null
 					&& messageType == Const.UIUTILS_SHOWALERT_HTML) {
@@ -605,7 +609,7 @@ public class LimboActivity extends Activity {
 		}
 	};
 
-	public static void UIAlertHelp(String title, String html,
+	public static void UIAlertLicense(String title, String html,
 			final Activity activity) {
 
 		AlertDialog alertDialog;
@@ -617,12 +621,13 @@ public class LimboActivity extends Activity {
 				"text/html", "UTF-8");
 		alertDialog.setView(webview);
 
-		// alertDialog.setMessage(body);
 		alertDialog.setButton("I Acknowledge",
 				new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int which) {
 						if (isFirstLaunch()) {
 							install();
+							onHelp();
+							onChangeLog();
 						}
 						setFirstLaunch();
 						return;
@@ -653,14 +658,11 @@ public class LimboActivity extends Activity {
 		webview.loadData("<font color=\"FFFFFF\">" + html + " </font>",
 				"text/html", "UTF-8");
 		alertDialog.setView(webview);
-
-		// alertDialog.setMessage(body);
-		alertDialog.setButton("I Acknowledge",
-				new DialogInterface.OnClickListener() {
-					public void onClick(DialogInterface dialog, int which) {
-						return;
-					}
-				});
+		alertDialog.setButton("OK", new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int which) {
+				return;
+			}
+		});
 		alertDialog.show();
 	}
 
@@ -770,10 +772,9 @@ public class LimboActivity extends Activity {
 	}
 
 	private void onDeleteMachine() {
-		if(this.currMachine == null)
-		{
-			Toast.makeText(this, "Select a machine first!",
-					Toast.LENGTH_SHORT).show();
+		if (this.currMachine == null) {
+			Toast.makeText(this, "Select a machine first!", Toast.LENGTH_SHORT)
+					.show();
 		}
 		this.machineDB.deleteMachine(currMachine);
 		this.resetUserPressed();
@@ -851,7 +852,40 @@ public class LimboActivity extends Activity {
 
 	}
 
-	private void onHelp() {
+	private static void onHelp() {
+		PackageInfo pInfo = null;
+
+		FileUtils fileutils = new FileUtils();
+		try {
+			showAlertHtml("HELP", fileutils.LoadFile(activity, "HELP", false),
+					OShandler);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	private static void onChangeLog() {
+		PackageInfo pInfo = null;
+
+		try {
+			pInfo = activity.getPackageManager().getPackageInfo(
+					activity.getClass().getPackage().getName(),
+					PackageManager.GET_META_DATA);
+		} catch (NameNotFoundException e) {
+			e.printStackTrace();
+		}
+		FileUtils fileutils = new FileUtils();
+		try {
+			showAlertHtml("CHANCELOG",
+					fileutils.LoadFile(activity, "CHANGELOG", false), OShandler);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	private void onLicense() {
 		PackageInfo pInfo = null;
 
 		try {
@@ -863,19 +897,19 @@ public class LimboActivity extends Activity {
 		}
 		FileUtils fileutils = new FileUtils();
 		try {
-			showAlertHelp(Const.APP_NAME + " v" + pInfo.versionName,
-					fileutils.LoadFile(activity, "HELP", false), handler);
+			showAlertLicense(Const.APP_NAME + " v" + pInfo.versionName,
+					fileutils.LoadFile(activity, "LICENSE", false), handler);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 
-	public static void showAlertHelp(String title, String message,
+	public static void showAlertLicense(String title, String message,
 			Handler handler) {
 		Message msg1 = handler.obtainMessage();
 		Bundle b = new Bundle();
-		b.putInt("message_type", Const.UIUTILS_SHOWALERT_HELP);
+		b.putInt("message_type", Const.UIUTILS_SHOWALERT_LICENSE);
 		b.putString("title", title);
 		b.putString("body", message);
 		msg1.setData(b);
@@ -991,9 +1025,17 @@ public class LimboActivity extends Activity {
 	// Retrives values from saved preferences
 	private void onStartButton() {
 
-		if (this.mMachine.getSelectedItemPosition() == 0) {
+		if (this.mMachine.getSelectedItemPosition() == 0
+				|| this.currMachine == null) {
 			Toast.makeText(getApplicationContext(),
 					"Select or Create a Virtual Machine first",
+					Toast.LENGTH_LONG).show();
+			return;
+		}
+		String filenotexists = validateFiles();
+		if (filenotexists!= null) {
+			Toast.makeText(getApplicationContext(),
+					"Could not find file: " + filenotexists,
 					Toast.LENGTH_LONG).show();
 			return;
 		}
@@ -1027,8 +1069,6 @@ public class LimboActivity extends Activity {
 		vmexecutor.print();
 		output = "Starting VM...";
 		sendHandlerMessage(handler, Const.VM_STARTED);
-
-		OShandler = this.handler;
 
 		if (mUI.getSelectedItemPosition() == 1) { // SDL
 			Thread tsdl = new Thread(new Runnable() {
@@ -1071,6 +1111,35 @@ public class LimboActivity extends Activity {
 			// tdns.start();
 		}
 
+	}
+
+	private String validateFiles() {
+		// TODO Auto-generated method stub
+		if (this.currMachine.hda_img_path != null
+				&& !(new File(this.currMachine.hda_img_path)).exists()) {
+			return this.currMachine.hda_img_path;
+		} else if (this.currMachine.hdb_img_path != null
+				&& !(new File(this.currMachine.hdb_img_path)).exists()) {
+			return this.currMachine.hdb_img_path;
+		} else if (this.currMachine.fda_img_path != null
+				&& !(new File(this.currMachine.fda_img_path)).exists()) {
+			return this.currMachine.fda_img_path;
+		} else if (this.currMachine.fdb_img_path != null
+				&& !(new File(this.currMachine.fdb_img_path)).exists()) {
+			return this.currMachine.fdb_img_path;
+		} else if (this.currMachine.cd_iso_path != null
+				&& !(new File(this.currMachine.cd_iso_path)).exists()) {
+			return this.currMachine.cd_iso_path;
+		} else if (this.currMachine.kernel != null
+				&& !(new File(this.currMachine.kernel)).exists()) {
+			return this.currMachine.kernel;
+		} else if (this.currMachine.initrd != null
+				&& !(new File(this.currMachine.initrd)).exists()) {
+			return this.currMachine.initrd;
+		} else if (!(new File(Const.basefiledir+"/bios.bin")).exists()) {
+			return Const.basefiledir+"/bios.bin";
+		}
+		return null;
 	}
 
 	private void setDNSaddr() {
@@ -1187,7 +1256,8 @@ public class LimboActivity extends Activity {
 		mPrio.setChecked(SettingsManager.getPrio(activity));
 
 		this.mReverseLandscape = (CheckBox) findViewById(R.id.reverselval); //
-		mReverseLandscape.setChecked(SettingsManager.getOrientationReverse(activity));
+		mReverseLandscape.setChecked(SettingsManager
+				.getOrientationReverse(activity));
 
 		this.mMultiAIO = (CheckBox) findViewById(R.id.enableMultiThreadval); // No
 																				// external
@@ -1284,12 +1354,12 @@ public class LimboActivity extends Activity {
 					currMachine.cpu = cpu;
 					int ret = machineDB.update(currMachine,
 							MachineOpenHelper.CPU, cpu);
-					if(currMachine.cpu.endsWith("(arm)")){
+					if (currMachine.cpu.endsWith("(arm)")) {
 						mKernel.setEnabled(true);
 						mInitrd.setEnabled(true);
 						mAppend.setEnabled(true);
 						mMachineType.setEnabled(true);
-					}else {
+					} else {
 						mKernel.setEnabled(false);
 						mInitrd.setEnabled(false);
 						mAppend.setEnabled(false);
@@ -1739,12 +1809,11 @@ public class LimboActivity extends Activity {
 							activity.getClass().getPackage().getName(),
 							PackageManager.GET_META_DATA);
 					Toast.makeText(getApplicationContext(),
-							"UserID = " + pInfo.uid,
-							Toast.LENGTH_LONG).show();
+							"UserID = " + pInfo.uid, Toast.LENGTH_LONG).show();
 				} catch (NameNotFoundException e) {
 					e.printStackTrace();
 				}
-				if (netfcg.equals("tap")){
+				if (netfcg.equals("tap")) {
 					try {
 						Process p = Runtime.getRuntime().exec("su");
 					} catch (IOException e) {
@@ -2010,18 +2079,20 @@ public class LimboActivity extends Activity {
 				// Log.v(TAG, "Nothing selected");
 			}
 		});
-		
-		mReverseLandscape.setOnCheckedChangeListener(new OnCheckedChangeListener() {
-			public void onCheckedChanged(CompoundButton viewButton,
-					boolean isChecked) {
-					SettingsManager.setOrientationReverse(activity, isChecked);
-			}
 
-			public void onNothingSelected(AdapterView<?> parentView) {
-				// your code here
-				// Log.v(TAG, "Nothing selected");
-			}
-		});
+		mReverseLandscape
+				.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+					public void onCheckedChanged(CompoundButton viewButton,
+							boolean isChecked) {
+						SettingsManager.setOrientationReverse(activity,
+								isChecked);
+					}
+
+					public void onNothingSelected(AdapterView<?> parentView) {
+						// your code here
+						// Log.v(TAG, "Nothing selected");
+					}
+				});
 
 		mMultiAIO.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 			public void onCheckedChanged(CompoundButton viewButton,
@@ -2209,13 +2280,13 @@ public class LimboActivity extends Activity {
 	}
 
 	public void promptMultiAIO(final Activity activity) {
-//		if (!ICS) {
-//			Toast.makeText(getApplicationContext(),
-//					"Multithread AIO supported only for ICS and above!",
-//					Toast.LENGTH_SHORT).show();
-//			this.mMultiAIO.setChecked(false);
-//			return;
-//		}
+		// if (!ICS) {
+		// Toast.makeText(getApplicationContext(),
+		// "Multithread AIO supported only for ICS and above!",
+		// Toast.LENGTH_SHORT).show();
+		// this.mMultiAIO.setChecked(false);
+		// return;
+		// }
 		final AlertDialog alertDialog;
 		alertDialog = new AlertDialog.Builder(activity).create();
 		alertDialog.setTitle("Warning!");
@@ -2367,27 +2438,30 @@ public class LimboActivity extends Activity {
 		setPlusParams.addRule(RelativeLayout.BELOW, imageNameView.getId());
 		mLayout.addView(size, setPlusParams);
 
-		//TODO: Not working for now
-//		final TextView preallocText = new TextView(this);
-//		preallocText.setText("Preallocate? ");
-//		preallocText.setTextSize(15);
-//		RelativeLayout.LayoutParams preallocTParams = new RelativeLayout.LayoutParams(
-//				RelativeLayout.LayoutParams.WRAP_CONTENT,
-//				RelativeLayout.LayoutParams.WRAP_CONTENT);
-//		preallocTParams.addRule(RelativeLayout.BELOW, size.getId());
-//		mLayout.addView(preallocText, preallocTParams);
-//		preallocText.setId(64512044);
-//
-//		final CheckBox prealloc = new CheckBox(this);
-//		RelativeLayout.LayoutParams preallocParams = new RelativeLayout.LayoutParams(
-//				RelativeLayout.LayoutParams.WRAP_CONTENT,
-//				RelativeLayout.LayoutParams.WRAP_CONTENT);
-//		preallocParams.addRule(RelativeLayout.BELOW, size.getId());
-//		preallocParams.addRule(RelativeLayout.RIGHT_OF, preallocText.getId());
-//		preallocParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT,
-//				preallocText.getId());
-//		mLayout.addView(prealloc, preallocParams);
-//		prealloc.setId(64512344);
+		// TODO: Not working for now
+		// final TextView preallocText = new TextView(this);
+		// preallocText.setText("Preallocate? ");
+		// preallocText.setTextSize(15);
+		// RelativeLayout.LayoutParams preallocTParams = new
+		// RelativeLayout.LayoutParams(
+		// RelativeLayout.LayoutParams.WRAP_CONTENT,
+		// RelativeLayout.LayoutParams.WRAP_CONTENT);
+		// preallocTParams.addRule(RelativeLayout.BELOW, size.getId());
+		// mLayout.addView(preallocText, preallocTParams);
+		// preallocText.setId(64512044);
+		//
+		// final CheckBox prealloc = new CheckBox(this);
+		// RelativeLayout.LayoutParams preallocParams = new
+		// RelativeLayout.LayoutParams(
+		// RelativeLayout.LayoutParams.WRAP_CONTENT,
+		// RelativeLayout.LayoutParams.WRAP_CONTENT);
+		// preallocParams.addRule(RelativeLayout.BELOW, size.getId());
+		// preallocParams.addRule(RelativeLayout.RIGHT_OF,
+		// preallocText.getId());
+		// preallocParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT,
+		// preallocText.getId());
+		// mLayout.addView(prealloc, preallocParams);
+		// prealloc.setId(64512344);
 
 		alertDialog.setView(mLayout);
 
@@ -2408,10 +2482,11 @@ public class LimboActivity extends Activity {
 				EditText a = (EditText) alertDialog.findViewById(201012010);
 				progDialog = ProgressDialog.show(activity, "Please Wait",
 						"Creating HD Image...", true);
-//				CreateImage createImg = new CreateImage(a.getText().toString(),
-//						hd_string, sizeInt, prealloc.isChecked());
+				// CreateImage createImg = new
+				// CreateImage(a.getText().toString(),
+				// hd_string, sizeInt, prealloc.isChecked());
 				CreateImage createImg = new CreateImage(a.getText().toString(),
-				hd_string, sizeInt, false);
+						hd_string, sizeInt, false);
 				createImg.execute();
 
 			}
@@ -2980,7 +3055,7 @@ public class LimboActivity extends Activity {
 
 	// Set Net Cfg
 	private void populateNet() {
-		String[] arraySpinner = { "None", "User","TAP" };
+		String[] arraySpinner = { "None", "User", "TAP" };
 		netAdapter = new ArrayAdapter(this,
 				android.R.layout.simple_spinner_item, arraySpinner);
 		netAdapter
@@ -3052,7 +3127,7 @@ public class LimboActivity extends Activity {
 			userPressedMachine = true;
 			// Log.v("Mach", "reset userPressed = " + userPressedMachine);
 		}
-//		mStart.requestFocus();
+		// mStart.requestFocus();
 	}
 
 	// Set Hard Disk
@@ -3371,7 +3446,7 @@ public class LimboActivity extends Activity {
 			mSnapshot.setSelection(0);
 			// Log.v("NET", "reset userPressed = " + this.userPressedBootDev);
 		}
-//		mStart.requestFocus();
+		// mStart.requestFocus();
 	}
 
 	private void setNicDevice(String nic, boolean userPressed) {
@@ -3396,36 +3471,27 @@ public class LimboActivity extends Activity {
 
 		String[] arraySpinner = {
 				// x86 32bit
-				"Default (x86)",
-				"qemu32",
-				"coreduo",
-				"486",
-				"pentium",
-				"pentium2",
-				"pentium3",
-				"athlon",
+				"Default (x86)", "qemu32", "coreduo", "486", "pentium",
+				"pentium2", "pentium3", "athlon",
 				"n270",
 
 				// x86 (64Bit)
-				"Default (64Bit)",
-				"qemu64 (64Bit)",
-				"phenom (64Bit)",
+				"Default (64Bit)", "qemu64 (64Bit)", "phenom (64Bit)",
 				"core2duo (64Bit)",
 				"kvm64 (64Bit)"
 
 				// arm
-				,"Default (arm)",
-				"arm926 (arm)", 
-				"arm946 (arm)", "arm1026 (arm)",
-//				"arm1136 (arm)", "arm1136-r2 (arm)", "arm1176 (arm)",
-//				"arm11mpcore (arm)", "cortex-m3 (arm)", "cortex-a8 (arm)",
-//				"cortex-a8-r2 (arm)", "cortex-a9 (arm)", "cortex-a15 (arm)",
-//				"ti925t (arm)", "pxa250 (arm)", "sa1100 (arm)", "sa1110 (arm)",
-//				"pxa255 (arm)", "pxa260 (arm)", "pxa261 (arm)", "pxa262 (arm)",
-//				"pxa270 (arm)", "pxa270-a0 (arm)", "pxa270-a1 (arm)",
-//				"pxa270-b0 (arm)", "pxa270-b1 (arm)", "pxa270-c0 (arm)",
-//				"pxa270-c5 (arm)", "any (arm)" 
-				};
+				, "Default (arm)", "arm926 (arm)", "arm946 (arm)",
+				"arm1026 (arm)",
+		// "arm1136 (arm)", "arm1136-r2 (arm)", "arm1176 (arm)",
+		// "arm11mpcore (arm)", "cortex-m3 (arm)", "cortex-a8 (arm)",
+		// "cortex-a8-r2 (arm)", "cortex-a9 (arm)", "cortex-a15 (arm)",
+		// "ti925t (arm)", "pxa250 (arm)", "sa1100 (arm)", "sa1110 (arm)",
+		// "pxa255 (arm)", "pxa260 (arm)", "pxa261 (arm)", "pxa262 (arm)",
+		// "pxa270 (arm)", "pxa270-a0 (arm)", "pxa270-a1 (arm)",
+		// "pxa270-b0 (arm)", "pxa270-b1 (arm)", "pxa270-c0 (arm)",
+		// "pxa270-c5 (arm)", "any (arm)"
+		};
 
 		cpuAdapter = new ArrayAdapter(this,
 				android.R.layout.simple_spinner_item, arraySpinner);
@@ -3438,43 +3504,42 @@ public class LimboActivity extends Activity {
 	private void populateMachineType() {
 		this.userPressedMachineType = false;
 
-		String[] arraySpinner = {
-				"None",
-//				"beagle - Beagle board (OMAP3530)",
-//				"beaglexm - Beagle board XM (OMAP3630)",
-//				"collie - Collie PDA (SA-1110)",
-//				"nuri - Samsung NURI board (Exynos4210)",
-//				"smdkc210 - Samsung SMDKC210 board (Exynos4210)",
-//				"connex - Gumstix Connex (PXA255)",
-//				"verdex - Gumstix Verdex (PXA270)",
-//				"highbank - Calxeda Highbank (ECX-1000)",
-//				"integratorcp - ARM Integrator/CP (ARM926EJ-S) (default)",
-//				"mainstone - Mainstone II (PXA27x)",
-//				"musicpal - Marvell 88w8618 / MusicPal (ARM926EJ-S)",
-//				"n800 - Nokia N800 tablet aka. RX-34 (OMAP2420)",
-//				"n810 - Nokia N810 tablet aka. RX-44 (OMAP2420)",
-//				"n900 - Nokia N900 (OMAP3)",
-//				"sx1 - Siemens SX1 (OMAP310) V2",
-//				"sx1-v1 - Siemens SX1 (OMAP310) V1",
-//				"overo - Gumstix Overo board (OMAP3530)",
-//				"cheetah - Palm Tungsten|E aka. Cheetah PDA (OMAP310)",
-//				"realview-eb - ARM RealView Emulation Baseboard (ARM926EJ-S)",
-//				"realview-eb-mpcore - ARM RealView Emulation Baseboard (ARM11MPCore)",
-//				"realview-pb-a8 - ARM RealView Platform Baseboard for Cortex-A8",
-//				"realview-pbx-a9 - ARM RealView Platform Baseboard Explore for Cortex-A9",
-//				"akita -  Akita PDA (PXA270)",
-//				"spitz - Spitz PDA (PXA270)",
-//				"borzoi - Borzoi PDA (PXA270)",
-//				"terrier - Terrier PDA (PXA270)",
-//				"lm3s811evb - Stellaris LM3S811EVB",
-//				"lm3s6965evb - Stellaris LM3S6965EVB",
-//				"tosa - Tosa PDA (PXA255)",
+		String[] arraySpinner = { "None",
+				// "beagle - Beagle board (OMAP3530)",
+				// "beaglexm - Beagle board XM (OMAP3630)",
+				// "collie - Collie PDA (SA-1110)",
+				// "nuri - Samsung NURI board (Exynos4210)",
+				// "smdkc210 - Samsung SMDKC210 board (Exynos4210)",
+				// "connex - Gumstix Connex (PXA255)",
+				// "verdex - Gumstix Verdex (PXA270)",
+				// "highbank - Calxeda Highbank (ECX-1000)",
+				// "integratorcp - ARM Integrator/CP (ARM926EJ-S) (default)",
+				// "mainstone - Mainstone II (PXA27x)",
+				// "musicpal - Marvell 88w8618 / MusicPal (ARM926EJ-S)",
+				// "n800 - Nokia N800 tablet aka. RX-34 (OMAP2420)",
+				// "n810 - Nokia N810 tablet aka. RX-44 (OMAP2420)",
+				// "n900 - Nokia N900 (OMAP3)",
+				// "sx1 - Siemens SX1 (OMAP310) V2",
+				// "sx1-v1 - Siemens SX1 (OMAP310) V1",
+				// "overo - Gumstix Overo board (OMAP3530)",
+				// "cheetah - Palm Tungsten|E aka. Cheetah PDA (OMAP310)",
+				// "realview-eb - ARM RealView Emulation Baseboard (ARM926EJ-S)",
+				// "realview-eb-mpcore - ARM RealView Emulation Baseboard (ARM11MPCore)",
+				// "realview-pb-a8 - ARM RealView Platform Baseboard for Cortex-A8",
+				// "realview-pbx-a9 - ARM RealView Platform Baseboard Explore for Cortex-A9",
+				// "akita -  Akita PDA (PXA270)",
+				// "spitz - Spitz PDA (PXA270)",
+				// "borzoi - Borzoi PDA (PXA270)",
+				// "terrier - Terrier PDA (PXA270)",
+				// "lm3s811evb - Stellaris LM3S811EVB",
+				// "lm3s6965evb - Stellaris LM3S6965EVB",
+				// "tosa - Tosa PDA (PXA255)",
 				"versatilepb - ARM Versatile/PB (ARM926EJ-S)",
-//				"versatileab - ARM Versatile/AB (ARM926EJ-S)",
-//				"vexpress-a9 - ARM Versatile Express for Cortex-A9",
-//				"vexpress-a15 - ARM Versatile Express for Cortex-A15",
-//				"z2 - Zipit Z2 (PXA27x)", 
-				};
+		// "versatileab - ARM Versatile/AB (ARM926EJ-S)",
+		// "vexpress-a9 - ARM Versatile Express for Cortex-A9",
+		// "vexpress-a15 - ARM Versatile Express for Cortex-A15",
+		// "z2 - Zipit Z2 (PXA27x)",
+		};
 
 		machineTypeAdapter = new ArrayAdapter(this,
 				android.R.layout.simple_spinner_item, arraySpinner);
@@ -3779,7 +3844,6 @@ public class LimboActivity extends Activity {
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
 		menu.clear();
-		
 
 		menu.add(0, INSTALL, 0, "Install Roms").setIcon(
 				android.R.drawable.ic_menu_agenda);
@@ -3790,6 +3854,10 @@ public class LimboActivity extends Activity {
 		menu.add(0, IMPORT, 0, "Import Machines").setIcon(
 				android.R.drawable.ic_menu_send);
 		menu.add(0, HELP, 0, "Help").setIcon(android.R.drawable.ic_menu_help);
+		menu.add(0, CHANGELOG, 0, "Changelog").setIcon(
+				android.R.drawable.ic_menu_help);
+		menu.add(0, LICENSE, 0, "License").setIcon(
+				android.R.drawable.ic_menu_help);
 		menu.add(0, QUIT, 0, "Exit").setIcon(
 				android.R.drawable.ic_lock_power_off);
 
@@ -3811,6 +3879,10 @@ public class LimboActivity extends Activity {
 			this.onImportMachines();
 		} else if (item.getItemId() == this.HELP) {
 			this.onHelp();
+		} else if (item.getItemId() == this.CHANGELOG) {
+			this.onChangeLog();
+		} else if (item.getItemId() == this.LICENSE) {
+			this.onLicense();
 		} else if (item.getItemId() == this.QUIT) {
 			this.exit();
 		}
@@ -3932,7 +4004,7 @@ public class LimboActivity extends Activity {
 
 	private String checkStatus() {
 		String state = "READY";
-		if (vmexecutor != null && vmexecutor.libLoaded 
+		if (vmexecutor != null && vmexecutor.libLoaded
 				&& vmexecutor.get_state().equals("RUNNING")) {
 			state = "RUNNING";
 		} else if (vmexecutor != null) {
