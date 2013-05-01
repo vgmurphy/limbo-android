@@ -11,7 +11,7 @@ NDK_PLATFORM = platforms/android-14
 
 #For ARM only
 #Possible values:armeabi, armeabi-v7a
-ARMEABI=armeabi-v7a
+ARMEABI=armeabi
 
 ################ No modifications below this line are necessary #####################
 
