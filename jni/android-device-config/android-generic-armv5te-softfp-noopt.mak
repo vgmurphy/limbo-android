@@ -64,7 +64,7 @@ ARCH_CFLAGS += -fpic
 #ARCH_CFLAGS += -foptimize-sibling-calls
 
 # Should not be limiting inline functions or this value should be very large
-#ARCH_CFLAGS += -finline-limit=64
+ARCH_CFLAGS += -finline-limit=20000
 
 # Not supported
 #ARCH_CFLAGS += -fforce-mem

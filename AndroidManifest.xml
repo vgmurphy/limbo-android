@@ -116,6 +116,17 @@
             </intent-filter>
         </activity>
         
+        <activity android:name="com.mopub.mobileads.MoPubActivity"
+                  android:configChanges="keyboardHidden|orientation"/>
+        <activity android:name="com.mopub.mobileads.MraidActivity"
+                  android:configChanges="keyboardHidden|orientation"/>
+        <activity android:name="com.mopub.mobileads.MraidBrowser"
+                  android:configChanges="keyboardHidden|orientation"/>
+        <activity android:name="com.mopub.simpleadsdemo.BannersTab" />
+        <activity android:name="com.mopub.simpleadsdemo.InterstitialsTab" />
+        <activity android:name="com.mopub.simpleadsdemo.ConsoleTab" />
+        <activity android:name="com.mopub.simpleadsdemo.AboutTab" />
+        
     </application>
 
 </manifest>

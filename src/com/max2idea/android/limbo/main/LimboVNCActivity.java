@@ -24,7 +24,9 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -46,6 +48,7 @@ public class LimboVNCActivity extends android.androidVNC.VncCanvasActivity {
 
 	public static final int KEYBOARD = 10000;
 	public static final int QUIT = 10001;
+	public static final int HELP = 10002;
 	private boolean qmpMode = false;
 	private boolean mouseOn = false;
 	private Object lockTime = new Object();
@@ -57,16 +60,16 @@ public class LimboVNCActivity extends android.androidVNC.VncCanvasActivity {
 	public void onCreate(Bundle b) {
 		super.onCreate(b);
 
-		if(SettingsManager.getOrientationReverse(this))
+		if (SettingsManager.getOrientationReverse(this))
 			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
-		
-		
+
 		Toast toast = Toast.makeText(activity,
 				"2-Finger Long Press for Right Click", Toast.LENGTH_LONG);
 		toast.setGravity(Gravity.TOP | Gravity.CENTER, 0, 0);
 		toast.show();
 		this.vncCanvas.setFocusableInTouchMode(true);
 		onMouse();
+		
 
 	}
 
@@ -81,6 +84,10 @@ public class LimboVNCActivity extends android.androidVNC.VncCanvasActivity {
 	public void onDestroy() {
 		super.onDestroy();
 		this.stopTimeListener();
+		if (LimboAds.mAdView != null) {
+			LimboAds.mAdView.destroy();
+		}
+
 	}
 
 	public void onPause() {
@@ -149,8 +156,10 @@ public class LimboVNCActivity extends android.androidVNC.VncCanvasActivity {
 		} else if (item.getItemId() == this.QUIT) {
 		} else if (item.getItemId() == R.id.itemCenterMouse) {
 			return onMouse();
+		} else if (item.getItemId() == R.id.itemHelp) {
+			this.onMenuHelp();
 		}
-//		this.vncCanvas.requestFocus();
+		// this.vncCanvas.requestFocus();
 		return true;
 	}
 
@@ -343,5 +352,13 @@ public class LimboVNCActivity extends android.androidVNC.VncCanvasActivity {
 			save_state = LimboActivity.vmexecutor.get_save_state();
 		}
 		return save_state;
+	}
+
+	private static void onMenuHelp() {
+		String url = "http://code.google.com/p/limbo-android/wiki/LimboAndroid";
+		Intent i = new Intent(Intent.ACTION_VIEW);
+		i.setData(Uri.parse(url));
+		LimboActivity.activity.startActivity(i);
+
 	}
 }

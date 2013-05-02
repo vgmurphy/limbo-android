@@ -90,5 +90,6 @@
 <string name="username_caption">Username</string>
 <string name="username_hint">For Windows Authentication</string>
 <string name="right_click">Mouse Right Click</string>
+<string name="help">Help</string>
 </resources>
 

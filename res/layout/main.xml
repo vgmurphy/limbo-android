@@ -6,6 +6,19 @@
     android:keepScreenOn="true"
     android:orientation="vertical" >
 
+      <LinearLayout
+        android:id="@+id/adsl"
+        android:layout_width="320dip"
+        android:layout_height="50dip"
+        android:layout_gravity="center" >
+
+        <com.max2idea.android.limbo.main.LimboAdView
+            android:id="@+id/adview"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:layout_gravity="center" />
+    </LinearLayout>
+    
     <LinearLayout
         android:id="@+id/scroll_layout"
         android:layout_width="wrap_content"

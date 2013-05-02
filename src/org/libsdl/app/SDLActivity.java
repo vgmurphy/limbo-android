@@ -23,6 +23,7 @@ import android.content.pm.ActivityInfo;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
+import android.net.Uri;
 import android.opengl.GLSurfaceView;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -68,6 +69,7 @@ public class SDLActivity extends Activity {
 
 	public static final int KEYBOARD = 10000;
 	public static final int QUIT = 10001;
+	public static final int HELP = 10002;
 	private boolean monitorMode = false;
 	private boolean mouseOn = false;
 	private Object lockTime = new Object();
@@ -1048,9 +1050,19 @@ public class SDLActivity extends Activity {
 		} else if (item.getItemId() == R.id.itemZoomable) {
 			this.setZoomable();
 		} else if (item.getItemId() == this.QUIT) {
+		} else if (item.getItemId() == R.id.itemHelp) {
+			this.onMenuHelp();
 		}
 		// this.canvas.requestFocus();
 		return true;
+	}
+
+	private static void onMenuHelp() {
+		String url = "http://code.google.com/p/limbo-android/wiki/LimboAndroid";
+		Intent i = new Intent(Intent.ACTION_VIEW);
+		i.setData(Uri.parse(url));
+		LimboActivity.activity.startActivity(i);
+
 	}
 
 	private void promptMouse() {
@@ -1510,11 +1522,12 @@ public class SDLActivity extends Activity {
 
 		// Set up the surface
 		mSurface = getSDLSurface();
-		// mSurface.setRenderer(new ClearRenderer());
+		mSurface.setRenderer(new ClearRenderer());
+//		mSurface.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
 		// setContentView(mSurface);
 		createUI(0, 0);
 		SurfaceHolder holder = mSurface.getHolder();
-		// holder.setType(SurfaceHolder.SURFACE_TYPE_GPU);
+		 holder.setType(SurfaceHolder.SURFACE_TYPE_GPU);
 		setScreenSize();
 
 	}
@@ -1883,5 +1896,6 @@ class ClearRenderer implements GLSurfaceView.Renderer {
 	public void onDrawFrame(GL10 gl) {
 		Log.v("onDrawFrame", "...");
 		gl.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
+		
 	}
 }

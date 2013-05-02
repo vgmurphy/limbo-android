@@ -39,7 +39,7 @@ public class Const {
 	public static boolean debug = false;
 	public static boolean enable_SDL = true;
 	public static boolean enable_sound = true;
-	public static boolean enableAds = false;
+	public static boolean enableAds = true;
 	
 	public static String DBFile = Environment.getExternalStorageDirectory() + "/limbo/machines.csv";
     public static String APP_NAME = "Limbo PC Emulator (QEMU)";

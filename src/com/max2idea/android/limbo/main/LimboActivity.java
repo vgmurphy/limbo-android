@@ -46,6 +46,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.Color;
+import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.net.wifi.WifiManager.WifiLock;
 import android.os.AsyncTask;
@@ -248,11 +249,13 @@ public class LimboActivity extends Activity {
 		if (SettingsManager.getOrientationReverse(this))
 			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
 
-		// requestWindowFeature(Window.FEATURE_NO_TITLE);
+		if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+		 requestWindowFeature(Window.FEATURE_NO_TITLE);
+		}
 
-		//
-		// getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-		// WindowManager.LayoutParams.FLAG_FULLSCREEN);
+		
+		 getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+		 WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
 		// Declare an instance variable for your MoPubView.
 
@@ -270,7 +273,7 @@ public class LimboActivity extends Activity {
 		populateAttributes();
 
 		if (Const.enableAds) {
-			setupAds();
+			LimboAds.setupAds();
 		}
 
 		execTimeListener();
@@ -864,6 +867,14 @@ public class LimboActivity extends Activity {
 			e.printStackTrace();
 		}
 	}
+	
+	private static void onMenuHelp() {
+		String url = "http://code.google.com/p/limbo-android/wiki/LimboAndroid";
+		Intent i = new Intent(Intent.ACTION_VIEW);
+		i.setData(Uri.parse(url));
+		activity.startActivity(i);
+		
+	}
 
 	private static void onChangeLog() {
 		PackageInfo pInfo = null;
@@ -978,9 +989,6 @@ public class LimboActivity extends Activity {
 
 	}
 
-	private void setupAds() {
-
-	}
 
 	static private void onInstall() {
 		FileInstaller.installFiles(activity);
@@ -1115,25 +1123,32 @@ public class LimboActivity extends Activity {
 
 	private String validateFiles() {
 		// TODO Auto-generated method stub
-		if (this.currMachine.hda_img_path != null
+		if ((this.currMachine.hda_img_path != null 
+				&&! currMachine.hda_img_path.equals("None"))
 				&& !(new File(this.currMachine.hda_img_path)).exists()) {
 			return this.currMachine.hda_img_path;
-		} else if (this.currMachine.hdb_img_path != null
+		} else if ((this.currMachine.hdb_img_path != null
+				&&! currMachine.hdb_img_path.equals("None"))
 				&& !(new File(this.currMachine.hdb_img_path)).exists()) {
 			return this.currMachine.hdb_img_path;
-		} else if (this.currMachine.fda_img_path != null
+		} else if ((this.currMachine.fda_img_path != null
+				&&! currMachine.fda_img_path.equals("None"))
 				&& !(new File(this.currMachine.fda_img_path)).exists()) {
 			return this.currMachine.fda_img_path;
-		} else if (this.currMachine.fdb_img_path != null
+		} else if ((this.currMachine.fdb_img_path != null
+				&&! currMachine.fdb_img_path.equals("None"))
 				&& !(new File(this.currMachine.fdb_img_path)).exists()) {
 			return this.currMachine.fdb_img_path;
-		} else if (this.currMachine.cd_iso_path != null
+		} else if ((this.currMachine.cd_iso_path != null
+				&&! currMachine.cd_iso_path.equals("None"))
 				&& !(new File(this.currMachine.cd_iso_path)).exists()) {
 			return this.currMachine.cd_iso_path;
-		} else if (this.currMachine.kernel != null
+		} else if ((this.currMachine.kernel != null
+				&&! currMachine.kernel.equals("None"))
 				&& !(new File(this.currMachine.kernel)).exists()) {
 			return this.currMachine.kernel;
-		} else if (this.currMachine.initrd != null
+		} else if ((this.currMachine.initrd != null
+				&&! currMachine.initrd.equals("None"))
 				&& !(new File(this.currMachine.initrd)).exists()) {
 			return this.currMachine.initrd;
 		} else if (!(new File(Const.basefiledir+"/bios.bin")).exists()) {
@@ -3878,7 +3893,7 @@ public class LimboActivity extends Activity {
 		} else if (item.getItemId() == this.IMPORT) {
 			this.onImportMachines();
 		} else if (item.getItemId() == this.HELP) {
-			this.onHelp();
+			this.onMenuHelp();
 		} else if (item.getItemId() == this.CHANGELOG) {
 			this.onChangeLog();
 		} else if (item.getItemId() == this.LICENSE) {

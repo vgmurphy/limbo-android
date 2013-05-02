@@ -28,7 +28,7 @@ import com.max2idea.android.limbo.main.Const;
  * 
  * Because of this, that's where we set up the SDL thread
  */
-public class SDLSurface extends SurfaceView implements
+public class SDLSurface extends GLSurfaceView implements
 		SurfaceHolder.Callback, View.OnKeyListener, View.OnTouchListener,
 		SensorEventListener {
 
