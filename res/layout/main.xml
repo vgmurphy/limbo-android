@@ -199,7 +199,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
-                        android:text="CPU: "
+                        android:text="CPU Model: "
                         android:textSize="15dip" />
 
                     <Spinner
@@ -223,7 +223,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
-                        android:text="CPUs: "
+                        android:text="CPU Cores: "
                         android:textSize="15dip" />
 
                     <Spinner
@@ -247,7 +247,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
-                        android:text="RAM Memory Size: "
+                        android:text="RAM Memory (MB) "
                         android:textSize="15dip" />
 
                     <Spinner
