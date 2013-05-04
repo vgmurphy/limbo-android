@@ -49,6 +49,9 @@ https://code.google.com/p/limbo-android/
     		 
     	** Make sure the *.so libraries are zipped in the final .apk
     	(Eclipse should do that automatically) 
+    	
+    d. If you want to build the ARM Emulator update qemu.config.mak file:
+    TARGET_LIST = arm-softmmu
 
 ===============================================================================
 5. Run
