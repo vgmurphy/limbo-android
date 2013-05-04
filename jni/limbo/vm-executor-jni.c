@@ -604,15 +604,15 @@ JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_start(
 	if (hdb_img_path_str != NULL) {
 		params += 2;
 	}
-	if (cdrom_iso_path_str != NULL) {
+	//if (cdrom_iso_path_str != NULL) { //Always define a cdrom drive
 		params += 2;
-	}
+	//}
 	//if (fda_img_path_str != NULL) { //Always define a diskette drive
 	params += 2;
 	//}
-	if (fdb_img_path_str != NULL) {
+//	if (fdb_img_path_str != NULL) {//Always define a diskette drive
 		params += 2;
-	}
+//	}
 	if (net_str != NULL) {
 		params += 2;
 	}
@@ -769,6 +769,10 @@ JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_start(
 		LOGV("Adding CD");
 		strcpy(argv[param++], "-cdrom");
 		strcpy(argv[param++], cdrom_iso_path_str);
+	} else {
+		//empty cdrom
+		strcpy(argv[param++], "-drive");
+		strcpy(argv[param++], "index=2,media=cdrom");
 	}
 	if (fda_img_path_str != NULL) {
 		LOGV("Adding FDA");
@@ -782,6 +786,9 @@ JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_start(
 		LOGV("Adding FDB");
 		strcpy(argv[param++], "-fdb");
 		strcpy(argv[param++], fdb_img_path_str);
+	} else {
+		strcpy(argv[param++], "-drive"); //Always define floppy
+		strcpy(argv[param++], "index=1,if=floppy");
 	}
 
 	if (vga_type_str != NULL && strncmp(arch_str, "arm", 3) != 0) {
