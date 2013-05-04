@@ -854,13 +854,49 @@ public class LimboActivity extends Activity {
 		alertDialog.show();
 
 	}
-
+	
+	private static void onTap() {
+		ApplicationInfo pInfo = null;
+		String userid="None";
+		try {
+			pInfo = activity.getPackageManager().getApplicationInfo(
+					activity.getClass().getPackage().getName(),
+					PackageManager.GET_META_DATA);
+			userid = pInfo.uid + "";
+		} catch (NameNotFoundException e) {
+			e.printStackTrace();
+		}
+		if(!(new File("/dev/net/tun")).exists()){
+			showAlertHtml("TAP - User Id: " + userid, "Your device doesn't support TAP, use \"User\" network mode instead ",
+					OShandler);		
+			return;
+		}
+		FileUtils fileutils = new FileUtils();
+		try {
+			showAlertHtml("TAP - User Id: " + userid, fileutils.LoadFile(activity, "TAP", false),
+					OShandler);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	
 	private static void onHelp() {
 		PackageInfo pInfo = null;
 
+		try {
+			pInfo = activity.getPackageManager().getPackageInfo(
+					activity.getClass().getPackage().getName(),
+					PackageManager.GET_META_DATA);
+		} catch (NameNotFoundException e) {
+			e.printStackTrace();
+		} 
+		
+
 		FileUtils fileutils = new FileUtils();
 		try {
-			showAlertHtml("HELP", fileutils.LoadFile(activity, "HELP", false),
+			showAlertHtml(Const.APP_NAME + " v" + pInfo.versionName, fileutils.LoadFile(activity, "HELP", false),
 					OShandler);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -1819,22 +1855,10 @@ public class LimboActivity extends Activity {
 				userPressedNetCfg = true;
 				ApplicationInfo pInfo = null;
 
-				try {
-					pInfo = activity.getPackageManager().getApplicationInfo(
-							activity.getClass().getPackage().getName(),
-							PackageManager.GET_META_DATA);
-					Toast.makeText(getApplicationContext(),
-							"UserID = " + pInfo.uid, Toast.LENGTH_LONG).show();
-				} catch (NameNotFoundException e) {
-					e.printStackTrace();
-				}
-				if (netfcg.equals("tap")) {
-					try {
-						Process p = Runtime.getRuntime().exec("su");
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
+				
+				if (netfcg.equals("TAP")) {
+					
+					onTap();
 				}
 				// Log.v("Net CFG List", "reset userPressed = "
 				// + userPressedNetCfg);
@@ -3893,7 +3917,7 @@ public class LimboActivity extends Activity {
 		} else if (item.getItemId() == this.IMPORT) {
 			this.onImportMachines();
 		} else if (item.getItemId() == this.HELP) {
-			this.onMenuHelp();
+			this.onHelp();
 		} else if (item.getItemId() == this.CHANGELOG) {
 			this.onChangeLog();
 		} else if (item.getItemId() == this.LICENSE) {
