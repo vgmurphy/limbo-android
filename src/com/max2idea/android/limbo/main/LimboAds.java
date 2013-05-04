@@ -28,8 +28,8 @@ public class LimboAds {
 
 		mAdView.setOnAdLoadedListener(new OnAdLoadedListener() {
 			public void OnAdLoaded(MoPubView mpv) {
-				 Toast.makeText(LimboActivity.activity.getApplicationContext(),
-				 "Ad successfully loaded.", Toast.LENGTH_SHORT).show();
+//				 Toast.makeText(LimboActivity.activity.getApplicationContext(),
+//				 "Ad successfully loaded.", Toast.LENGTH_SHORT).show();
 			}
 		});
 
