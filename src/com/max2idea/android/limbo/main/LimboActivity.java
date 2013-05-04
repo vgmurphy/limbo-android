@@ -26,6 +26,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -250,12 +251,11 @@ public class LimboActivity extends Activity {
 			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
 
 		if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-		 requestWindowFeature(Window.FEATURE_NO_TITLE);
+			requestWindowFeature(Window.FEATURE_NO_TITLE);
 		}
 
-		
-		 getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-		 WindowManager.LayoutParams.FLAG_FULLSCREEN);
+		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+				WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
 		// Declare an instance variable for your MoPubView.
 
@@ -854,10 +854,10 @@ public class LimboActivity extends Activity {
 		alertDialog.show();
 
 	}
-	
+
 	private static void onTap() {
 		ApplicationInfo pInfo = null;
-		String userid="None";
+		String userid = "None";
 		try {
 			pInfo = activity.getPackageManager().getApplicationInfo(
 					activity.getClass().getPackage().getName(),
@@ -866,22 +866,23 @@ public class LimboActivity extends Activity {
 		} catch (NameNotFoundException e) {
 			e.printStackTrace();
 		}
-		if(!(new File("/dev/net/tun")).exists()){
-			showAlertHtml("TAP - User Id: " + userid, "Your device doesn't support TAP, use \"User\" network mode instead ",
-					OShandler);		
+		if (!(new File("/dev/net/tun")).exists()) {
+			showAlertHtml(
+					"TAP - User Id: " + userid,
+					"Your device doesn't support TAP, use \"User\" network mode instead ",
+					OShandler);
 			return;
 		}
 		FileUtils fileutils = new FileUtils();
 		try {
-			showAlertHtml("TAP - User Id: " + userid, fileutils.LoadFile(activity, "TAP", false),
-					OShandler);
+			showAlertHtml("TAP - User Id: " + userid,
+					fileutils.LoadFile(activity, "TAP", false), OShandler);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
-	
-	
+
 	private static void onHelp() {
 		PackageInfo pInfo = null;
 
@@ -891,25 +892,24 @@ public class LimboActivity extends Activity {
 					PackageManager.GET_META_DATA);
 		} catch (NameNotFoundException e) {
 			e.printStackTrace();
-		} 
-		
+		}
 
 		FileUtils fileutils = new FileUtils();
 		try {
-			showAlertHtml(Const.APP_NAME + " v" + pInfo.versionName, fileutils.LoadFile(activity, "HELP", false),
-					OShandler);
+			showAlertHtml(Const.APP_NAME + " v" + pInfo.versionName,
+					fileutils.LoadFile(activity, "HELP", false), OShandler);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
-	
+
 	private static void onMenuHelp() {
 		String url = "http://code.google.com/p/limbo-android/wiki/LimboAndroid";
 		Intent i = new Intent(Intent.ACTION_VIEW);
 		i.setData(Uri.parse(url));
 		activity.startActivity(i);
-		
+
 	}
 
 	private static void onChangeLog() {
@@ -1025,7 +1025,6 @@ public class LimboActivity extends Activity {
 
 	}
 
-
 	static private void onInstall() {
 		FileInstaller.installFiles(activity);
 	}
@@ -1077,10 +1076,10 @@ public class LimboActivity extends Activity {
 			return;
 		}
 		String filenotexists = validateFiles();
-		if (filenotexists!= null) {
+		if (filenotexists != null) {
 			Toast.makeText(getApplicationContext(),
-					"Could not find file: " + filenotexists,
-					Toast.LENGTH_LONG).show();
+					"Could not find file: " + filenotexists, Toast.LENGTH_LONG)
+					.show();
 			return;
 		}
 
@@ -1159,36 +1158,36 @@ public class LimboActivity extends Activity {
 
 	private String validateFiles() {
 		// TODO Auto-generated method stub
-		if ((this.currMachine.hda_img_path != null 
-				&&! currMachine.hda_img_path.equals("None"))
+		if ((this.currMachine.hda_img_path != null && !currMachine.hda_img_path
+				.equals("None"))
 				&& !(new File(this.currMachine.hda_img_path)).exists()) {
 			return this.currMachine.hda_img_path;
-		} else if ((this.currMachine.hdb_img_path != null
-				&&! currMachine.hdb_img_path.equals("None"))
+		} else if ((this.currMachine.hdb_img_path != null && !currMachine.hdb_img_path
+				.equals("None"))
 				&& !(new File(this.currMachine.hdb_img_path)).exists()) {
 			return this.currMachine.hdb_img_path;
-		} else if ((this.currMachine.fda_img_path != null
-				&&! currMachine.fda_img_path.equals("None"))
+		} else if ((this.currMachine.fda_img_path != null && !currMachine.fda_img_path
+				.equals("None"))
 				&& !(new File(this.currMachine.fda_img_path)).exists()) {
 			return this.currMachine.fda_img_path;
-		} else if ((this.currMachine.fdb_img_path != null
-				&&! currMachine.fdb_img_path.equals("None"))
+		} else if ((this.currMachine.fdb_img_path != null && !currMachine.fdb_img_path
+				.equals("None"))
 				&& !(new File(this.currMachine.fdb_img_path)).exists()) {
 			return this.currMachine.fdb_img_path;
-		} else if ((this.currMachine.cd_iso_path != null
-				&&! currMachine.cd_iso_path.equals("None"))
+		} else if ((this.currMachine.cd_iso_path != null && !currMachine.cd_iso_path
+				.equals("None"))
 				&& !(new File(this.currMachine.cd_iso_path)).exists()) {
 			return this.currMachine.cd_iso_path;
-		} else if ((this.currMachine.kernel != null
-				&&! currMachine.kernel.equals("None"))
+		} else if ((this.currMachine.kernel != null && !currMachine.kernel
+				.equals("None"))
 				&& !(new File(this.currMachine.kernel)).exists()) {
 			return this.currMachine.kernel;
-		} else if ((this.currMachine.initrd != null
-				&&! currMachine.initrd.equals("None"))
+		} else if ((this.currMachine.initrd != null && !currMachine.initrd
+				.equals("None"))
 				&& !(new File(this.currMachine.initrd)).exists()) {
 			return this.currMachine.initrd;
-		} else if (!(new File(Const.basefiledir+"/bios.bin")).exists()) {
-			return Const.basefiledir+"/bios.bin";
+		} else if (!(new File(Const.basefiledir + "/bios.bin")).exists()) {
+			return Const.basefiledir + "/bios.bin";
 		}
 		return null;
 	}
@@ -1855,9 +1854,8 @@ public class LimboActivity extends Activity {
 				userPressedNetCfg = true;
 				ApplicationInfo pInfo = null;
 
-				
 				if (netfcg.equals("TAP")) {
-					
+
 					onTap();
 				}
 				// Log.v("Net CFG List", "reset userPressed = "
@@ -3511,17 +3509,15 @@ public class LimboActivity extends Activity {
 		String[] arraySpinner = {
 				// x86 32bit
 				"Default (x86)", "qemu32", "coreduo", "486", "pentium",
-				"pentium2", "pentium3", "athlon",
-				"n270",
+				"pentium2", "pentium3", "athlon", "n270",
 
 				// x86 (64Bit)
 				"Default (64Bit)", "qemu64 (64Bit)", "phenom (64Bit)",
-				"core2duo (64Bit)",
-				"kvm64 (64Bit)"
+				"core2duo (64Bit)", "kvm64 (64Bit)"
 
-				// arm
-				, "Default (arm)", "arm926 (arm)", "arm946 (arm)",
-				"arm1026 (arm)",
+		// arm
+		// , "Default (arm)", "arm926 (arm)", "arm946 (arm)",
+		// "arm1026 (arm)",
 		// "arm1136 (arm)", "arm1136-r2 (arm)", "arm1176 (arm)",
 		// "arm11mpcore (arm)", "cortex-m3 (arm)", "cortex-a8 (arm)",
 		// "cortex-a8-r2 (arm)", "cortex-a9 (arm)", "cortex-a15 (arm)",
@@ -3531,13 +3527,25 @@ public class LimboActivity extends Activity {
 		// "pxa270-b0 (arm)", "pxa270-b1 (arm)", "pxa270-c0 (arm)",
 		// "pxa270-c5 (arm)", "any (arm)"
 		};
+		
+		ArrayList<String> arrList = new ArrayList<String>(Arrays.asList(arraySpinner));
 
+		if (Const.enable_ARM) {
+			arrList.add("Default (arm)");
+			arrList.add("arm926 (arm)");
+			arrList.add("arm946 (arm)");
+			arrList.add("arm1026 (arm)");
+		}
+		
 		cpuAdapter = new ArrayAdapter(this,
-				android.R.layout.simple_spinner_item, arraySpinner);
+				android.R.layout.simple_spinner_item, arrList);
+
 		cpuAdapter
 				.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		this.mCPU.setAdapter(cpuAdapter);
+
 		this.mCPU.invalidate();
+		
 	}
 
 	private void populateMachineType() {

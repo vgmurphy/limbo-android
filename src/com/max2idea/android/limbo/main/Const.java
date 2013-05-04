@@ -40,6 +40,8 @@ public class Const {
 	public static boolean enable_SDL = true;
 	public static boolean enable_sound = true;
 	public static boolean enableAds = true;
+	public static boolean enable_ARM = false;
+	
 	
 	public static String DBFile = Environment.getExternalStorageDirectory() + "/limbo/machines.csv";
     public static String APP_NAME = "Limbo PC Emulator (QEMU)";
@@ -82,6 +84,7 @@ public class Const {
 	public static String dnsServer = "8.8.8.8";
 	public static String ui = "VNC";
 	public static String append = "root=/dev/sda1";
+	
     
     
     
