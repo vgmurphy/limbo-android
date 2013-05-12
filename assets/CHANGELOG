@@ -1,4 +1,10 @@
 <br>
+Limbo v0.9.7b (May 12, 2013)<br>
+- Disabling TSC Feature (too buggy)<br>
+This should fix multiple issues with the last update.<br>
+<br>
+
+<br>
 Limbo v0.9.7 (May 3, 2013)<br>
 - Fixed Removable Devices<br>
 - Enabled TSC feature for Pentium+<br>

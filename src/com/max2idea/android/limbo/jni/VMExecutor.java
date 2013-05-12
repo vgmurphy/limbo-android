@@ -310,7 +310,9 @@ public class VMExecutor {
 	}
 
 	public String get_save_state() {
-		return this.getsavestate();
+		if(this.libLoaded)
+			return this.getsavestate();
+		return "";
 	}
 
 	public String get_state() {

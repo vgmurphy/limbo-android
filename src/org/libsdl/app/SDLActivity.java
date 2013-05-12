@@ -668,6 +668,9 @@ public class SDLActivity extends Activity {
 
 	public void setParams(Machine machine) {
 
+		if (machine == null) {
+			return;
+		}
 		memory = machine.memory;
 		vga_type = machine.vga_type;
 		hd_cache = machine.hd_cache;
@@ -1515,6 +1518,10 @@ public class SDLActivity extends Activity {
 		if (SettingsManager.getOrientationReverse(this))
 			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
 
+		if (LimboActivity.currMachine == null) {
+			Log.v("SDLAcivity","No VM selected!");
+		}
+
 		setParams(LimboActivity.currMachine);
 
 		// So we can call stuff from static callbacks
@@ -1523,13 +1530,15 @@ public class SDLActivity extends Activity {
 		// Set up the surface
 		mSurface = getSDLSurface();
 		mSurface.setRenderer(new ClearRenderer());
-//		mSurface.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+		// mSurface.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
 		// setContentView(mSurface);
 		createUI(0, 0);
 		SurfaceHolder holder = mSurface.getHolder();
-		 holder.setType(SurfaceHolder.SURFACE_TYPE_GPU);
+		holder.setType(SurfaceHolder.SURFACE_TYPE_GPU);
 		setScreenSize();
 
+		Toast toast = Toast.makeText(activity, "2-Finger Tap for Right Click",
+				Toast.LENGTH_LONG);
 	}
 
 	public SDLSurface getSDLSurface() {
@@ -1896,6 +1905,6 @@ class ClearRenderer implements GLSurfaceView.Renderer {
 	public void onDrawFrame(GL10 gl) {
 		Log.v("onDrawFrame", "...");
 		gl.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
-		
+
 	}
 }

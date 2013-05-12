@@ -5,8 +5,8 @@ TARGET_ARCH ?= arm
 NDK_ROOT = /home/dev/tools/android-ndk-r8e
 MAKE += 
 #GCC_VERSION = 4.4.3
-#GCC_VERSION = 4.6
-GCC_VERSION = 4.7
+GCC_VERSION = 4.6
+#GCC_VERSION = 4.7
 NDK_PLATFORM = platforms/android-14
 
 #For ARM only
@@ -20,7 +20,7 @@ ifeq ($(TARGET_ARCH),arm)
     TARGET_ARCH_ABI := $(ARMEABI)
     TOOLCHAIN_PREFIX = arm-linux-androideabi-
 else
-	#GCC 4.7 fails so switching to 4.6 for x86
+	#GCC 4.7 fails so switching to 4.4.3 for x86
 	GCC_VERSION = 4.4.3
     EABI = x86-$(GCC_VERSION)
     TARGET_ARCH_ABI = x86

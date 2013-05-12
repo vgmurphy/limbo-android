@@ -775,11 +775,12 @@ public class LimboActivity extends Activity {
 	}
 
 	private void onDeleteMachine() {
-		if (this.currMachine == null) {
+		if (currMachine == null) {
 			Toast.makeText(this, "Select a machine first!", Toast.LENGTH_SHORT)
 					.show();
+			return;
 		}
-		this.machineDB.deleteMachine(currMachine);
+		machineDB.deleteMachine(currMachine);
 		this.resetUserPressed();
 		this.populateAttributes();
 		Toast.makeText(this, "Machine " + currMachine.machinename + " deleted",

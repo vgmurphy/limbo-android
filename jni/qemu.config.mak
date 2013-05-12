@@ -25,6 +25,9 @@ CONFIG_EXTRA += --enable-vnc-jpeg --enable-vnc-png
 CONFIG_EXTRA += --audio-drv-list=sdl --enable-mixemu
 #CONFIG_EXTRA += --audio-card-list= --audio-drv-list=
 
+#ENABLE TSC PENTIUM FEATURE
+#LIMBO_DISABLE_TSC=LIMBO_DISABLE_TSC
+
 ifeq ($(TARGET_ARCH), arm)
     QEMU_TARGET_CPU = armv4b
 else
@@ -59,6 +62,7 @@ config:
 	-I../limbo/include -I../../glib/glib \
 	-I../../glib -I../../glib/gmodule -I../../glib/io \
 	-I../SDL/include -I../png -I../jpeg \
+	-D$(LIMBO_DISABLE_TSC) \
 	" \
 	--with-coroutine=$(COROUTINE) \
 	$(CONFIG_EXTRA) \

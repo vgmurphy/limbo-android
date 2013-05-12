@@ -64,7 +64,7 @@ public class LimboVNCActivity extends android.androidVNC.VncCanvasActivity {
 			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
 
 		Toast toast = Toast.makeText(activity,
-				"2-Finger Long Press for Right Click", Toast.LENGTH_LONG);
+				"2-Finger Tap for Right Click", Toast.LENGTH_LONG);
 		toast.setGravity(Gravity.TOP | Gravity.CENTER, 0, 0);
 		toast.show();
 		this.vncCanvas.setFocusableInTouchMode(true);
