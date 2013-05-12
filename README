@@ -29,6 +29,8 @@ https://code.google.com/p/limbo-android/
 
     Configure variables for toolchain and NDK directories for your device
      in jni/android-toolchain.mak.
+    Configure your PATH variable add the NDK Directory so makefile can find ndk-build
+    
 
 ===============================================================================
 4. Build
