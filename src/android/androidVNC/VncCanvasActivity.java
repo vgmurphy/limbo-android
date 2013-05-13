@@ -58,6 +58,7 @@ import android.view.Display;
 import android.widget.EditText;
 import com.max2idea.android.limbo.main.Const;
 import com.max2idea.android.limbo.main.LimboActivity;
+//import com.max2idea.android.limbo.mainarmv7.R;
 import com.max2idea.android.limbo.main.R;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -685,7 +686,8 @@ public class VncCanvasActivity extends Activity {
 
 		super.onCreate(icicle);
 		activity = this;
-		if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+		if (Const.enable_fullscreen ||
+				android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
 			requestWindowFeature(Window.FEATURE_NO_TITLE);
 
 		}

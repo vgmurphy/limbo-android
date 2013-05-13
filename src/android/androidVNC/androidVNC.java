@@ -39,8 +39,8 @@ import android.widget.EditText;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
+//import com.max2idea.android.limbo.mainarmv7.R;
 import com.max2idea.android.limbo.main.R;
-
 import java.util.ArrayList;
 import java.util.Collections;
 

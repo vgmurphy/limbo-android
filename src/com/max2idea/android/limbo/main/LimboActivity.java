@@ -90,6 +90,8 @@ import android.widget.Toast;
 import com.max2idea.android.limbo.jni.ImageCreator;
 
 import com.max2idea.android.limbo.jni.VMExecutor;
+//import com.max2idea.android.limbo.mainarmv7.R;
+import com.max2idea.android.limbo.main.R;
 import com.max2idea.android.limbo.utils.FavOpenHelper;
 import com.max2idea.android.limbo.utils.FileInstaller;
 import com.max2idea.android.limbo.utils.FileUtils;
@@ -250,7 +252,8 @@ public class LimboActivity extends Activity {
 		if (SettingsManager.getOrientationReverse(this))
 			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
 
-		if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+		if (Const.enable_fullscreen ||
+				android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
 			requestWindowFeature(Window.FEATURE_NO_TITLE);
 		}
 

@@ -56,6 +56,7 @@ import android.widget.Toast;
 import com.max2idea.android.limbo.main.Const;
 import com.max2idea.android.limbo.main.LimboActivity;
 import com.max2idea.android.limbo.main.LimboVNCActivity;
+//import com.max2idea.android.limbo.mainarmv7.R;
 import com.max2idea.android.limbo.main.R;
 import com.max2idea.android.limbo.main.SettingsManager;
 import com.max2idea.android.limbo.utils.FileUtils;
@@ -1508,7 +1509,8 @@ public class SDLActivity extends Activity {
 		this.handler = commandHandler;
 		this.activity1 = this;
 
-		if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+		if (Const.enable_fullscreen ||
+				android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
 			requestWindowFeature(Window.FEATURE_NO_TITLE);
 		}
 
