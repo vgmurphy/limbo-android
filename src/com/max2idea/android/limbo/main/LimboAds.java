@@ -20,7 +20,7 @@ public class LimboAds {
 		FileUtils fileutils = new FileUtils();
 		String adunit = "";
 		try {
-			adunit = fileutils.LoadFile(LimboActivity.activity, "ADUNIT", false);
+			adunit = fileutils.LoadFile(LimboActivity.activity, "ADUNIT.ADS", false);
 		} catch (IOException ex) {
 			Logger.getLogger(LimboActivity.class.getName()).log(Level.SEVERE,
 					null, ex);
