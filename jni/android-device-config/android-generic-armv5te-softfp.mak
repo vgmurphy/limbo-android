@@ -37,7 +37,7 @@ ARM_MODE=arm
 
 # Suppress some warnings
 ARCH_CFLAGS += -Wno-psabi
-ARCH_CFLAGS += -O3
+ARCH_CFLAGS += -O2
 
 # Smaller code generation for shared libraries, usually faster
 # if doesn't work use -fPIC
