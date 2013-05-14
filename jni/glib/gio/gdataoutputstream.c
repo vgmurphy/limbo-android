@@ -20,13 +20,12 @@
  * Author: Alexander Larsson <alexl@redhat.com>
  */
 
-#include <config.h>
+#include "config.h"
 #include <string.h>
 #include "gdataoutputstream.h"
 #include "gioenumtypes.h"
 #include "glibintl.h"
 
-#include "gioalias.h"
 
 /**
  * SECTION:gdataoutputstream
@@ -500,7 +499,4 @@ g_data_output_stream_put_string (GDataOutputStream  *stream,
 				    str, strlen (str),
 				    &bytes_written,
 				    cancellable, error);
-}  
-
-#define __G_DATA_OUTPUT_STREAM_C__
-#include "gioaliasdef.c"
+}

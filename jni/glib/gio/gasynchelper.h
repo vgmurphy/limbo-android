@@ -1,5 +1,5 @@
 /* GIO - GLib Input, Output and Streaming Library
- * 
+ *
  * Copyright (C) 2006-2007 Red Hat, Inc.
  *
  * This library is free software; you can redistribute it and/or
@@ -23,26 +23,13 @@
 #ifndef __G_ASYNC_HELPER_H__
 #define __G_ASYNC_HELPER_H__
 
-#include <glib-object.h>
-#include "gcancellable.h"
+#include <gio/gio.h>
 
 G_BEGIN_DECLS
 
-typedef struct {
-  gpointer       async_object;
-  GError *       error;
-  gpointer       user_data;
-} GAsyncResultData;
-
-typedef gboolean (*GFDSourceFunc) (gpointer user_data,
+typedef gboolean (*GFDSourceFunc) (gpointer     user_data,
 				   GIOCondition condition,
-				   int fd);
-
-void     _g_queue_async_result (GAsyncResultData *result,
-				gpointer         async_object,
-				GError          *error,
-				gpointer         user_data,
-				GSourceFunc      source_func);
+				   int          fd);
 
 GSource *_g_fd_source_new      (int              fd,
 				gushort          events,

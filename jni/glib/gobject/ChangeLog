@@ -1,29 +1,481 @@
-2008-09-12  Matthias Clasen  <mclasen@redhat.com>
+=== ChangeLog discontinued ===
 
-	* === Released 2.16.6 ===
+	With the move to git, GLib is switching from a ChangeLog file
+	to relying on commit messages to provide change history. Please
+	see README.commits for guidance on the expected message format.
 
-2008-07-19  Matthias Clasen  <mclasen@redhat.com>
+2009-03-13  Kristian Rietveld  <kris@imendio.com>
 
-	* === Released 2.16.5 === 
+	* gsignal.c (signal_lookup_closure): when defaulting to the only
+	item in the array, check if this is indeed the default closure.
+	(patch by Tim Janik).
+
+2009-03-13  Matthias Clasen  <mclasen@redhat.com>
+
+	* === Released 2.20.0 ===
+
+2009-03-02  Matthias Clasen <mclasen@redhat.com>
+
+	* === Released 2.19.10 ===
+
+2009-03-02  Matthias Clasen <mclasen@redhat.com>
+
+	* === Released 2.19.9 ===
+
+2009-03-01  Matthias Clasen  <mclasen@redhat.com>
+
+	Bug 556706 – Inconsistent help arguments -h, -?
+
+	* glib-genmarshal.c:
+	* glib-mkenums.in: Adjust help output, accept -?, capitalize.
+	Patch by Christian Dywan
+
+2009-02-17  Matthias Clasen  <mclasen@redhat.com>
+
+	* === Released 2.19.8 ===
+
+2009-02-17  Matthias Clasen  <mclasen@redhat.com>
+
+	* gobject.c: Remove (now) unnecessary cases from g_atomic_int_get 
+	calls.
+
+2009-02-16  Matthias Clasen  <mclasen@redhat.com>
+
+	* === Released 2.19.7 ===
+
+2009-02-02  Matthias Clasen  <mclasen@redhat.com>
+
+	* === Released 2.19.6 ===
+
+2009-01-19  Matthias Clasen  <mclasen@redhat.com>
+
+	* === Released 2.19.5 ===
+
+2009-01-05  Matthias Clasen  <mclasen@redhat.com>
+
+	* === Released 2.19.4 ===
+
+2009-01-02  Behdad Esfahbod  <behdad@gnome.org>
+
+	Bug 565136 – Gobject's "notify" signal parameters are wrong in gtk-doc
+	Patch from  Andrzej Zaborowski
+
+	* gobject.c (g_object_do_class_init): Fix param order in docs.
+
+2008-12-15  Matthias Clasen <mclasen@redhat.com>
+
+	* === Released 2.19.3 ===
+
+2008-12-12  Dan Winship  <danw@gnome.org>
+
+	* pltcheck.sh: make this work on x86_64
+
+2008-12-02  Matthias Clasen  <mclasen@redhat.com>
+
+	Bug 473150 – g_type_module_use inconsistently increases the use
+	counter in case of error
+
+	* gtypemodule.c (g_type_module_use): Always reset the use count
+	to its previous value before returning FALSE. Pointed out by
+	Johan Billien.
+
+2008-12-01  Matthias Clasen  <mclasen@redhat.com>
+
+	* === Released 2.19.2 ===
+
+2008-12-01  Matthias Clasen  <mclasen@redhat.com>
+
+	* === Released 2.19.1 ===
+
+2008-11-28  Matthias Clasen  <mclasen@redhat.com>
+
+	Bug 559456 – GObject Reference Manual (typo)
+
+	* gsignal.c (g_signal_newv): Fix a typo in the docs, pointed out
+	by Andrew Feren
+
+2008-11-03  Matthias Clasen <mclasen@redhat.com>
+
+	Bug 555935 – Clear the mechanism of overwriting properties
+
+	* gobject.c: Expand the docs of g_object_class_install_property.
+	Proposed by Maciej Piechotka
+
+2008-10-16  Matthias Clasen <mclasen@redhat.com>
+
+	* === Released 2.19.0 ===
+
+2008-09-26  Dan Winship  <danw@gnome.org>
+
+	* gobject.c (g_object_ref, g_object_unref)
+	(g_object_freeze_notify, g_object_notify, g_object_thaw_notify):
+	* gparam.c (g_param_spec_ref, g_param_spec_unref):
+	* gsignal.c (handler_ref, handler_unref_R): add uint* -> int*
+	casts in g_atomic_int calls to avoid gcc warnings
+
+2008-09-17  Matthias Clasen  <mclasen@redhat.com>
+
+	* === Released 2.18.1 ===
+
+2008-09-02  Matthias Clasen  <mclasen@redhat.com>
+
+	* === Released 2.18.0 ===
+
+2008-08-21  Johan Dahlin  <johan@gnome.org>
+
+	* gobject.h:
+	Mark g_object_get_type function as const, it's
+	a fundamental type and can safely marked as const,
+	as opposed to traditionally *_get_type functions.
+
+2008-08-21  Johan Dahlin  <johan@gnome.org>
+
+	Bug 548800 – Missing a g_object_get_type function
+
+	* gobject.c (g_object_get_type):
+	* gobject.h:
+	* gobject.symbols:
+	Add g_object_get_type
+
+2008-08-18  Matthias Clasen  <mclasen@redhat.com>
+
+	* === Released 2.17.7 ===
+
+2008-08-04  Matthias Clasen  <mclasen@redhat.com>
+
+	* === Released 2.17.6 ===
+
+2008-08-04  Matthias Clasen  <mclasen@redhat.com>
+
+	* === Released 2.17.5 ===
+
+2008-08-01  Matthias Clasen  <mclasen@redhat.com>
+
+	Bug 545395 – Language tweak for g_value_set_string* docs
+
+	* gvaluetypes.c: Clarify the docs of some GValue setters.
+	Proposed by Erik Walthinsen
+
+2008-07-27  Tor Lillqvist  <tml@novell.com>
+
+	* gtype.h
+	* gtype.c: Revert my change from 2008-07-24. No G_TYPE_FORMAT is
+	needed. Just use G_GSIZE_FORMAT always when printing GType values.
+
+2008-07-27  Tor Lillqvist  <tml@novell.com>
+
+	* Makefile.am (gobject-2.0.lib): Pass appropriate -machine flag to lib.exe.
+
+2008-07-24  Tor Lillqvist  <tml@novell.com>
+
+	* gtype.h: Define G_TYPE_FORMAT as the printf format for a GType
+	value. Either G_GSIZE_FORMAT or "lu".
+
+	* gtype.c: Use it instead of the C99 zu.
+
+2008-07-23  Matthias Clasen  <mclasen2redhat.com>
+
+	544177 - Fix trivial cut and paste error in documentation
+
+	* gtype.h: Fix a typo. Pointed out by Paul Bolle.
+
+2008-07-21  Matthias Clasen  <mclasen2redhat.com>
+
+	* === Released 2.17.4 ===
+
+2008-07-21  Michael Natterer  <mitch@imendio.com>
+
+	Reviewed by Tim Janik:
+
+	* gsignal.c (g_signal_chain_from_overridden_handler): allocate
+	the temp GValue array with GSLice.
+
+	(g_signal_emit_valist): dito. Remove optimization/obfuscation of
+	allocating up to 16 GValues on the stack and always use GSLice.
+
+2008-07-05  Matthias Clasen  <mclasen@redhat.com>
+
+	Bug 539229 – gobject-query calls itself query
+
+	* gobject-query.c: Use the right binary name in help output.
+	Patch by Hiroyuki Ikezoe.
+
+2008-07-04  Michael Natterer  <mitch@imendio.com>
+
+	* gobject.c: remove unused #define PREALLOC_CPARAMS.
+
+2008-07-04  Michael Natterer  <mitch@imendio.com>
+
+	Bug 541208 – Functions to easily install and use signals without
+	class struct slot
+
+	* gobject.symbols
+	* gsignal.[ch] (g_signal_new_class_handler): the same as
+	_gtk_binding_signal_new(), to install signals with a callback
+	instead of a class struct slot as class closure.
+
+	The next two functions are C convenience and much easier to use
+	than the generic overriding and chaining APIs which are intended
+	primarily for language bindings:
+
+	(g_signal_override_class_handler): to override a signal with a
+	callback instead of a class struct slot.
+
+	(g_signal_chain_from_overridden_handler): to chain up from a
+	signal without class struct slot. The API is similar to
+	g_signal_emit().
+
+2008-07-02  Matthias Clasen  <mclasen@redhat.com>
+
+	* === Released 2.17.3 ===
 
 2008-07-01  Matthias Clasen  <mclasen@redhat.com>
+
+	* *.c: Fix up section comments far enough to avoid regressions.
+
+2008-06-27  Hans Breuer  <hans@breuer.org>
+
+	* glib-genmarshal.c : move G_OS_WIN32 inclusion of <io.h> down to
+	where G_OS_WIN32 will be defined (#540047, Kazuki IWAMOTO)
+
+2008-06-22  Michael Natterer  <mitch@imendio.com>
+
+	* *.c: remove trailing whitespace from newly added gtk-doc
+	comments and reformatted some where they contained overly long or
+	ill-formatted lines.
+
+2008-06-22  Michael Natterer  <mitch@imendio.com>
+
+	* *.c: moved includes back to the top of the files (before gtk-doc
+	SECTION comments). Add "config.h" in all files and move system
+	included before glib includes. Remove trailing whitespace from
+	SECTION comments and did some reformatting where lines were overly
+	long, no documentation content was changed.
+
+2008-06-22  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/reference/gobject/tmpl/gobject-unused.sgml:
+	* gobject/gobject.h:
+	* gobject/gtype.c:
+	* gobject/gtype.h:
+	  Move some content for gobject-unused.sgml and cleared empty entries.
+	  The remaining 4 ones should be checked by some else. If they are not
+	  needed. The file can be removed.
+
+2008-06-22  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/reference/gobject/tmpl/value_collection.sgml:
+	* gobject/gvaluecollector.h:
+	  Migrating docs.
+
+2008-06-22  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/reference/gobject/tmpl/value_arrays.sgml:
+	* gobject/gvaluearray.c:
+	* gobject/gvaluearray.h:
+	  Migrating docs.
+
+2008-06-22  Stefan Kost  <ensonic@users.sf.net>
+
+	* gobject/gsignal.c:
+	  Fix compiler warning in format string check.
+
+2008-06-22  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/reference/gobject/tmpl/signals.sgml:
+	* gobject/gclosure.c:
+	* gobject/gobject.c:
+	* gobject/gsignal.c:
+	* gobject/gsignal.h:
+	  Migrating docs.
+
+2008-06-22  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/reference/gobject/Makefile.am:
+	  Help poor little gtkdoc a bit and tell that it can ignore
+	  G_GNUC_INTERNAL. Also disable including the unit-test header as this
+	  causes warnings and we don't need it here.
+
+2008-06-22  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/reference/gobject/tmpl/param_value_types.sgml:
+	* gobject/gboxed.c:
+	* gobject/gboxed.h:
+	* gobject/genums.c:
+	* gobject/genums.h:
+	* gobject/gobject.c:
+	* gobject/gobject.h:
+	* gobject/gparam.c:
+	* gobject/gparam.h:
+	* gobject/gparamspecs.c:
+	* gobject/gparamspecs.h:
+	* gobject/gvaluetypes.c:
+	* gobject/gvaluetypes.h:
+	  Migrating docs.
+
+2008-06-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/reference/gobject/tmpl/objects.sgml:
+	* gobject/gobject.c:
+	* gobject/gobject.h:
+	* gobject/gparam.h:
+	  Migrating docs.
+
+2008-06-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/reference/gobject/tmpl/gtypeplugin.sgml:
+	* gobject/gtypeplugin.c:
+	* gobject/gtypeplugin.h:
+	  Migrating docs.
+
+2008-06-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/reference/gobject/Makefile.am:
+	  Add --sgml-mode to allow sgml in doc-fragments (which somehow works
+	  before already).
+
+	* gobject/gboxed.h:
+	* gobject/gclosure.c:
+	* gobject/gparam.c:
+	* gobject/gparam.h:
+	* gobject/gtype.h:
+	  Convert character entities back. Fix some broken sgml.
+
+2008-06-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/reference/gobject/tmpl/gtypemodule.sgml:
+	* gobject/gtypemodule.c:
+	* gobject/gtypemodule.h:
+	  Migrating docs.
+
+2008-06-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* gobject/gboxed.c:
+	* gobject/gclosure.c:
+	* gobject/genums.c:
+	* gobject/gparam.c:
+	* gobject/gvalue.c:
+	  Add titles back from tmpl.
+
+2008-06-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/reference/gobject/tmpl/gtype.sgml:
+	* gobject/gtype.c:
+	* gobject/gtype.h:
+	* gobject/gvaluetypes.h:
+	  Migrating docs.
+
+2008-06-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* gobject/gclosure.h:
+	* gobject/gparam.h:
+	  Add one missing ':' and reformate GParamFlags docs.
+
+2008-06-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/reference/gobject/tmpl/gparamspec.sgml:
+	* gobject/gparam.c:
+	* gobject/gparam.h:
+	  Migrating docs.
+
+2008-06-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* gobject/gboxed.c:
+	* gobject/gclosure.c:
+	* gobject/genums.c:
+	* gobject/gvalue.c:
+	  Use file-names from the section file for SECTION: comments.
+
+2008-06-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/reference/gobject/tmpl/generic_values.sgml:
+	* gobject/gboxed.h:
+	* gobject/gtype.h:
+	* gobject/gvalue.c:
+	* gobject/gvalue.h:
+	* gobject/gvaluetypes.c:
+	  Migrating docs.
+
+2008-06-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* gobject/genums.h:
+	  Fix documentation for return values.
+
+2008-06-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/reference/gobject/tmpl/gclosure.sgml:
+	* gobject/gboxed.h:
+	* gobject/gclosure.c:
+	* gobject/gclosure.h:
+	* gobject/gobject.c:
+	* gobject/gsourceclosure.c:
+	* gobject/gsourceclosure.h:
+	  Migrating docs.
+
+2008-06-21  Tor Lillqvist  <tml@novell.com>
+
+	* glib/gstdio.c: Improve Windows-specific parts of
+	documentation. Mention the different C library issue in more
+	places.
+
+2008-06-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/reference/gobject/gobject-sections.txt:
+	  Remove duplicated entries. They are documented and should be shown.
+
+2008-06-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/reference/gobject/tmpl/enumerations_flags.sgml:
+	* gobject/genums.c:
+	* gobject/genums.h:
+	  Migrating docs.
+
+2008-06-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/reference/gobject/tmpl/gboxed.sgml:
+	* gobject/gboxed.c:
+	* gobject/gboxed.h:
+	* gobject/gvaluetypes.c:
+	  Migrating docs.
+
+2008-06-12  Matthias Clasen  <mclasen@redhat.com>
 	
-	* === Released 2.16.4 ===
+	* === Released 2.17.2 ===
 
-2008-06-16  Matthias Clasen  <mclasen@redhat.com>
+2008-06-12  Matthias Clasen  <mclasen@redhat.com>
 
-	Backport from trunk:
+	* === Released 2.17.1 ===
 
-	* gtype.c (g_type_class_ref): fixed race condition where references to 
+2008-06-10 13:34:01  Tim Janik  <timj@imendio.com>
+
+	* tests/threadtests.c: added race condition tester from Michael Meeks
+	with a couple fixes so it's not triggering development warnings. From:
+	Bug 537555 - GObject instantiation not thread safe ...
+
+2008-06-10 13:15:29  Tim Janik  <timj@imendio.com>
+
+	* gtype.c (g_type_class_ref): fixed race condition where references to
 	partially initialized classes could be handed out.
 
-2008-04-08  Matthias Clasen  <mclasen@redhat.com>
+2008-05-28  Michael Natterer  <mitch@imendio.com>
 
-	* === Released 2.16.3 ===
+	* Makefile.am: don't define G_DISABLE_SINGLE_INCLUDES, it's in
+	the global CPPFLAGS now.
 
-2008-03-31  Matthias Clasen  <mclasen@redhat.com>
+2008-05-27  Matthias Clasen  <mclasen@redhat.com>
 
-	* === Released 2.16.2 ===
+	* === Released 2.17.0 ===
+
+2008-05-05  Michael Natterer  <mitch@imendio.com>
+
+	* Makefile.am. build with G_DISABLE_SINGLE_INCLUDES to prevent
+	code from being checked in that breaks the build of applications
+	which use G_DISABLE_SINGLE_INCLUDES.
+
+2008-03-16  Tor Lillqvist  <tml@novell.com>
+
+	* Makefile.am: Define gobject_def locally here instead of using an
+	Autoconf variable.
 
 2008-03-10  Matthias Clasen  <mclasen@redhat.com>
 	

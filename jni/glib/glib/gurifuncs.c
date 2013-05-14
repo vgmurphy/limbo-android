@@ -20,21 +20,28 @@
  * Author: Alexander Larsson <alexl@redhat.com>
  */
 
-#include <config.h>
-#include "gurifuncs.h"
-#include "string.h"
+#include "config.h"
 
-#include "galias.h"
+#include "gurifuncs.h"
+
+#include <glib/gstrfuncs.h>
+#include <glib/gmessages.h>
+#include <glib/gstring.h>
+#include <glib/gmem.h>
+
+#include <string.h>
+
+#include "config.h"
 
 /**
  * SECTION:gurifuncs
  * @short_description: URI Functions
  * 
  * Functions for manipulating Universal Resource Identifiers (URIs) as 
- * defined by RFC 3986. It is highly recommended that you have read and
- * understand RFC 3986 for understanding this API. A copy of RFC 3986 
- * can be found at <ulink url="http://www.ietf.org/rfc/rfc3986.txt"/>.
- **/
+ * defined by <ulink url="http://www.ietf.org/rfc/rfc3986.txt">
+ * RFC 3986</ulink>. It is highly recommended that you have read and
+ * understand RFC 3986 for understanding this API.
+ */
 
 static int
 unescape_character (const char *scanner)
@@ -208,7 +215,7 @@ g_uri_parse_scheme (const char  *uri)
  * g_uri_escape_string:
  * @unescaped: the unescaped input string.
  * @reserved_chars_allowed: a string of reserved characters that are
- *      allowed to be used.
+ *      allowed to be used, or %NULL.
  * @allow_utf8: %TRUE if the result can include UTF-8 characters.
  * 
  * Escapes a string for use in a URI.
@@ -240,6 +247,3 @@ g_uri_escape_string (const char *unescaped,
   
   return g_string_free (s, FALSE);
 }
-
-#define __G_URI_FUNCS_C__
-#include "galiasdef.c"

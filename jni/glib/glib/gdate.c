@@ -29,13 +29,12 @@
  */
 
 #include "config.h"
+#include "glibconfig.h"
 
 #define DEBUG_MSG(x)	/* */
 #ifdef G_ENABLE_DEBUG
 /* #define DEBUG_MSG(args)	g_message args ; */
 #endif
-
-#include "glib.h"
 
 #include <time.h>
 #include <string.h>
@@ -46,7 +45,18 @@
 #include <windows.h>
 #endif
 
-#include "galias.h"
+#include "gdate.h"
+
+#include "gconvert.h"
+#include "gmem.h"
+#include "gstrfuncs.h"
+#include "gtestutils.h"
+#include "gthread.h"
+#include "gunicode.h"
+
+#ifdef G_OS_WIN32
+#include "garray.h"
+#endif
 
 GDate*
 g_date_new (void)
@@ -176,7 +186,7 @@ g_date_update_julian (const GDate *const_d)
 {
   GDate *d = (GDate *) const_d;
   GDateYear year;
-  gint index;
+  gint idx;
   
   g_return_if_fail (d != NULL);
   g_return_if_fail (d->dmy);
@@ -184,10 +194,10 @@ g_date_update_julian (const GDate *const_d)
   g_return_if_fail (g_date_valid_dmy (d->day, d->month, d->year));
   
   /* What we actually do is: multiply years * 365 days in the year,
-   *  add the number of years divided by 4, subtract the number of
-   *  years divided by 100 and add the number of years divided by 400,
-   *  which accounts for leap year stuff. Code from Steffen Beyer's
-   *  DateCalc. 
+   * add the number of years divided by 4, subtract the number of
+   * years divided by 100 and add the number of years divided by 400,
+   * which accounts for leap year stuff. Code from Steffen Beyer's
+   * DateCalc. 
    */
   
   year = d->year - 1; /* we know d->year > 0 since it's valid */
@@ -197,9 +207,9 @@ g_date_update_julian (const GDate *const_d)
   d->julian_days -= (year /= 25); /* divides original # years by 100 */
   d->julian_days += year >> 2;    /* divides by 4, which divides original by 400 */
   
-  index = g_date_is_leap_year (d->year) ? 1 : 0;
+  idx = g_date_is_leap_year (d->year) ? 1 : 0;
   
-  d->julian_days += days_in_year[index][d->month] + d->day;
+  d->julian_days += days_in_year[idx][d->month] + d->day;
   
   g_return_if_fail (g_date_valid_julian (d->julian_days));
   
@@ -321,7 +331,7 @@ g_date_get_julian (const GDate *d)
 guint        
 g_date_get_day_of_year (const GDate *d)
 {
-  gint index;
+  gint idx;
   
   g_return_val_if_fail (g_date_valid (d), 0);
   
@@ -330,9 +340,9 @@ g_date_get_day_of_year (const GDate *d)
 
   g_return_val_if_fail (d->dmy, 0);  
   
-  index = g_date_is_leap_year (d->year) ? 1 : 0;
+  idx = g_date_is_leap_year (d->year) ? 1 : 0;
   
-  return (days_in_year[index][d->month] + d->day);
+  return (days_in_year[idx][d->month] + d->day);
 }
 
 guint        
@@ -672,7 +682,9 @@ g_date_prepare_to_parse (const gchar      *str,
           ++i;
         }
       if (using_twodigit_years)
-	DEBUG_MSG (("**Using twodigit years with cutoff year: %u", twodigit_start_year));
+        {
+	  DEBUG_MSG (("**Using twodigit years with cutoff year: %u", twodigit_start_year));
+        }
       { 
         gchar *strings[3];
         i = 0;
@@ -851,7 +863,9 @@ g_date_set_parse (GDate       *d,
     }
 #ifdef G_ENABLE_DEBUG
   else 
-    DEBUG_MSG (("Rejected DMY %u %u %u", day, m, y));
+    {
+      DEBUG_MSG (("Rejected DMY %u %u %u", day, m, y));
+    }
 #endif
   G_UNLOCK (g_date_global);
 }
@@ -861,7 +875,9 @@ g_date_set_parse (GDate       *d,
  * @date: a #GDate 
  * @timet: <type>time_t</type> value to set
  *
- * Sets the value of a date from a <type>time_t</type> value. 
+ * Sets the value of a date to the date corresponding to a time 
+ * specified as a time_t. The time to date conversion is done using 
+ * the user's current timezone.
  *
  * To set the value of a date to the current day, you could write:
  * |[
@@ -919,9 +935,10 @@ g_date_set_time_t (GDate *date,
  * @date: a #GDate.
  * @time_: #GTime value to set.
  *
- * Sets the value of a date from a #GTime value. 
+ * Sets the value of a date from a #GTime value.
+ * The time to date conversion is done using the user's current timezone.
  *
- * @Deprecated:2.10: Use g_date_set_time_t() instead.
+ * Deprecated: 2.10: Use g_date_set_time_t() instead.
  */
 void
 g_date_set_time (GDate *date,
@@ -938,6 +955,8 @@ g_date_set_time (GDate *date,
  * Sets the value of a date from a #GTimeVal value.  Note that the
  * @tv_usec member is ignored, because #GDate can't make use of the
  * additional precision.
+ *
+ * The time to date conversion is done using the user's current timezone.
  *
  * Since: 2.10
  */
@@ -1050,7 +1069,7 @@ g_date_is_first_of_month (const GDate *d)
 gboolean     
 g_date_is_last_of_month (const GDate *d)
 {
-  gint index;
+  gint idx;
   
   g_return_val_if_fail (g_date_valid (d), FALSE);
   
@@ -1059,9 +1078,9 @@ g_date_is_last_of_month (const GDate *d)
 
   g_return_val_if_fail (d->dmy, FALSE);  
   
-  index = g_date_is_leap_year (d->year) ? 1 : 0;
+  idx = g_date_is_leap_year (d->year) ? 1 : 0;
   
-  if (d->day == days_in_months[index][d->month]) return TRUE;
+  if (d->day == days_in_months[idx][d->month]) return TRUE;
   else return FALSE;
 }
 
@@ -1101,7 +1120,7 @@ g_date_add_months (GDate *d,
                    guint  nmonths)
 {
   guint years, months;
-  gint index;
+  gint idx;
   
   g_return_if_fail (g_date_valid (d));
   
@@ -1118,10 +1137,10 @@ g_date_add_months (GDate *d,
   d->month = months + 1;
   d->year  += years;
   
-  index = g_date_is_leap_year (d->year) ? 1 : 0;
+  idx = g_date_is_leap_year (d->year) ? 1 : 0;
   
-  if (d->day > days_in_months[index][d->month])
-    d->day = days_in_months[index][d->month];
+  if (d->day > days_in_months[idx][d->month])
+    d->day = days_in_months[idx][d->month];
   
   d->julian = FALSE;
   
@@ -1133,7 +1152,7 @@ g_date_subtract_months (GDate *d,
                         guint  nmonths)
 {
   guint years, months;
-  gint index;
+  gint idx;
   
   g_return_if_fail (g_date_valid (d));
   
@@ -1157,10 +1176,10 @@ g_date_subtract_months (GDate *d,
       d->year -= 1;
     }
   
-  index = g_date_is_leap_year (d->year) ? 1 : 0;
+  idx = g_date_is_leap_year (d->year) ? 1 : 0;
   
-  if (d->day > days_in_months[index][d->month])
-    d->day = days_in_months[index][d->month];
+  if (d->day > days_in_months[idx][d->month])
+    d->day = days_in_months[idx][d->month];
   
   d->julian = FALSE;
   
@@ -1225,14 +1244,14 @@ guint8
 g_date_get_days_in_month (GDateMonth month, 
                           GDateYear  year)
 {
-  gint index;
+  gint idx;
   
   g_return_val_if_fail (g_date_valid_year (year), 0);
   g_return_val_if_fail (g_date_valid_month (month), 0);
   
-  index = g_date_is_leap_year (year) ? 1 : 0;
+  idx = g_date_is_leap_year (year) ? 1 : 0;
   
-  return days_in_months[index][month];
+  return days_in_months[idx][month];
 }
 
 guint8       
@@ -1892,7 +1911,3 @@ g_date_strftime (gchar       *s,
   return retval;
 #endif
 }
-
-#define __G_DATE_C__
-#include "galiasdef.c"
-

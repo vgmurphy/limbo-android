@@ -22,36 +22,6 @@
 #include <glib.h>
 #include <glib-object.h>
 
-#define G_DEFINE_INTERFACE(TN, t_n, T_P)                   G_DEFINE_INTERFACE_WITH_CODE(TN, t_n, T_P, ;)
-#define G_DEFINE_INTERFACE_WITH_CODE(TN, t_n, T_P, _C_)     _G_DEFINE_INTERFACE_EXTENDED_BEGIN(TN, t_n, T_P) {_C_;} _G_DEFINE_INTERFACE_EXTENDED_END()
-/* _default_init, ##Interface, if(TYPE_PREREQ); */
-#define _G_DEFINE_INTERFACE_EXTENDED_BEGIN(TypeName, type_name, TYPE_PREREQ) \
-static void type_name##_default_init  (TypeName##Interface *klass); \
-GType \
-type_name##_get_type (void) \
-{ \
-  static volatile gsize g_define_type_id__volatile = 0; \
-  if (g_once_init_enter (&g_define_type_id__volatile))  \
-    { \
-      GType g_define_type_id = \
-        g_type_register_static_simple (G_TYPE_INTERFACE, \
-                                       g_intern_static_string (#TypeName), \
-                                       sizeof (TypeName##Interface), \
-                                       (GClassInitFunc) type_name##_default_init, \
-                                       0, \
-                                       (GInstanceInitFunc) NULL, \
-                                       (GTypeFlags) 0); \
-      if (TYPE_PREREQ) \
-        g_type_interface_add_prerequisite (g_define_type_id, TYPE_PREREQ); \
- { /* custom code follows */
-#define _G_DEFINE_INTERFACE_EXTENDED_END()        \
-        /* following custom code */             \
- }                                              \
-      g_once_init_leave (&g_define_type_id__volatile, g_define_type_id); \
- }                                               \
-  return g_define_type_id__volatile;                 \
-} /* closes type_name##_get_type() */
-
 static volatile int mtsafe_call_counter = 0; /* multi thread safe call counter */
 static int          unsafe_call_counter = 0; /* single-threaded call counter */
 
@@ -64,9 +34,9 @@ call_counter_init (gpointer tclass)
   for (i = 0; i < NUM_COUNTER_INCREMENTS; i++)
     {
       int saved_unsafe_call_counter = unsafe_call_counter;
-      g_atomic_int_add (&mtsafe_call_counter, 1); // real call count update
-      g_thread_yield(); // let concurrent threads corrupt the unsafe_call_counter state
-      unsafe_call_counter = 1 + saved_unsafe_call_counter; // non-atomic counter update
+      g_atomic_int_add (&mtsafe_call_counter, 1); /* real call count update */
+      g_thread_yield(); /* let concurrent threads corrupt the unsafe_call_counter state */
+      unsafe_call_counter = 1 + saved_unsafe_call_counter; /* non-atomic counter update */
     }
 }
 
@@ -109,6 +79,7 @@ G_DEFINE_TYPE_WITH_CODE (MyTester2, my_tester2, G_TYPE_OBJECT,
 static void my_tester2_init (MyTester2*t) {}
 static void my_tester2_class_init (MyTester2Class*c) { call_counter_init (c); }
 
+static GCond *sync_cond = NULL;
 static GMutex *sync_mutex = NULL;
 
 static gpointer
@@ -138,7 +109,6 @@ test_threaded_class_init (void)
 {
   GThread *threads[3] = { NULL, };
   /* pause newly created threads */
-  sync_mutex = g_mutex_new();
   g_mutex_lock (sync_mutex);
   /* create threads */
   threads[0] = g_thread_create (tester_init_thread, (gpointer) my_tester0_get_type(), TRUE, NULL);
@@ -158,6 +128,75 @@ test_threaded_class_init (void)
   g_assert_cmpint (g_atomic_int_get (&mtsafe_call_counter), ==, unsafe_call_counter);
 }
 
+typedef struct {
+  GObject parent;
+  char   *name;
+} PropTester;
+typedef GObjectClass    PropTesterClass;
+G_DEFINE_TYPE (PropTester, prop_tester, G_TYPE_OBJECT);
+#define PROP_NAME 1
+static void
+prop_tester_init (PropTester* t)
+{
+  if (t->name == NULL)
+    ; /* neds unit test framework initialization: g_test_bug ("race initializing properties"); */
+}
+static void
+prop_tester_set_property (GObject        *object,
+                          guint           property_id,
+                          const GValue   *value,
+                          GParamSpec     *pspec)
+{}
+static void
+prop_tester_class_init (PropTesterClass *c)
+{
+  int i;
+  GParamSpec *param;
+  GObjectClass *gobject_class = G_OBJECT_CLASS (c);
+
+  gobject_class->set_property = prop_tester_set_property; /* silence GObject checks */
+
+  g_mutex_lock (sync_mutex);
+  g_cond_signal (sync_cond);
+  g_mutex_unlock (sync_mutex);
+
+  for (i = 0; i < 100; i++) /* wait a bit. */
+    g_thread_yield();
+
+  call_counter_init (c);
+  param = g_param_spec_string ("name", "name_i18n",
+			       "yet-more-wasteful-i18n",
+			       NULL,
+			       G_PARAM_CONSTRUCT_ONLY | G_PARAM_WRITABLE |
+			       G_PARAM_STATIC_NAME | G_PARAM_STATIC_BLURB |
+			       G_PARAM_STATIC_NICK);
+  g_object_class_install_property (gobject_class, PROP_NAME, param);
+}
+
+static gpointer
+object_create (gpointer data)
+{
+  GObject *obj = g_object_new (prop_tester_get_type(), "name", "fish", NULL);
+  g_object_unref (obj);
+  return NULL;
+}
+
+static void
+test_threaded_object_init (void)
+{
+  GThread *creator;
+  g_mutex_lock (sync_mutex);
+
+  creator = g_thread_create (object_create, NULL, TRUE, NULL);
+  /* really provoke the race */
+  g_cond_wait (sync_cond, sync_mutex);
+
+  object_create (NULL);
+  g_mutex_unlock (sync_mutex);
+
+  g_thread_join (creator);
+}
+
 int
 main (int   argc,
       char *argv[])
@@ -166,7 +205,11 @@ main (int   argc,
   g_test_init (&argc, &argv, NULL);
   g_type_init ();
 
+  sync_cond = g_cond_new();
+  sync_mutex = g_mutex_new();
+
   g_test_add_func ("/GObject/threaded-class-init", test_threaded_class_init);
+  g_test_add_func ("/GObject/threaded-object-init", test_threaded_object_init);
 
   return g_test_run();
 }

@@ -1,5 +1,5 @@
 /* GIO - GLib Input, Output and Streaming Library
- * 
+ *
  * Copyright (C) 2006-2007 Red Hat, Inc.
  *
  * This library is free software; you can redistribute it and/or
@@ -27,8 +27,7 @@
 #ifndef __G_VFS_H__
 #define __G_VFS_H__
 
-#include <glib-object.h>
-#include <gio/gfile.h>
+#include <gio/giotypes.h>
 
 G_BEGIN_DECLS
 
@@ -42,20 +41,20 @@ G_BEGIN_DECLS
 /**
  * G_VFS_EXTENSION_POINT_NAME:
  *
- * Extension point for #GVfs functionality. 
- * See <link linkend="gio-extension-points">Extending GIO</link>.
+ * Extension point for #GVfs functionality.
+ * See <link linkend="extending-gio">Extending GIO</link>.
  */
 #define G_VFS_EXTENSION_POINT_NAME "gio-vfs"
 
 /**
  * GVfs:
- * 
+ *
  * Virtual File System object.
  **/
-typedef struct _GVfs         GVfs; /* Dummy typedef */
 typedef struct _GVfsClass    GVfsClass;
 
-struct _GVfs {
+struct _GVfs
+{
   GObject parent_instance;
 };
 
@@ -65,17 +64,37 @@ struct _GVfsClass
 
   /* Virtual Table */
 
-  gboolean             (*is_active)                 (GVfs *vfs);
-  GFile               *(*get_file_for_path)         (GVfs *vfs,
-				                     const char *path);
-  GFile               *(*get_file_for_uri)          (GVfs *vfs,
-				                     const char *uri);
-  const gchar * const *(*get_supported_uri_schemes) (GVfs *vfs);
-  GFile               *(*parse_name)                (GVfs *vfs,
-				                     const char *parse_name);
-
+  gboolean              (* is_active)                 (GVfs       *vfs);
+  GFile               * (* get_file_for_path)         (GVfs       *vfs,
+                                                       const char *path);
+  GFile               * (* get_file_for_uri)          (GVfs       *vfs,
+                                                       const char *uri);
+  const gchar * const * (* get_supported_uri_schemes) (GVfs       *vfs);
+  GFile               * (* parse_name)                (GVfs       *vfs,
+                                                       const char *parse_name);
 
   /*< private >*/
+  void                  (* local_file_add_info)       (GVfs       *vfs,
+						       const char *filename,
+						       guint64     device,
+						       GFileAttributeMatcher *attribute_matcher,
+						       GFileInfo  *info,
+						       GCancellable *cancellable,
+						       gpointer   *extra_data,
+						       GDestroyNotify *free_extra_data);
+  void                  (* add_writable_namespaces)   (GVfs       *vfs,
+						       GFileAttributeInfoList *list);
+  gboolean              (* local_file_set_attributes) (GVfs       *vfs,
+						       const char *filename,
+						       GFileInfo  *info,
+                                                       GFileQueryInfoFlags flags,
+                                                       GCancellable *cancellable,
+						       GError    **error);
+  void                  (* local_file_removed)        (GVfs       *vfs,
+						       const char *filename);
+  void                  (* local_file_moved)          (GVfs       *vfs,
+						       const char *source,
+						       const char *dest);
   /* Padding for future expansion */
   void (*_g_reserved1) (void);
   void (*_g_reserved2) (void);
@@ -84,25 +103,19 @@ struct _GVfsClass
   void (*_g_reserved5) (void);
   void (*_g_reserved6) (void);
   void (*_g_reserved7) (void);
-  void (*_g_reserved8) (void);
-  void (*_g_reserved9) (void);
-  void (*_g_reserved10) (void);
-  void (*_g_reserved11) (void);
-  void (*_g_reserved12) (void);
-  
 };
 
-GType g_vfs_get_type (void) G_GNUC_CONST;
+GType                 g_vfs_get_type                  (void) G_GNUC_CONST;
 
 gboolean              g_vfs_is_active                 (GVfs       *vfs);
 GFile *               g_vfs_get_file_for_path         (GVfs       *vfs,
-				                       const char *path);
+                                                       const char *path);
 GFile *               g_vfs_get_file_for_uri          (GVfs       *vfs,
-				                       const char *uri);
-const gchar * const * g_vfs_get_supported_uri_schemes (GVfs *vfs);
+                                                       const char *uri);
+const gchar* const * g_vfs_get_supported_uri_schemes  (GVfs       *vfs);
 
 GFile *               g_vfs_parse_name                (GVfs       *vfs,
-				                       const char *parse_name);
+                                                       const char *parse_name);
 
 GVfs *                g_vfs_get_default               (void);
 GVfs *                g_vfs_get_local                 (void);

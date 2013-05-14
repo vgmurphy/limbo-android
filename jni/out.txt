@@ -1,0 +1,201 @@
+mkdir -p ../obj/local/armeabi/
+mkdir -p ../libs/armeabi/
+cd .. && ndk-build V=1 TARGET_ARCH=arm
+make[1]: Entering directory `/home/dev/prj/opensource/limbo-android'
+rm -f ./libs/armeabi/lib*.so ./libs/armeabi-v7a/lib*.so ./libs/mips/lib*.so ./libs/x86/lib*.so
+rm -f ./libs/armeabi/gdbserver ./libs/armeabi-v7a/gdbserver ./libs/mips/gdbserver ./libs/x86/gdbserver
+rm -f ./libs/armeabi/gdb.setup ./libs/armeabi-v7a/gdb.setup ./libs/mips/gdb.setup ./libs/x86/gdb.setup
+Install        : libSDL2.so => libs/armeabi/libSDL2.so
+install -p ./obj/local/armeabi/libSDL2.so ./libs/armeabi/libSDL2.so
+/home/dev/tools/android-ndk-r8e/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-strip --strip-unneeded  ./libs/armeabi/libSDL2.so
+Install        : libSDL2_image.so => libs/armeabi/libSDL2_image.so
+install -p ./obj/local/armeabi/libSDL2_image.so ./libs/armeabi/libSDL2_image.so
+/home/dev/tools/android-ndk-r8e/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-strip --strip-unneeded  ./libs/armeabi/libSDL2_image.so
+Install        : libSDL2_mixer.so => libs/armeabi/libSDL2_mixer.so
+install -p ./obj/local/armeabi/libSDL2_mixer.so ./libs/armeabi/libSDL2_mixer.so
+/home/dev/tools/android-ndk-r8e/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-strip --strip-unneeded  ./libs/armeabi/libSDL2_mixer.so
+Install        : libglib-2.0.so => libs/armeabi/libglib-2.0.so
+install -p ./obj/local/armeabi/libglib-2.0.so ./libs/armeabi/libglib-2.0.so
+/home/dev/tools/android-ndk-r8e/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-strip --strip-unneeded  ./libs/armeabi/libglib-2.0.so
+Install        : libgmodule-2.0.so => libs/armeabi/libgmodule-2.0.so
+install -p ./obj/local/armeabi/libgmodule-2.0.so ./libs/armeabi/libgmodule-2.0.so
+/home/dev/tools/android-ndk-r8e/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-strip --strip-unneeded  ./libs/armeabi/libgmodule-2.0.so
+Install        : libgobject-2.0.so => libs/armeabi/libgobject-2.0.so
+install -p ./obj/local/armeabi/libgobject-2.0.so ./libs/armeabi/libgobject-2.0.so
+/home/dev/tools/android-ndk-r8e/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-strip --strip-unneeded  ./libs/armeabi/libgobject-2.0.so
+Install        : libgthread-2.0.so => libs/armeabi/libgthread-2.0.so
+install -p ./obj/local/armeabi/libgthread-2.0.so ./libs/armeabi/libgthread-2.0.so
+/home/dev/tools/android-ndk-r8e/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-strip --strip-unneeded  ./libs/armeabi/libgthread-2.0.so
+Install        : libiconv.so => libs/armeabi/libiconv.so
+install -p ./obj/local/armeabi/libiconv.so ./libs/armeabi/libiconv.so
+/home/dev/tools/android-ndk-r8e/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-strip --strip-unneeded  ./libs/armeabi/libiconv.so
+Install        : libmain.so => libs/armeabi/libmain.so
+install -p ./obj/local/armeabi/libmain.so ./libs/armeabi/libmain.so
+/home/dev/tools/android-ndk-r8e/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-strip --strip-unneeded  ./libs/armeabi/libmain.so
+Install        : libmikmod.so => libs/armeabi/libmikmod.so
+install -p ./obj/local/armeabi/libmikmod.so ./libs/armeabi/libmikmod.so
+/home/dev/tools/android-ndk-r8e/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-strip --strip-unneeded  ./libs/armeabi/libmikmod.so
+Install        : parprouted => libs/armeabi/parprouted
+install -p ./obj/local/armeabi/parprouted ./libs/armeabi/parprouted
+/home/dev/tools/android-ndk-r8e/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-strip --strip-unneeded  ./libs/armeabi/parprouted
+Install        : tunctl => libs/armeabi/tunctl
+install -p ./obj/local/armeabi/tunctl ./libs/armeabi/tunctl
+/home/dev/tools/android-ndk-r8e/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-strip --strip-unneeded  ./libs/armeabi/tunctl
+make[1]: Leaving directory `/home/dev/prj/opensource/limbo-android'
+make  -f qemu.config.mak V=1
+make[1]: Entering directory `/home/dev/prj/opensource/limbo-android/jni'
+echo TOOLCHAIN DIR: /home/dev/tools/android-ndk-r8e/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86
+TOOLCHAIN DIR: /home/dev/tools/android-ndk-r8e/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86
+echo NDK ROOT: /home/dev/tools/android-ndk-r8e 
+NDK ROOT: /home/dev/tools/android-ndk-r8e
+echo NDK PLATFORM: platforms/android-14 
+NDK PLATFORM: platforms/android-14
+echo USR INCLUDE: /home/dev/tools/android-ndk-r8e/platforms/android-14/arch-arm/usr/include
+USR INCLUDE: /home/dev/tools/android-ndk-r8e/platforms/android-14/arch-arm/usr/include
+cd ./qemu	; \
+	./configure \
+	--target-list=x86_64-softmmu \
+	--cpu=armv4b \
+	--disable-kvm --disable-curses \
+	--disable-vhost-net --disable-spice \
+	--disable-smartcard-nss --disable-uuid \
+	--enable-vnc-thread --disable-attr \
+	--disable-linux-aio --disable-zlib-test \
+	--disable-smartcard --disable-smartcard-nss \
+	--disable-nptl --disable-opengl --disable-pie \
+	--disable-guest-agent --android --less-warnings \
+	--cross-prefix=/home/dev/tools/android-ndk-r8e/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi- \
+	--extra-cflags=\
+	"\
+	-I/home/dev/tools/android-ndk-r8e/platforms/android-14/ \
+	-I../limbo/include -I../glib/glib -I../glib \
+	-I../glib/gmodule -I../glib/io \
+	-I../limbo/include -I../../glib/glib \
+	-I../../glib -I../../glib/gmodule -I../../glib/io \
+	-I../../glib/android -I../glib/android \
+	-I../SDL/include -I../png -I../jpeg \
+	-DLIMBO_DISABLE_TSC \
+	" \
+	--with-coroutine=sigaltstack \
+	--enable-sdl --enable-vnc-jpeg --enable-vnc-png  --audio-drv-list=sdl --enable-mixemu \
+	
+Skipping glib detection
+Skipping pthread detection, assuming existing for android
+Skipping iovec probe assuming existing for Android
+Install prefix    /usr/local
+BIOS directory    /usr/local/share/qemu
+binary directory  /usr/local/bin
+library directory /usr/local/lib
+include directory /usr/local/include
+config directory  /usr/local/etc
+Manual directory  /usr/local/share/man
+ELF interp prefix /usr/gnemul/qemu-%M
+Source path       /home/dev/prj/opensource/limbo-android/jni/qemu
+C compiler        /home/dev/tools/android-ndk-r8e/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-gcc
+Host C compiler   gcc
+CFLAGS            
+QEMU_CFLAGS        -Wundef -D_FORTIFY_SOURCE=2 -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -fno-strict-aliasing -I/home/dev/tools/android-ndk-r8e/platforms/android-14/ -I../limbo/include -I../glib/glib -I../glib -I../glib/gmodule -I../glib/io -I../limbo/include -I../../glib/glib -I../../glib -I../../glib/gmodule -I../../glib/io -I../../glib/android -I../glib/android -I../SDL/include -I../png -I../jpeg -DLIMBO_DISABLE_TSC   
+LDFLAGS           
+make              make
+install           install
+python            python
+smbd              /usr/sbin/smbd
+host CPU          arm
+host big endian   no
+target list       x86_64-softmmu
+tcg debug enabled no
+Mon debug enabled no
+gprof enabled     no
+sparse enabled    no
+strip binaries    yes
+profiler          no
+static build      no
+-Werror enabled   no
+SDL support       yes
+curses support    no
+curl support      no
+mingw32 support   no
+Audio drivers     sdl
+Extra audio cards ac97 es1370 sb16 hda
+Block whitelist   
+Mixer emulation   yes
+VirtFS support    no
+VNC support       yes
+VNC TLS support   no
+VNC SASL support  no
+VNC JPEG support  yes
+VNC PNG support   yes
+VNC thread        yes
+xen support       no
+brlapi support    no
+bluez  support    no
+Documentation     no
+NPTL support      no
+GUEST_BASE        yes
+PIE               no
+vde support       no
+Linux AIO support no
+ATTR/XATTR support no
+Install blobs     yes
+KVM support       no
+TCG interpreter   no
+fdt support       no
+preadv support    
+fdatasync         no
+madvise           no
+posix_madvise     no
+uuid support      no
+libcap-ng support 
+vhost-net support no
+Trace backend     nop
+Trace output file trace-<pid>
+spice support     no
+rbd support       no
+xfsctl support    no
+nss used          no
+usb net redir     no
+OpenGL support    no
+libiscsi support  no
+build guest agent no
+coroutine backend sigaltstack
+android		yes
+less warnings	yes
+make[1]: Leaving directory `/home/dev/prj/opensource/limbo-android/jni'
+make  -f qemu.mak all V=1
+make[1]: Entering directory `/home/dev/prj/opensource/limbo-android/jni'
+cd qemu && make all V=1 && make qemu-img.so V=1
+make[2]: Entering directory `/home/dev/prj/opensource/limbo-android/jni/qemu'
+sh /home/dev/prj/opensource/limbo-android/jni/qemu/scripts/create_config < config-host.mak > config-host.h-timestamp
+python /home/dev/prj/opensource/limbo-android/jni/qemu/scripts/tracetool.py --format=h --backend=nop < /home/dev/prj/opensource/limbo-android/jni/qemu/trace-events > trace.h-timestamp
+python /home/dev/prj/opensource/limbo-android/jni/qemu/scripts/tracetool.py --format=c --backend=nop < /home/dev/prj/opensource/limbo-android/jni/qemu/trace-events > trace.c-timestamp
+/home/dev/tools/android-ndk-r8e/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-ar rcs qemu-nbd.a qemu-nbd.o osdep.o oslib-posix.o qemu-thread-posix.o trace.o trace/default.o trace/control.o qemu-tool.o qemu-timer.o qemu-timer-common.o main-loop.o notify.o iohandler.o cutils.o async.o compatfd.o cutils.o cache-utils.o qemu-option.o module.o async.o nbd.o block.o aio.o aes.o qemu-config.o qemu-progress.o qemu-sockets.o qemu-coroutine.o qemu-coroutine-lock.o qemu-coroutine-io.o qemu-coroutine-sleep.o coroutine-sigaltstack.o qint.o qstring.o qdict.o qlist.o qfloat.o qbool.o qjson.o json-lexer.o json-streamer.o json-parser.o qerror.o error.o qemu-error.o  posix-aio-compat.o block/raw.o block/cow.o block/qcow.o block/vdi.o block/vmdk.o block/cloop.o block/dmg.o block/bochs.o block/vpc.o block/vvfat.o block/qcow2.o block/qcow2-refcount.o block/qcow2-cluster.o block/qcow2-snapshot.o block/qcow2-cache.o block/qed.o block/qed-gencb.o block/qed-l2-cache.o block/qed-table.o block/qed-cluster.o block/qed-check.o block/parallels.o block/nbd.o block/blkdebug.o block/sheepdog.o block/blkverify.o block/stream.o block/raw-posix.o
+/home/dev/tools/android-ndk-r8e/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-ar rcs qemu-img.a qemu-img.o osdep.o oslib-posix.o qemu-thread-posix.o trace.o trace/default.o trace/control.o qemu-tool.o qemu-timer.o qemu-timer-common.o main-loop.o notify.o iohandler.o cutils.o async.o compatfd.o cutils.o cache-utils.o qemu-option.o module.o async.o nbd.o block.o aio.o aes.o qemu-config.o qemu-progress.o qemu-sockets.o qemu-coroutine.o qemu-coroutine-lock.o qemu-coroutine-io.o qemu-coroutine-sleep.o coroutine-sigaltstack.o qint.o qstring.o qdict.o qlist.o qfloat.o qbool.o qjson.o json-lexer.o json-streamer.o json-parser.o qerror.o error.o qemu-error.o  posix-aio-compat.o block/raw.o block/cow.o block/qcow.o block/vdi.o block/vmdk.o block/cloop.o block/dmg.o block/bochs.o block/vpc.o block/vvfat.o block/qcow2.o block/qcow2-refcount.o block/qcow2-cluster.o block/qcow2-snapshot.o block/qcow2-cache.o block/qed.o block/qed-gencb.o block/qed-l2-cache.o block/qed-table.o block/qed-cluster.o block/qed-check.o block/parallels.o block/nbd.o block/blkdebug.o block/sheepdog.o block/blkverify.o block/stream.o block/raw-posix.o
+/home/dev/tools/android-ndk-r8e/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-ar rcs qemu-io.a qemu-io.o cmd.o osdep.o oslib-posix.o qemu-thread-posix.o trace.o trace/default.o trace/control.o qemu-tool.o qemu-timer.o qemu-timer-common.o main-loop.o notify.o iohandler.o cutils.o async.o compatfd.o cutils.o cache-utils.o qemu-option.o module.o async.o nbd.o block.o aio.o aes.o qemu-config.o qemu-progress.o qemu-sockets.o qemu-coroutine.o qemu-coroutine-lock.o qemu-coroutine-io.o qemu-coroutine-sleep.o coroutine-sigaltstack.o qint.o qstring.o qdict.o qlist.o qfloat.o qbool.o qjson.o json-lexer.o json-streamer.o json-parser.o qerror.o error.o qemu-error.o  posix-aio-compat.o block/raw.o block/cow.o block/qcow.o block/vdi.o block/vmdk.o block/cloop.o block/dmg.o block/bochs.o block/vpc.o block/vvfat.o block/qcow2.o block/qcow2-refcount.o block/qcow2-cluster.o block/qcow2-snapshot.o block/qcow2-cache.o block/qed.o block/qed-gencb.o block/qed-l2-cache.o block/qed-table.o block/qed-cluster.o block/qed-check.o block/parallels.o block/nbd.o block/blkdebug.o block/sheepdog.o block/blkverify.o block/stream.o block/raw-posix.o
+/home/dev/tools/android-ndk-r8e/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-ar rcs qemu-bridge-helper.a qemu-bridge-helper.o
+make   BUILD_DIR=/home/dev/prj/opensource/limbo-android/jni/qemu -C libhw64 TARGET_ARCH="arm" V="1" TARGET_DIR="libhw64/" all
+make[3]: Entering directory `/home/dev/prj/opensource/limbo-android/jni/qemu/libhw64'
+make[3]: Leaving directory `/home/dev/prj/opensource/limbo-android/jni/qemu/libhw64'
+/home/dev/tools/android-ndk-r8e/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-gcc -I/home/dev/prj/opensource/limbo-android/jni/qemu/slirp -I. -I/home/dev/prj/opensource/limbo-android/jni/qemu -I/home/dev/prj/opensource/limbo-android/jni/qemu/fpu -Wundef -D_FORTIFY_SOURCE=2 -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -fno-strict-aliasing -I/home/dev/tools/android-ndk-r8e/platforms/android-14/ -I../limbo/include -I../glib/glib -I../glib -I../glib/gmodule -I../glib/io -I../limbo/include -I../../glib/glib -I../../glib -I../../glib/gmodule -I../../glib/io -I../../glib/android -I../glib/android -I../SDL/include -I../png -I../jpeg -DLIMBO_DISABLE_TSC     -I../include-fixed -I./qemu/linux-headers -I/home/dev/tools/android-ndk-r8e/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/arm-linux-androideabi-4.6/include -I/home/dev/tools/android-ndk-r8e/platforms/android-14/arch-arm/usr/include -include ../logutils.h  -std=gnu99 -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__ -march=armv5te -mtune=xscale -msoft-float -Wno-psabi -O2 -fpic  -ffunction-sections -fno-strict-aliasing -fstrength-reduce  -fforce-addr  -ffast-math -funsafe-math-optimizations     -I/home/dev/prj/opensource/limbo-android/jni/qemu/include -MMD -MP -MT qom/container.o -MF qom/container.d  -c -o qom/container.o qom/container.c
+make   BUILD_DIR=/home/dev/prj/opensource/limbo-android/jni/qemu -C libdis TARGET_ARCH="arm" V="1" TARGET_DIR="libdis/" all
+make[3]: Entering directory `/home/dev/prj/opensource/limbo-android/jni/qemu/libdis'
+make[3]: Leaving directory `/home/dev/prj/opensource/limbo-android/jni/qemu/libdis'
+make   BUILD_DIR=/home/dev/prj/opensource/limbo-android/jni/qemu -C x86_64-softmmu TARGET_ARCH="arm" V="1" TARGET_DIR="x86_64-softmmu/" all
+make[3]: Entering directory `/home/dev/prj/opensource/limbo-android/jni/qemu/x86_64-softmmu'
+sh /home/dev/prj/opensource/limbo-android/jni/qemu/scripts/create_config < config-target.mak > config-target.h-timestamp
+/home/dev/tools/android-ndk-r8e/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86/bin/arm-linux-androideabi-g++     \
+	-Wl,-soname,qemu-system-x86_64 \
+	-shared --sysroot=/home/dev/tools/android-ndk-r8e/platforms/android-14/arch-arm \
+	-Wl,--no-undefined -Wl,-z,noexecstack  \
+	../acl.o ../aes.o ../aio.o ../async.o ../audio/audio.o ../audio/mixeng.o ../audio/noaudio.o ../audio/sdlaudio.o ../audio/wavaudio.o ../audio/wavcapture.o ../bitmap.o ../bitops.o ../block-migration.o ../block.o ../block/blkdebug.o ../block/blkverify.o ../block/bochs.o ../block/cloop.o ../block/cow.o ../block/dmg.o ../block/nbd.o ../block/parallels.o ../block/qcow.o ../block/qcow2-cache.o ../block/qcow2-cluster.o ../block/qcow2-refcount.o ../block/qcow2-snapshot.o ../block/qcow2.o ../block/qed-check.o ../block/qed-cluster.o ../block/qed-gencb.o ../block/qed-l2-cache.o ../block/qed-table.o ../block/qed.o ../block/raw-posix.o ../block/raw.o ../block/sheepdog.o ../block/stream.o ../block/vdi.o ../block/vmdk.o ../block/vpc.o ../block/vvfat.o ../blockdev.o ../bt-hci-csr.o ../bt-hci.o ../bt-hid.o ../bt-host.o ../bt-l2cap.o ../bt-sdp.o ../bt-vhci.o ../bt.o ../buffered_file.o ../cache-utils.o ../cdrom.o ../compatfd.o ../console.o ../coroutine-sigaltstack.o ../cursor.o ../cutils.o ../eeprom93xx.o ../error.o ../event_notifier.o ../hid.o ../hmp.o ../host-utils.o ../i2c.o ../input.o ../iohandler.o ../iov.o ../irq.o ../json-lexer.o ../json-parser.o ../json-streamer.o ../libdis/arm-dis.o ../libdis/i386-dis.o ../libhw64/ac97.o ../libhw64/acpi.o ../libhw64/acpi_piix4.o ../libhw64/apm.o ../libhw64/applesmc.o ../libhw64/cirrus_vga.o ../libhw64/dma-helpers.o ../libhw64/dma.o ../libhw64/e1000.o ../libhw64/eepro100.o ../libhw64/es1370.o ../libhw64/fdc.o ../libhw64/fw_cfg.o ../libhw64/hda-audio.o ../libhw64/hpet.o ../libhw64/i8254.o ../libhw64/i8254_common.o ../libhw64/i8259.o ../libhw64/i8259_common.o ../libhw64/ide/ahci.o ../libhw64/ide/atapi.o ../libhw64/ide/core.o ../libhw64/ide/ich.o ../libhw64/ide/isa.o ../libhw64/ide/pci.o ../libhw64/ide/piix.o ../libhw64/ide/qdev.o ../libhw64/intel-hda.o ../libhw64/ioh3420.o ../libhw64/isa-bus.o ../libhw64/loader.o ../libhw64/lsi53c895a.o ../libhw64/msi.o ../libhw64/msix.o ../libhw64/ne2000-isa.o ../libhw64/ne2000.o ../libhw64/parallel.o ../libhw64/pci.o ../libhw64/pci_bridge.o ../libhw64/pci_bridge_dev.o ../libhw64/pci_host.o ../libhw64/pcie.o ../libhw64/pcie_aer.o ../libhw64/pcie_host.o ../libhw64/pcie_port.o ../libhw64/pckbd.o ../libhw64/pcnet-pci.o ../libhw64/pcnet.o ../libhw64/pcspk.o ../libhw64/pflash_cfi01.o ../libhw64/pm_smbus.o ../libhw64/qdev-addr.o ../libhw64/qtest.o ../libhw64/rtl8139.o ../libhw64/sb16.o ../libhw64/serial.o ../libhw64/shpc.o ../libhw64/slotid_cap.o ../libhw64/sysbus.o ../libhw64/usb/hcd-ehci.o ../libhw64/usb/hcd-ohci.o ../libhw64/usb/hcd-uhci.o ../libhw64/usb/hcd-xhci.o ../libhw64/usb/libhw.o ../libhw64/vga-isa.o ../libhw64/vga-pci.o ../libhw64/virtio-console.o ../libhw64/virtio-pci.o ../libhw64/vl.o ../libhw64/vmmouse.o ../libhw64/vmware_vga.o ../libhw64/watchdog.o ../libhw64/wdt_i6300esb.o ../libhw64/xio3130_downstream.o ../libhw64/xio3130_upstream.o ../main-loop.o ../migration-exec.o ../migration-fd.o ../migration-tcp.o ../migration-unix.o ../migration.o ../module.o ../msmouse.o ../nbd.o ../net.o ../net/checksum.o ../net/dump.o ../net/queue.o ../net/slirp.o ../net/socket.o ../net/tap-linux.o ../net/tap.o ../net/util.o ../notify.o ../os-posix.o ../osdep.o ../oslib-posix.o ../pflib.o ../posix-aio-compat.o ../ps2.o ../qapi-types.o ../qapi-visit.o ../qapi/qapi-dealloc-visitor.o ../qapi/qapi-visit-core.o ../qapi/qmp-dispatch.o ../qapi/qmp-input-visitor.o ../qapi/qmp-output-visitor.o ../qapi/qmp-registry.o ../qapi/string-input-visitor.o ../qapi/string-output-visitor.o ../qbool.o ../qdev-monitor.o ../qdev-properties.o ../qdev.o ../qdict.o ../qemu-char.o ../qemu-config.o ../qemu-coroutine-io.o ../qemu-coroutine-lock.o ../qemu-coroutine-sleep.o ../qemu-coroutine.o ../qemu-error.o ../qemu-option.o ../qemu-progress.o ../qemu-sockets.o ../qemu-thread-posix.o ../qemu-timer-common.o ../qemu-timer.o ../qerror.o ../qfloat.o ../qint.o ../qjson.o ../qlist.o ../qmp-marshal.o ../qmp.o ../qom/container.o ../qom/cpu.o ../qom/object.o ../qom/qom-qobject.o ../qstring.o ../readline.o ../scsi-bus.o ../scsi-disk.o ../scsi-generic.o ../slirp/arp_table.o ../slirp/bootp.o ../slirp/cksum.o ../slirp/if.o ../slirp/ip_icmp.o ../slirp/ip_input.o ../slirp/ip_output.o ../slirp/mbuf.o ../slirp/misc.o ../slirp/sbuf.o ../slirp/slirp.o ../slirp/socket.o ../slirp/tcp_input.o ../slirp/tcp_output.o ../slirp/tcp_subr.o ../slirp/tcp_timer.o ../slirp/tftp.o ../slirp/udp.o ../smbus.o ../smbus_eeprom.o ../tcg-runtime.o ../trace.o ../trace/control.o ../trace/default.o ../ui/d3des.o ../ui/keymaps.o ../ui/sdl.o ../ui/sdl_zoom.o ../ui/vnc-enc-hextile.o ../ui/vnc-enc-tight.o ../ui/vnc-enc-zlib.o ../ui/vnc-enc-zrle.o ../ui/vnc-jobs-async.o ../ui/vnc-palette.o ../ui/vnc.o ../ui/x_keymap.o ../usb/bus.o ../usb/core.o ../usb/desc.o ../usb/dev-audio.o ../usb/dev-bluetooth.o ../usb/dev-hid.o ../usb/dev-hub.o ../usb/dev-network.o ../usb/dev-serial.o ../usb/dev-storage.o ../usb/dev-wacom.o ../usb/host-linux.o arch_init.o balloon.o cpu-exec.o cpu.o cpus.o cputlb.o device-hotplug.o disas.o exec.o fpu/softfloat.o gdbstub.o helper.o ioport.o kvm-stub.o machine.o memory.o monitor.o op_helper.o savevm.o tcg/optimize.o tcg/tcg.o translate-all.o translate.o vga.o vhost_net.o virtio-balloon.o virtio-blk.o virtio-net.o virtio-scsi.o virtio-serial-bus.o virtio.o xen-stub.o \
+	mc146818rtc.o pc.o apic_common.o apic.o kvmvapic.o sga.o ioapic_common.o ioapic.o piix_pci.o vmport.o pci-hotplug.o smbios.o wdt_ib700.o debugcon.o multiboot.o pc_piix.o pc_sysfw.o \
+	 \
+	../../../obj/local/armeabi/libglib-2.0.so ../../../obj/local/armeabi/libgthread-2.0.so ../../../obj/local/armeabi/libgmodule-2.0.so ../../../obj/local/armeabi/libgobject-2.0.so \
+	../../../obj/local/armeabi/libiconv.so \
+	../../../obj/local/armeabi/libpng.a ../../../obj/local/armeabi/libjpeg.a ../../../obj/local/armeabi/libSDL2.so ../../../obj/local/armeabi/libSDL2_image.so ../../../obj/local/armeabi/libSDL2_mixer.so \
+	-L/home/dev/tools/android-ndk-r8e/toolchains/arm-linux-androideabi-4.6/prebuilt/linux-x86//lib \
+	-llog -lm -lz -lstdc++ -lc -dl \
+     \
+	-o ../../../obj/local/armeabi/libqemu-system-x86_64.so
+make[3]: Leaving directory `/home/dev/prj/opensource/limbo-android/jni/qemu/x86_64-softmmu'
+make[2]: Leaving directory `/home/dev/prj/opensource/limbo-android/jni/qemu'
+make[1]: Leaving directory `/home/dev/prj/opensource/limbo-android/jni'

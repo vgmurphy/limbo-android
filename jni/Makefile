@@ -1,4 +1,4 @@
-.PHONY: createdirs glib sdl qemu glib limbo
+.PHONY: createdirs sdl qemu limbo
 
 include android-toolchain.mak
 
@@ -21,7 +21,7 @@ ifeq ($(TARGET_ARCH),x86)
 	RENAME_PARPROUTED=
 endif
 	
-all: createdirs sdl config qemu glib limbo
+all: createdirs sdl config qemu limbo
 	$(INSTALL_LIBS)
 	$(RENAME_TUNCTL)
 	$(RENAME_PARPROUTED)
@@ -31,16 +31,13 @@ createdirs:
 	$(CREATE_OBJDIR)
 	$(CREATE_LIBSDIR)
 
-glib:
-	$(MAKE) -f glib.mak V=1
-
 sdl:
 	$(sdlbuild)
 
-qemu: glib sdl
+qemu:  sdl
 	$(MAKE) -f qemu.mak all V=1
 	
-limbo: qemu glib sdl
+limbo: qemu sdl
 	$(MAKE) -f limbo.mak all V=1
 	
 config:
@@ -73,12 +70,10 @@ release: release-x86 release-arm
 
 clean:
 	-cd .. && ndk-build clean
-	$(MAKE) -f glib.mak clean V=1
 	$(MAKE) -f qemu.mak clean V=1
 	$(MAKE) -f limbo.mak clean V=1
 
 veryclean:
-	$(MAKE) -f glib.mak veryclean V=1
 	$(MAKE) -f qemu.mak veryclean V=1
 	$(MAKE) -f limbo.mak veryclean V=1
 	-rm -rf ../obj/local/

@@ -20,14 +20,12 @@
  * Author: Christian Kellner <gicmo@gnome.org> 
  */
 
-#include <config.h>
+#include "config.h"
 #include "gbufferedoutputstream.h"
 #include "goutputstream.h"
 #include "gsimpleasyncresult.h"
 #include "string.h"
 #include "glibintl.h"
-
-#include <gioalias.h>
 
 /**
  * SECTION:gbufferedoutputstream
@@ -335,8 +333,7 @@ g_buffered_output_stream_finalize (GObject *object)
 
   g_free (priv->buffer);
 
-  if (G_OBJECT_CLASS (g_buffered_output_stream_parent_class)->finalize)
-    (*G_OBJECT_CLASS (g_buffered_output_stream_parent_class)->finalize) (object);
+  G_OBJECT_CLASS (g_buffered_output_stream_parent_class)->finalize (object);
 }
 
 static void
@@ -475,12 +472,10 @@ g_buffered_output_stream_flush (GOutputStream  *stream,
                                 GError        **error)
 {
   GBufferedOutputStream *bstream;
-  GBufferedOutputStreamPrivate *priv;
   GOutputStream                *base_stream;
   gboolean res;
 
   bstream = G_BUFFERED_OUTPUT_STREAM (stream);
-  priv = bstream->priv;
   base_stream = G_FILTER_OUTPUT_STREAM (stream)->base_stream;
 
   res = flush_buffer (bstream, cancellable, error);
@@ -499,21 +494,21 @@ g_buffered_output_stream_close (GOutputStream  *stream,
                                 GError        **error)
 {
   GBufferedOutputStream        *bstream;
-  GBufferedOutputStreamPrivate *priv;
   GOutputStream                *base_stream;
   gboolean                      res;
 
   bstream = G_BUFFERED_OUTPUT_STREAM (stream);
-  priv = bstream->priv;
   base_stream = G_FILTER_OUTPUT_STREAM (bstream)->base_stream;
-
   res = flush_buffer (bstream, cancellable, error);
 
-  /* report the first error but still close the stream */
-  if (res)
-    res = g_output_stream_close (base_stream, cancellable, error); 
-  else
-    g_output_stream_close (base_stream, cancellable, NULL); 
+  if (g_filter_output_stream_get_close_base_stream (G_FILTER_OUTPUT_STREAM (stream)))
+    {
+      /* report the first error but still close the stream */
+      if (res)
+        res = g_output_stream_close (base_stream, cancellable, error);
+      else
+        g_output_stream_close (base_stream, cancellable, NULL);
+    }
 
   return res;
 }
@@ -570,10 +565,13 @@ flush_buffer_thread (GSimpleAsyncResult *result,
       /* if flushing the buffer or the stream returned 
        * an error report that first error but still try 
        * close the stream */
-      if (res == FALSE)
-        g_output_stream_close (base_stream, cancellable, NULL);
-      else 
-        res = g_output_stream_close (base_stream, cancellable, &error);
+      if (g_filter_output_stream_get_close_base_stream (G_FILTER_OUTPUT_STREAM (stream)))
+        {
+          if (res == FALSE)
+            g_output_stream_close (base_stream, cancellable, NULL);
+          else 
+            res = g_output_stream_close (base_stream, cancellable, &error);
+        }
     }
 
   if (res == FALSE)
@@ -759,10 +757,7 @@ g_buffered_output_stream_close_finish (GOutputStream        *stream,
   simple = G_SIMPLE_ASYNC_RESULT (result);
 
   g_warn_if_fail (g_simple_async_result_get_source_tag (simple) == 
-            g_buffered_output_stream_flush_async);
+            g_buffered_output_stream_close_async);
 
   return TRUE;
 }
-
-#define __G_BUFFERED_OUTPUT_STREAM_C__
-#include "gioaliasdef.c"

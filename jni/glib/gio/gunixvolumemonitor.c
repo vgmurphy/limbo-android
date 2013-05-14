@@ -23,7 +23,7 @@
  *         David Zeuthen <davidz@redhat.com>
  */
 
-#include <config.h>
+#include "config.h"
 
 #include <string.h>
 
@@ -32,10 +32,11 @@
 #include "gunixmounts.h"
 #include "gunixmount.h"
 #include "gunixvolume.h"
+#include "gmount.h"
 #include "gmountprivate.h"
+#include "giomodule.h"
 #include "glibintl.h"
 
-#include "gioalias.h"
 
 struct _GUnixVolumeMonitor {
   GNativeVolumeMonitor parent;
@@ -84,9 +85,25 @@ g_unix_volume_monitor_finalize (GObject *object)
   g_list_free (monitor->volumes);
   g_list_foreach (monitor->mounts, (GFunc)g_object_unref, NULL);
   g_list_free (monitor->mounts);
+
+  G_OBJECT_CLASS (g_unix_volume_monitor_parent_class)->finalize (object);
+}
+
+static void
+g_unix_volume_monitor_dispose (GObject *object)
+{
+  GUnixVolumeMonitor *monitor;
+
+  monitor = G_UNIX_VOLUME_MONITOR (object);
+  g_list_foreach (monitor->volumes, (GFunc)g_object_unref, NULL);
+  g_list_free (monitor->volumes);
+  monitor->volumes = NULL;
   
-  if (G_OBJECT_CLASS (g_unix_volume_monitor_parent_class)->finalize)
-    (*G_OBJECT_CLASS (g_unix_volume_monitor_parent_class)->finalize) (object);
+  g_list_foreach (monitor->mounts, (GFunc)g_object_unref, NULL);
+  g_list_free (monitor->mounts);
+  monitor->mounts = NULL;
+  
+  G_OBJECT_CLASS (g_unix_volume_monitor_parent_class)->dispose (object);
 }
 
 static GList *
@@ -169,6 +186,7 @@ g_unix_volume_monitor_class_init (GUnixVolumeMonitorClass *klass)
   GNativeVolumeMonitorClass *native_class = G_NATIVE_VOLUME_MONITOR_CLASS (klass);
   
   gobject_class->finalize = g_unix_volume_monitor_finalize;
+  gobject_class->dispose = g_unix_volume_monitor_dispose;
 
   monitor_class->get_mounts = get_mounts;
   monitor_class->get_volumes = get_volumes;
@@ -209,22 +227,17 @@ g_unix_volume_monitor_init (GUnixVolumeMonitor *unix_monitor)
   unix_monitor->mount_monitor = g_unix_mount_monitor_new ();
 
   g_signal_connect (unix_monitor->mount_monitor,
-		    "mounts_changed", G_CALLBACK (mounts_changed),
+		    "mounts-changed", G_CALLBACK (mounts_changed),
 		    unix_monitor);
   
   g_signal_connect (unix_monitor->mount_monitor,
-		    "mountpoints_changed", G_CALLBACK (mountpoints_changed),
+		    "mountpoints-changed", G_CALLBACK (mountpoints_changed),
 		    unix_monitor);
 		    
   update_volumes (unix_monitor);
   update_mounts (unix_monitor);
 }
 
-/**
- * g_unix_volume_monitor_new:
- * 
- * Returns:  a new #GVolumeMonitor.
- **/
 GVolumeMonitor *
 _g_unix_volume_monitor_new (void)
 {
@@ -279,13 +292,6 @@ diff_sorted_lists (GList         *list1,
     }
 }
 
-/**
- * _g_unix_volume_monitor_lookup_volume_for_mount_path: 
- * @monitor:
- * @mount_path:
- * 
- * Returns:  #GUnixVolume for the given @mount_path.
- **/
 GUnixVolume *
 _g_unix_volume_monitor_lookup_volume_for_mount_path (GUnixVolumeMonitor *monitor,
                                                      const char         *mount_path)
@@ -346,7 +352,7 @@ update_volumes (GUnixVolumeMonitor *monitor)
 	{
 	  _g_unix_volume_disconnected (volume);
 	  monitor->volumes = g_list_remove (monitor->volumes, volume);
-	  g_signal_emit_by_name (monitor, "volume_removed", volume);
+	  g_signal_emit_by_name (monitor, "volume-removed", volume);
 	  g_signal_emit_by_name (volume, "removed");
 	  g_object_unref (volume);
 	}
@@ -360,7 +366,7 @@ update_volumes (GUnixVolumeMonitor *monitor)
       if (volume)
 	{
 	  monitor->volumes = g_list_prepend (monitor->volumes, volume);
-	  g_signal_emit_by_name (monitor, "volume_added", volume);
+	  g_signal_emit_by_name (monitor, "volume-added", volume);
 	}
     }
   
@@ -399,7 +405,7 @@ update_mounts (GUnixVolumeMonitor *monitor)
 	{
 	  _g_unix_mount_unmounted (mount);
 	  monitor->mounts = g_list_remove (monitor->mounts, mount);
-	  g_signal_emit_by_name (monitor, "mount_removed", mount);
+	  g_signal_emit_by_name (monitor, "mount-removed", mount);
 	  g_signal_emit_by_name (mount, "unmounted");
 	  g_object_unref (mount);
 	}
@@ -416,7 +422,7 @@ update_mounts (GUnixVolumeMonitor *monitor)
       if (mount)
 	{
 	  monitor->mounts = g_list_prepend (monitor->mounts, mount);
-	  g_signal_emit_by_name (monitor, "mount_added", mount);
+	  g_signal_emit_by_name (monitor, "mount-added", mount);
 	}
     }
   

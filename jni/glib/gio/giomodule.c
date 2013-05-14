@@ -20,20 +20,29 @@
  * Author: Alexander Larsson <alexl@redhat.com>
  */
 
-#include <config.h>
+#include "config.h"
 
 #include <string.h>
 
 #include "giomodule.h"
 #include "giomodule-priv.h"
+#include "gmemorysettingsbackend.h"
 #include "glocalfilemonitor.h"
 #include "glocaldirectorymonitor.h"
 #include "gnativevolumemonitor.h"
+#include "gproxyresolver.h"
+#include "gproxy.h"
+#include "gsocks4proxy.h"
+#include "gsocks4aproxy.h"
+#include "gsocks5proxy.h"
 #include "gvfs.h"
 #ifdef G_OS_UNIX
 #include "gdesktopappinfo.h"
 #endif
-#include "gioalias.h"
+#ifdef G_OS_WIN32
+#include "gregistrysettingsbackend.h"
+#endif
+#include <glib/gstdio.h>
 
 /**
  * SECTION:giomodule
@@ -50,7 +59,7 @@
  * SECTION:extensionpoints
  * @short_description: Extension Points
  * @include: gio.h
- * @see_also: <link linkend="gio-extension-points">Extending GIO</link>
+ * @see_also: <link linkend="extending-gio">Extending GIO</link>
  *
  * #GIOExtensionPoint provides a mechanism for modules to extend the
  * functionality of the library or application that loaded it in an 
@@ -88,14 +97,21 @@
  *  it uses the implementations that have been associated with it.
  *  Depending on the use case, it may use all implementations, or
  *  only the one with the highest priority, or pick a specific
- *  one by name. 
+ *  one by name.
+ *
+ *  To avoid opening all modules just to find out what extension
+ *  points they implement, GIO makes use of a caching mechanism,
+ *  see <link linkend="gio-querymodules">gio-querymodules</link>.
+ *  You are expected to run this command after installing a
+ *  GIO module.
  */
 struct _GIOModule {
   GTypeModule parent_instance;
-  
+
   gchar       *filename;
   GModule     *library;
-  
+  gboolean     initialized; /* The module was loaded at least once */
+
   void (* load)   (GIOModule *module);
   void (* unload) (GIOModule *module);
 };
@@ -109,6 +125,22 @@ struct _GIOModuleClass
 static void      g_io_module_finalize      (GObject      *object);
 static gboolean  g_io_module_load_module   (GTypeModule  *gmodule);
 static void      g_io_module_unload_module (GTypeModule  *gmodule);
+
+struct _GIOExtension {
+  char *name;
+  GType type;
+  gint priority;
+};
+
+struct _GIOExtensionPoint {
+  GType required_type;
+  char *name;
+  GList *extensions;
+  GList *lazy_load_modules;
+};
+
+static GHashTable *extension_points = NULL;
+G_LOCK_DEFINE_STATIC(extension_points);
 
 G_DEFINE_TYPE (GIOModule, g_io_module, G_TYPE_TYPE_MODULE);
 
@@ -174,6 +206,7 @@ g_io_module_load_module (GTypeModule *gmodule)
 
   /* Initialize the loaded module */
   module->load (module);
+  module->initialized = TRUE;
 
   return TRUE;
 }
@@ -228,10 +261,155 @@ is_valid_module_name (const gchar *basename)
 }
 
 /**
+ * g_io_modules_scan_all_in_directory:
+ * @dirname: pathname for a directory containing modules to scan.
+ *
+ * Scans all the modules in the specified directory, ensuring that
+ * any extension point implemented by a module is registered.
+ *
+ * This may not actually load and initialize all the types in each
+ * module, some modules may be lazily loaded and initialized when
+ * an extension point it implementes is used with e.g.
+ * g_io_extension_point_get_extensions() or
+ * g_io_extension_point_get_extension_by_name().
+ *
+ * If you need to guarantee that all types are loaded in all the modules,
+ * use g_io_modules_scan_all_in_directory().
+ *
+ * Since: 2.24
+ **/
+void
+g_io_modules_scan_all_in_directory (const char *dirname)
+{
+  const gchar *name;
+  char *filename;
+  GDir *dir;
+  GStatBuf statbuf;
+  char *data;
+  time_t cache_mtime;
+  GHashTable *cache;
+
+  if (!g_module_supported ())
+    return;
+
+  dir = g_dir_open (dirname, 0, NULL);
+  if (!dir)
+    return;
+
+  filename = g_build_filename (dirname, "giomodule.cache", NULL);
+
+  cache = g_hash_table_new_full (g_str_hash, g_str_equal,
+				 g_free, (GDestroyNotify)g_strfreev);
+
+  cache_mtime = 0;
+  if (g_stat (filename, &statbuf) == 0 &&
+      g_file_get_contents (filename, &data, NULL, NULL))
+    {
+      char **lines;
+      int i;
+
+      /* Cache mtime is the time the cache file was created, any file
+       * that has a ctime before this was created then and not modified
+       * since then (userspace can't change ctime). Its possible to change
+       * the ctime forward without changing the file content, by e.g.
+       * chmoding the file, but this is uncommon and will only cause us
+       * to not use the cache so will not cause bugs.
+       */
+      cache_mtime = statbuf.st_mtime;
+
+      lines = g_strsplit (data, "\n", -1);
+      g_free (data);
+
+      for (i = 0;  lines[i] != NULL; i++)
+	{
+	  char *line = lines[i];
+	  char *file;
+	  char *colon;
+	  char **extension_points;
+
+	  if (line[0] == '#')
+	    continue;
+
+	  colon = strchr (line, ':');
+	  if (colon == NULL || line == colon)
+	    continue; /* Invalid line, ignore */
+
+	  *colon = 0; /* terminate filename */
+	  file = g_strdup (line);
+	  colon++; /* after colon */
+
+	  while (g_ascii_isspace (*colon))
+	    colon++;
+
+	  extension_points = g_strsplit (colon, ",", -1);
+	  g_hash_table_insert (cache, file, extension_points);
+	}
+      g_strfreev (lines);
+    }
+
+  while ((name = g_dir_read_name (dir)))
+    {
+      if (is_valid_module_name (name))
+	{
+	  GIOExtensionPoint *extension_point;
+	  GIOModule *module;
+	  gchar *path;
+	  char **extension_points;
+	  int i;
+
+	  path = g_build_filename (dirname, name, NULL);
+	  module = g_io_module_new (path);
+
+	  extension_points = g_hash_table_lookup (cache, name);
+	  if (extension_points != NULL &&
+	      g_stat (path, &statbuf) == 0 &&
+	      statbuf.st_ctime <= cache_mtime)
+	    {
+	      /* Lazy load/init the library when first required */
+	      for (i = 0; extension_points[i] != NULL; i++)
+		{
+		  extension_point =
+		    g_io_extension_point_register (extension_points[i]);
+		  extension_point->lazy_load_modules =
+		    g_list_prepend (extension_point->lazy_load_modules,
+				    module);
+		}
+	    }
+	  else
+	    {
+	      /* Try to load and init types */
+	      if (g_type_module_use (G_TYPE_MODULE (module)))
+		g_type_module_unuse (G_TYPE_MODULE (module)); /* Unload */
+	      else
+		{ /* Failure to load */
+		  g_printerr ("Failed to load module: %s\n", path);
+		  g_object_unref (module);
+		  g_free (path);
+		  continue;
+		}
+	    }
+
+	  g_free (path);
+	}
+    }
+
+  g_dir_close (dir);
+
+  g_hash_table_destroy (cache);
+
+  g_free (filename);
+}
+
+
+/**
  * g_io_modules_load_all_in_directory:
  * @dirname: pathname for a directory containing modules to load.
  *
  * Loads all the modules in the specified directory.
+ *
+ * If don't require all modules to be initialized (and thus registering
+ * all gtypes) then you can use g_io_modules_scan_all_in_directory()
+ * which allows delayed/lazy loading of modules.
  *
  * Returns: a list of #GIOModules loaded from the directory,
  *      All the modules are loaded into memory, if you want to
@@ -283,26 +461,67 @@ g_io_modules_load_all_in_directory (const char *dirname)
   return modules;
 }
 
+G_LOCK_DEFINE_STATIC (registered_extensions);
 G_LOCK_DEFINE_STATIC (loaded_dirs);
 
+extern GType _g_fen_directory_monitor_get_type (void);
+extern GType _g_fen_file_monitor_get_type (void);
 extern GType _g_inotify_directory_monitor_get_type (void);
 extern GType _g_inotify_file_monitor_get_type (void);
 extern GType _g_unix_volume_monitor_get_type (void);
 extern GType _g_local_vfs_get_type (void);
 
-void
-_g_io_modules_ensure_loaded (void)
+extern GType _g_win32_volume_monitor_get_type (void);
+extern GType g_win32_directory_monitor_get_type (void);
+extern GType _g_winhttp_vfs_get_type (void);
+
+extern GType _g_dummy_proxy_resolver_get_type (void);
+
+#ifdef G_PLATFORM_WIN32
+
+#include <windows.h>
+
+static HMODULE gio_dll = NULL;
+
+#ifdef DLL_EXPORT
+
+BOOL WINAPI
+DllMain (HINSTANCE hinstDLL,
+	 DWORD     fdwReason,
+	 LPVOID    lpvReserved)
 {
-  GList *modules, *l;
-  static gboolean loaded_dirs = FALSE;
+  if (fdwReason == DLL_PROCESS_ATTACH)
+      gio_dll = hinstDLL;
+
+  return TRUE;
+}
+
+#endif
+
+#undef GIO_MODULE_DIR
+
+/* GIO_MODULE_DIR is used only in code called just once,
+ * so no problem leaking this
+ */
+#define GIO_MODULE_DIR \
+  g_build_filename (g_win32_get_package_installation_directory_of_module (gio_dll), \
+		    "lib/gio/modules", \
+		    NULL)
+
+#endif
+
+void
+_g_io_modules_ensure_extension_points_registered (void)
+{
+  static gboolean registered_extensions = FALSE;
   GIOExtensionPoint *ep;
 
-  G_LOCK (loaded_dirs);
-
-  if (!loaded_dirs)
+  G_LOCK (registered_extensions);
+  
+  if (!registered_extensions)
     {
-      loaded_dirs = TRUE;
-
+      registered_extensions = TRUE;
+      
 #ifdef G_OS_UNIX
       ep = g_io_extension_point_register (G_DESKTOP_APP_INFO_LOOKUP_EXTENSION_POINT_NAME);
       g_io_extension_point_set_required_type (ep, G_TYPE_DESKTOP_APP_INFO_LOOKUP);
@@ -313,7 +532,7 @@ _g_io_modules_ensure_loaded (void)
       
       ep = g_io_extension_point_register (G_LOCAL_FILE_MONITOR_EXTENSION_POINT_NAME);
       g_io_extension_point_set_required_type (ep, G_TYPE_LOCAL_FILE_MONITOR);
-
+      
       ep = g_io_extension_point_register (G_VOLUME_MONITOR_EXTENSION_POINT_NAME);
       g_io_extension_point_set_required_type (ep, G_TYPE_VOLUME_MONITOR);
       
@@ -322,43 +541,81 @@ _g_io_modules_ensure_loaded (void)
       
       ep = g_io_extension_point_register (G_VFS_EXTENSION_POINT_NAME);
       g_io_extension_point_set_required_type (ep, G_TYPE_VFS);
-      
-      modules = g_io_modules_load_all_in_directory (GIO_MODULE_DIR);
+
+      ep = g_io_extension_point_register ("gsettings-backend");
+      g_io_extension_point_set_required_type (ep, G_TYPE_OBJECT);
+
+      ep = g_io_extension_point_register (G_PROXY_RESOLVER_EXTENSION_POINT_NAME);
+      g_io_extension_point_set_required_type (ep, G_TYPE_PROXY_RESOLVER);
+
+      ep = g_io_extension_point_register (G_PROXY_EXTENSION_POINT_NAME);
+      g_io_extension_point_set_required_type (ep, G_TYPE_PROXY);
+    }
+  
+  G_UNLOCK (registered_extensions);
+ }
+
+void
+_g_io_modules_ensure_loaded (void)
+{
+  static gboolean loaded_dirs = FALSE;
+  const char *module_path;
+
+  _g_io_modules_ensure_extension_points_registered ();
+  
+  G_LOCK (loaded_dirs);
+
+  if (!loaded_dirs)
+    {
+      loaded_dirs = TRUE;
+
+      g_io_modules_scan_all_in_directory (GIO_MODULE_DIR);
+
+      module_path = g_getenv ("GIO_EXTRA_MODULES");
+
+      if (module_path)
+	{
+	  gchar **paths;
+	  int i;
+
+	  paths = g_strsplit (module_path, ":", 0);
+
+	  for (i = 0; paths[i] != NULL; i++)
+	    g_io_modules_scan_all_in_directory (paths[i]);
+
+	  g_strfreev (paths);
+	}
 
       /* Initialize types from built-in "modules" */
+      g_memory_settings_backend_get_type ();
 #if defined(HAVE_SYS_INOTIFY_H) || defined(HAVE_LINUX_INOTIFY_H)
       _g_inotify_directory_monitor_get_type ();
       _g_inotify_file_monitor_get_type ();
 #endif
+#if defined(HAVE_FEN)
+      _g_fen_directory_monitor_get_type ();
+      _g_fen_file_monitor_get_type ();
+#endif
+#ifdef G_OS_WIN32
+      _g_win32_volume_monitor_get_type ();
+      g_win32_directory_monitor_get_type ();
+      g_registry_backend_get_type ();
+#endif
 #ifdef G_OS_UNIX
       _g_unix_volume_monitor_get_type ();
 #endif
+#ifdef G_OS_WIN32
+      _g_winhttp_vfs_get_type ();
+#endif
       _g_local_vfs_get_type ();
-    
-      for (l = modules; l != NULL; l = l->next)
-	g_type_module_unuse (G_TYPE_MODULE (l->data));
-      
-      g_list_free (modules);
+      _g_dummy_proxy_resolver_get_type ();
+      _g_socks4a_proxy_get_type ();
+      _g_socks4_proxy_get_type ();
+      _g_socks5_proxy_get_type ();
     }
 
   G_UNLOCK (loaded_dirs);
 }
-
-struct _GIOExtension {
-  char *name;
-  GType type;
-  gint priority;
-};
-
-struct _GIOExtensionPoint {
-  GType required_type;
-  char *name;
-  GList *extensions;
-};
-
-static GHashTable *extension_points = NULL;
-G_LOCK_DEFINE_STATIC(extension_points);
-
 
 static void
 g_io_extension_point_free (GIOExtensionPoint *ep)
@@ -388,11 +645,11 @@ g_io_extension_point_register (const char *name)
 					      NULL,
 					      (GDestroyNotify)g_io_extension_point_free);
 
-  if (g_hash_table_lookup (extension_points, name) != NULL)
+  ep = g_hash_table_lookup (extension_points, name);
+  if (ep != NULL)
     {
-      g_warning ("Extension point %s registered multiple times", name);
       G_UNLOCK (extension_points);
-      return NULL;
+      return ep;
     }
 
   ep = g_new0 (GIOExtensionPoint, 1);
@@ -460,19 +717,42 @@ g_io_extension_point_get_required_type (GIOExtensionPoint *extension_point)
   return extension_point->required_type;
 }
 
+void
+lazy_load_modules (GIOExtensionPoint *extension_point)
+{
+  GIOModule *module;
+  GList *l;
+
+  for (l = extension_point->lazy_load_modules; l != NULL; l = l->next)
+    {
+      module = l->data;
+
+      if (!module->initialized)
+	{
+	  if (g_type_module_use (G_TYPE_MODULE (module)))
+	    g_type_module_unuse (G_TYPE_MODULE (module)); /* Unload */
+	  else
+	    g_printerr ("Failed to load module: %s\n",
+			module->filename);
+	}
+    }
+}
+
 /**
  * g_io_extension_point_get_extensions:
  * @extension_point: a #GIOExtensionPoint
  *
  * Gets a list of all extensions that implement this extension point.
  * The list is sorted by priority, beginning with the highest priority.
- * 
- * Returns: a #GList of #GIOExtension<!-- -->s. The list is owned by
- *   GIO and should not be modified
+ *
+ * Returns: (element-type GIOExtension) (transfer none): a #GList of
+ * #GIOExtension<!-- -->s. The list is owned by GIO and should not be
+ * modified.
  */
 GList *
 g_io_extension_point_get_extensions (GIOExtensionPoint *extension_point)
 {
+  lazy_load_modules (extension_point);
   return extension_point->extensions;
 }
 
@@ -492,6 +772,7 @@ g_io_extension_point_get_extension_by_name (GIOExtensionPoint *extension_point,
 {
   GList *l;
 
+  lazy_load_modules (extension_point);
   for (l = extension_point->extensions; l != NULL; l = l->next)
     {
       GIOExtension *e = l->data;
@@ -510,7 +791,13 @@ extension_prio_compare (gconstpointer  a,
 {
   const GIOExtension *extension_a = a, *extension_b = b;
 
-  return extension_b->priority - extension_a->priority;
+  if (extension_a->priority > extension_b->priority)
+    return -1;
+
+  if (extension_b->priority > extension_a->priority)
+    return 1;
+
+  return 0;
 }
 
 /**
@@ -558,7 +845,7 @@ g_io_extension_point_implement (const char *extension_point_name,
       return NULL;
     }      
 
-  /* Its safe to register the same type multiple times */
+  /* It's safe to register the same type multiple times */
   for (l = extension_point->extensions; l != NULL; l = l->next)
     {
       extension = l->data;
@@ -636,6 +923,3 @@ g_io_extension_get_priority (GIOExtension *extension)
 {
   return extension->priority;
 }
-
-#define __G_IO_MODULE_C__
-#include "gioaliasdef.c"

@@ -21,8 +21,12 @@
  * Modified by the GLib Team and others 1997-2000.  See the AUTHORS
  * file for a list of people on the GLib Team.  See the ChangeLog
  * files for a list of changes.  These files are distributed with
- * GLib at ftp://ftp.gtk.org/pub/gtk/. 
+ * GLib at ftp://ftp.gtk.org/pub/gtk/.
  */
+
+#if defined(G_DISABLE_SINGLE_INCLUDES) && !defined (__GLIB_H_INSIDE__) && !defined (GLIB_COMPILATION)
+#error "Only <glib.h> can be included directly."
+#endif
 
 #ifndef __G_MESSAGES_H__
 #define __G_MESSAGES_H__
@@ -130,12 +134,14 @@ void g_assert_warning         (const char *log_domain,
 #define G_LOG_DOMAIN    ((gchar*) 0)
 #endif  /* G_LOG_DOMAIN */
 #ifdef G_HAVE_ISO_VARARGS
-/* for(;;); so that GCC knows that control doesn't go past g_error() */
+/* for(;;) ; so that GCC knows that control doesn't go past g_error().
+ * Put space before ending semicolon to avoid C++ build warnings.
+ */
 #define g_error(...)  G_STMT_START {                 \
                         g_log (G_LOG_DOMAIN,         \
                                G_LOG_LEVEL_ERROR,    \
                                __VA_ARGS__);         \
-                        for (;;);                    \
+                        for (;;) ;                   \
                       } G_STMT_END
                         
 #define g_message(...)  g_log (G_LOG_DOMAIN,         \
@@ -155,7 +161,7 @@ void g_assert_warning         (const char *log_domain,
                                 g_log (G_LOG_DOMAIN,         \
                                        G_LOG_LEVEL_ERROR,    \
                                        format);              \
-                                for (;;);                    \
+                                for (;;) ;                   \
                               } G_STMT_END
                               
 #define g_message(format...)    g_log (G_LOG_DOMAIN,         \
@@ -180,7 +186,7 @@ g_error (const gchar *format,
   g_logv (G_LOG_DOMAIN, G_LOG_LEVEL_ERROR, format, args);
   va_end (args);
 
-  for(;;);
+  for(;;) ;
 }
 static void
 g_message (const gchar *format,
@@ -335,4 +341,3 @@ GPrintFunc      g_set_printerr_handler  (GPrintFunc      func);
 G_END_DECLS
 
 #endif /* __G_MESSAGES_H__ */
-

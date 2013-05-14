@@ -20,12 +20,13 @@
  * Author: Alexander Larsson <alexl@redhat.com>
  */
 
-#include <config.h>
+#include "config.h"
 
 #include <string.h>
 
 #include "gcontenttypeprivate.h"
 #include "gwin32appinfo.h"
+#include "gappinfo.h"
 #include "gioerror.h"
 #include "gfile.h"
 #include <glib/gstdio.h>
@@ -34,7 +35,6 @@
 #include <windows.h>
 #include <shlwapi.h>
 
-#include "gioalias.h"
 
 #ifndef ASSOCF_INIT_BYEXENAME
 #define ASSOCF_INIT_BYEXENAME 0x00000002
@@ -79,9 +79,8 @@ g_win32_app_info_finalize (GObject *object)
   g_free (info->id_utf8);
   g_free (info->name);
   g_free (info->executable);
-  
-  if (G_OBJECT_CLASS (g_win32_app_info_parent_class)->finalize)
-    (*G_OBJECT_CLASS (g_win32_app_info_parent_class)->finalize) (object);
+
+  G_OBJECT_CLASS (g_win32_app_info_parent_class)->finalize (object);
 }
 
 static void
@@ -239,7 +238,7 @@ g_win32_app_info_get_executable (GAppInfo *appinfo)
   return info->executable;
 }
 
-static const char *
+static GIcon *
 g_win32_app_info_get_icon (GAppInfo *appinfo)
 {
   /* GWin32AppInfo *info = G_WIN32_APP_INFO (appinfo); */
@@ -274,7 +273,7 @@ g_win32_app_info_launch (GAppInfo           *appinfo,
 		      NULL,
 		      &class_key) != S_OK)
     {
-      g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED, _("Can't find application"));
+      g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_FAILED, _("Can't find application"));
       return FALSE;
     }
 #endif
@@ -293,25 +292,12 @@ g_win32_app_info_launch (GAppInfo           *appinfo,
       exec_info.nShow = SW_SHOWNORMAL;
       exec_info.hkeyClass = class_key;
       
-      if (!ShellExecuteExW(&exec_info))
+      if (!ShellExecuteExW (&exec_info))
 	{
-	  DWORD last_error;
-	  LPVOID message;
-	  char *message_utf8;
-	  
-	  last_error = GetLastError ();
-	  FormatMessage (FORMAT_MESSAGE_ALLOCATE_BUFFER | 
-			 FORMAT_MESSAGE_FROM_SYSTEM,
-			 NULL,
-			 last_error,
-			 MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-			 (LPTSTR) &message,
-			 0, NULL );
-	  
-	  message_utf8 = g_utf16_to_utf8 (message, -1, NULL, NULL, NULL);
+	  char *message_utf8 = g_win32_error_message (GetLastError ());
+
 	  g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED, _("Error launching application: %s"), message_utf8);
 	  g_free (message_utf8);
-	  LocalFree (message);
 	  
 	  g_free (wfilename);
 	  RegCloseKey (class_key);
@@ -344,9 +330,9 @@ g_win32_app_info_launch_uris (GAppInfo           *appinfo,
 			      GAppLaunchContext  *launch_context,
 			      GError            **error)
 {
-  g_set_error (error, G_IO_ERROR, 
-               G_IO_ERROR_NOT_SUPPORTED, 
-               _("URIs not supported"));
+  g_set_error_literal (error, G_IO_ERROR, 
+                       G_IO_ERROR_NOT_SUPPORTED, 
+                       _("URIs not supported"));
   return FALSE;
 }
 
@@ -366,9 +352,9 @@ g_win32_app_info_set_as_default_for_type (GAppInfo    *appinfo,
                                           const char  *content_type,
                                           GError     **error)
 {
-  g_set_error (error, G_IO_ERROR, 
-               G_IO_ERROR_NOT_SUPPORTED, 
-               _("association changes not supported on win32"));
+  g_set_error_literal (error, G_IO_ERROR, 
+                       G_IO_ERROR_NOT_SUPPORTED, 
+                       _("association changes not supported on win32"));
   return FALSE;
 }
 
@@ -378,9 +364,9 @@ g_app_info_create_from_commandline (const char           *commandline,
 				    GAppInfoCreateFlags   flags,
 				    GError              **error)
 {
-  g_set_error (error, G_IO_ERROR, 
-               G_IO_ERROR_NOT_SUPPORTED, 
-               _("Association creation not supported on win32"));
+  g_set_error_literal (error, G_IO_ERROR, 
+                       G_IO_ERROR_NOT_SUPPORTED, 
+                       _("Association creation not supported on win32"));
   return NULL;
 }
 
@@ -673,4 +659,10 @@ g_app_info_get_all (void)
   RegCloseKey (reg_key);
 
   return g_list_reverse (infos);
+}
+
+void
+g_app_info_reset_type_associations (const char *content_type)
+{
+  /* nothing to do */
 }

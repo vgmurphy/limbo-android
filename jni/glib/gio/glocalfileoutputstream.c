@@ -20,7 +20,7 @@
  * Author: Alexander Larsson <alexl@redhat.com>
  */
 
-#include <config.h>
+#include "config.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -35,8 +35,13 @@
 #include <glib/gstdio.h>
 #include "glibintl.h"
 #include "gioerror.h"
+#include "gcancellable.h"
 #include "glocalfileoutputstream.h"
 #include "glocalfileinfo.h"
+
+#ifdef G_OS_UNIX
+#include "gfiledescriptorbased.h"
+#endif
 
 #ifdef G_OS_WIN32
 #include <io.h>
@@ -52,10 +57,21 @@
 #define O_BINARY 0
 #endif
 
-#include "gioalias.h"
+
+#ifdef G_OS_UNIX
+static void       g_file_descriptor_based_iface_init   (GFileDescriptorBasedIface *iface);
+#endif
 
 #define g_local_file_output_stream_get_type _g_local_file_output_stream_get_type
-G_DEFINE_TYPE (GLocalFileOutputStream, g_local_file_output_stream, G_TYPE_FILE_OUTPUT_STREAM);
+#ifdef G_OS_UNIX
+G_DEFINE_TYPE_WITH_CODE (GLocalFileOutputStream, g_local_file_output_stream, G_TYPE_FILE_OUTPUT_STREAM,
+			 G_IMPLEMENT_INTERFACE (G_TYPE_FILE_DESCRIPTOR_BASED,
+						g_file_descriptor_based_iface_init)
+                           );
+#else
+G_DEFINE_TYPE_WITH_CODE (GLocalFileOutputStream, g_local_file_output_stream, G_TYPE_FILE_OUTPUT_STREAM,);
+#endif
+
 
 /* Some of the file replacement code was based on the code from gedit,
  * relicenced to LGPL with permissions from the authors.
@@ -68,6 +84,8 @@ struct _GLocalFileOutputStreamPrivate {
   char *original_filename;
   char *backup_filename;
   char *etag;
+  guint sync_on_close : 1;
+  guint do_close : 1;
   int fd;
 };
 
@@ -80,7 +98,7 @@ static gboolean   g_local_file_output_stream_close        (GOutputStream      *s
 							   GCancellable       *cancellable,
 							   GError            **error);
 static GFileInfo *g_local_file_output_stream_query_info   (GFileOutputStream  *stream,
-							   char               *attributes,
+							   const char         *attributes,
 							   GCancellable       *cancellable,
 							   GError            **error);
 static char *     g_local_file_output_stream_get_etag     (GFileOutputStream  *stream);
@@ -96,6 +114,9 @@ static gboolean   g_local_file_output_stream_truncate     (GFileOutputStream  *s
 							   goffset             size,
 							   GCancellable       *cancellable,
 							   GError            **error);
+#ifdef G_OS_UNIX
+static int        g_local_file_output_stream_get_fd       (GFileDescriptorBased *stream);
+#endif
 
 static void
 g_local_file_output_stream_finalize (GObject *object)
@@ -108,10 +129,10 @@ g_local_file_output_stream_finalize (GObject *object)
   g_free (file->priv->original_filename);
   g_free (file->priv->backup_filename);
   g_free (file->priv->etag);
-  
-  if (G_OBJECT_CLASS (g_local_file_output_stream_parent_class)->finalize)
-    (*G_OBJECT_CLASS (g_local_file_output_stream_parent_class)->finalize) (object);
+
+  G_OBJECT_CLASS (g_local_file_output_stream_parent_class)->finalize (object);
 }
+
 
 static void
 g_local_file_output_stream_class_init (GLocalFileOutputStreamClass *klass)
@@ -135,12 +156,21 @@ g_local_file_output_stream_class_init (GLocalFileOutputStreamClass *klass)
   file_stream_class->truncate_fn = g_local_file_output_stream_truncate;
 }
 
+#ifdef G_OS_UNIX
+static void
+g_file_descriptor_based_iface_init (GFileDescriptorBasedIface *iface)
+{
+  iface->get_fd = g_local_file_output_stream_get_fd;
+}
+#endif
+
 static void
 g_local_file_output_stream_init (GLocalFileOutputStream *stream)
 {
   stream->priv = G_TYPE_INSTANCE_GET_PRIVATE (stream,
 					      G_TYPE_LOCAL_FILE_OUTPUT_STREAM,
 					      GLocalFileOutputStreamPrivate);
+  stream->priv->do_close = TRUE;
 }
 
 static gssize
@@ -179,16 +209,56 @@ g_local_file_output_stream_write (GOutputStream  *stream,
   return res;
 }
 
-static gboolean
-g_local_file_output_stream_close (GOutputStream  *stream,
-				  GCancellable   *cancellable,
-				  GError        **error)
+void
+_g_local_file_output_stream_set_do_close (GLocalFileOutputStream *out,
+					  gboolean do_close)
 {
-  GLocalFileOutputStream *file;
-  struct stat final_stat;
+  out->priv->do_close = do_close;
+}
+
+gboolean
+_g_local_file_output_stream_really_close (GLocalFileOutputStream *file,
+					  GCancellable   *cancellable,
+					  GError        **error)
+{
+  GLocalFileStat final_stat;
   int res;
 
-  file = G_LOCAL_FILE_OUTPUT_STREAM (stream);
+#ifdef HAVE_FSYNC
+  if (file->priv->sync_on_close &&
+      fsync (file->priv->fd) != 0)
+    {
+      int errsv = errno;
+      
+      g_set_error (error, G_IO_ERROR,
+		   g_io_error_from_errno (errsv),
+		   _("Error writing to file: %s"),
+		   g_strerror (errsv));
+      goto err_out;
+    }
+#endif
+ 
+#ifdef G_OS_WIN32
+
+  /* Must close before renaming on Windows, so just do the close first
+   * in all cases for now.
+   */
+  if (_fstati64 (file->priv->fd, &final_stat) == 0)
+    file->priv->etag = _g_local_file_info_create_etag (&final_stat);
+
+  res = close (file->priv->fd);
+  if (res == -1)
+    {
+      int errsv = errno;
+      
+      g_set_error (error, G_IO_ERROR,
+		   g_io_error_from_errno (errsv),
+		   _("Error closing file: %s"),
+		   g_strerror (errsv));
+      return FALSE;
+    }
+
+#endif
 
   if (file->priv->tmp_filename)
     {
@@ -254,7 +324,7 @@ g_local_file_output_stream_close (GOutputStream  *stream,
           int errsv = errno;
 
 	  g_set_error (error, G_IO_ERROR,
-		       g_io_error_from_errno (errno),
+		       g_io_error_from_errno (errsv),
 		       _("Error renaming temporary file: %s"),
 		       g_strerror (errsv));
 	  goto err_out;
@@ -264,6 +334,8 @@ g_local_file_output_stream_close (GOutputStream  *stream,
   if (g_cancellable_set_error_if_cancelled (cancellable, error))
     goto err_out;
       
+#ifndef G_OS_WIN32		/* Already did the fstat() and close() above on Win32 */
+
   if (fstat (file->priv->fd, &final_stat) == 0)
     file->priv->etag = _g_local_file_info_create_etag (&final_stat);
 
@@ -284,10 +356,36 @@ g_local_file_output_stream_close (GOutputStream  *stream,
   
   return res != -1;
 
+#else
+
+  return TRUE;
+
+#endif
+
  err_out:
+
+#ifndef G_OS_WIN32
   /* A simple try to close the fd in case we fail before the actual close */
   close (file->priv->fd);
+#endif
   return FALSE;
+}
+
+
+static gboolean
+g_local_file_output_stream_close (GOutputStream  *stream,
+				  GCancellable   *cancellable,
+				  GError        **error)
+{
+  GLocalFileOutputStream *file;
+
+  file = G_LOCAL_FILE_OUTPUT_STREAM (stream);
+
+  if (file->priv->do_close)
+    return _g_local_file_output_stream_really_close (file,
+						     cancellable,
+						     error);
+  return TRUE;
 }
 
 static char *
@@ -426,7 +524,7 @@ g_local_file_output_stream_truncate (GFileOutputStream  *stream,
 
 static GFileInfo *
 g_local_file_output_stream_query_info (GFileOutputStream  *stream,
-				       char               *attributes,
+				       const char         *attributes,
 				       GCancellable       *cancellable,
 				       GError            **error)
 {
@@ -443,7 +541,54 @@ g_local_file_output_stream_query_info (GFileOutputStream  *stream,
 }
 
 GFileOutputStream *
+_g_local_file_output_stream_open  (const char        *filename,
+				   gboolean          readable,
+				   GCancellable      *cancellable,
+				   GError           **error)
+{
+  GLocalFileOutputStream *stream;
+  int fd;
+  int open_flags;
+
+  if (g_cancellable_set_error_if_cancelled (cancellable, error))
+    return NULL;
+
+  open_flags = O_BINARY;
+  if (readable)
+    open_flags |= O_RDWR;
+  else
+    open_flags |= O_WRONLY;
+
+  fd = g_open (filename, open_flags, 0666);
+  if (fd == -1)
+    {
+      int errsv = errno;
+
+      if (errsv == EINVAL)
+	/* This must be an invalid filename, on e.g. FAT */
+	g_set_error_literal (error, G_IO_ERROR,
+                             G_IO_ERROR_INVALID_FILENAME,
+                             _("Invalid filename"));
+      else
+	{
+	  char *display_name = g_filename_display_name (filename);
+	  g_set_error (error, G_IO_ERROR,
+		       g_io_error_from_errno (errsv),
+		       _("Error opening file '%s': %s"),
+		       display_name, g_strerror (errsv));
+	  g_free (display_name);
+	}
+      return NULL;
+    }
+  
+  stream = g_object_new (G_TYPE_LOCAL_FILE_OUTPUT_STREAM, NULL);
+  stream->priv->fd = fd;
+  return G_FILE_OUTPUT_STREAM (stream);
+}
+
+GFileOutputStream *
 _g_local_file_output_stream_create  (const char        *filename,
+				     gboolean          readable,
 				     GFileCreateFlags   flags,
 				     GCancellable      *cancellable,
 				     GError           **error)
@@ -451,6 +596,7 @@ _g_local_file_output_stream_create  (const char        *filename,
   GLocalFileOutputStream *stream;
   int mode;
   int fd;
+  int open_flags;
 
   if (g_cancellable_set_error_if_cancelled (cancellable, error))
     return NULL;
@@ -459,17 +605,23 @@ _g_local_file_output_stream_create  (const char        *filename,
     mode = 0600;
   else
     mode = 0666;
-  
-  fd = g_open (filename, O_CREAT | O_EXCL | O_WRONLY | O_BINARY, mode);
+
+  open_flags = O_CREAT | O_EXCL | O_BINARY;
+  if (readable)
+    open_flags |= O_RDWR;
+  else
+    open_flags |= O_WRONLY;
+
+  fd = g_open (filename, open_flags, mode);
   if (fd == -1)
     {
       int errsv = errno;
 
       if (errsv == EINVAL)
 	/* This must be an invalid filename, on e.g. FAT */
-	g_set_error (error, G_IO_ERROR,
-		     G_IO_ERROR_INVALID_FILENAME,
-		     _("Invalid filename"));
+	g_set_error_literal (error, G_IO_ERROR,
+                             G_IO_ERROR_INVALID_FILENAME,
+                             _("Invalid filename"));
       else
 	{
 	  char *display_name = g_filename_display_name (filename);
@@ -512,9 +664,9 @@ _g_local_file_output_stream_append  (const char        *filename,
 
       if (errsv == EINVAL)
 	/* This must be an invalid filename, on e.g. FAT */
-	g_set_error (error, G_IO_ERROR,
-		     G_IO_ERROR_INVALID_FILENAME,
-		     _("Invalid filename"));
+	g_set_error_literal (error, G_IO_ERROR,
+                             G_IO_ERROR_INVALID_FILENAME,
+                             _("Invalid filename"));
       else
 	{
 	  char *display_name = g_filename_display_name (filename);
@@ -608,21 +760,30 @@ copy_file_data (gint     sfd,
 
 static int
 handle_overwrite_open (const char    *filename,
+		       gboolean       readable,
 		       const char    *etag,
 		       gboolean       create_backup,
 		       char         **temp_filename,
+		       GFileCreateFlags flags,
 		       GCancellable  *cancellable,
 		       GError       **error)
 {
   int fd = -1;
-  struct stat original_stat;
+  GLocalFileStat original_stat;
   char *current_etag;
   gboolean is_symlink;
   int open_flags;
+  int res;
+  int mode;
+
+  if (flags & G_FILE_CREATE_PRIVATE)
+    mode = 0600;
+  else
+    mode = 0666;
 
   /* We only need read access to the original file if we are creating a backup.
    * We also add O_CREATE to avoid a race if the file was just removed */
-  if (create_backup)
+  if (create_backup || readable)
     open_flags = O_RDWR | O_CREAT | O_BINARY;
   else
     open_flags = O_WRONLY | O_CREAT | O_BINARY;
@@ -631,16 +792,16 @@ handle_overwrite_open (const char    *filename,
    * when finding out if the file we opened was a symlink */
 #ifdef O_NOFOLLOW
   is_symlink = FALSE;
-  fd = g_open (filename, open_flags | O_NOFOLLOW, 0666);
+  fd = g_open (filename, open_flags | O_NOFOLLOW, mode);
   if (fd == -1 && errno == ELOOP)
     {
       /* Could be a symlink, or it could be a regular ELOOP error,
        * but then the next open will fail too. */
       is_symlink = TRUE;
-      fd = g_open (filename, open_flags, 0666);
+      fd = g_open (filename, open_flags, mode);
     }
 #else
-  fd = g_open (filename, open_flags, 0666);
+  fd = g_open (filename, open_flags, mode);
   /* This is racy, but we do it as soon as possible to minimize the race */
   is_symlink = g_file_test (filename, G_FILE_TEST_IS_SYMLINK);
 #endif
@@ -657,7 +818,13 @@ handle_overwrite_open (const char    *filename,
       return -1;
     }
   
-  if (fstat (fd, &original_stat) != 0) 
+#ifdef G_OS_WIN32
+  res = _fstati64 (fd, &original_stat);
+#else
+  res = fstat (fd, &original_stat);
+#endif
+
+  if (res != 0) 
     {
       int errsv = errno;
       char *display_name = g_filename_display_name (filename);
@@ -673,15 +840,15 @@ handle_overwrite_open (const char    *filename,
   if (!S_ISREG (original_stat.st_mode))
     {
       if (S_ISDIR (original_stat.st_mode))
-	g_set_error (error,
-		     G_IO_ERROR,
-		     G_IO_ERROR_IS_DIRECTORY,
-		     _("Target file is a directory"));
+	g_set_error_literal (error,
+                             G_IO_ERROR,
+                             G_IO_ERROR_IS_DIRECTORY,
+                             _("Target file is a directory"));
       else
-	g_set_error (error,
-		     G_IO_ERROR,
-		     G_IO_ERROR_NOT_REGULAR_FILE,
-		     _("Target file is not a regular file"));
+	g_set_error_literal (error,
+                             G_IO_ERROR,
+                             G_IO_ERROR_NOT_REGULAR_FILE,
+                             _("Target file is not a regular file"));
       goto err_out;
     }
   
@@ -690,10 +857,10 @@ handle_overwrite_open (const char    *filename,
       current_etag = _g_local_file_info_create_etag (&original_stat);
       if (strcmp (etag, current_etag) != 0)
 	{
-	  g_set_error (error,
-		       G_IO_ERROR,
-		       G_IO_ERROR_WRONG_ETAG,
-		       _("The file was externally modified"));
+	  g_set_error_literal (error,
+                               G_IO_ERROR,
+                               G_IO_ERROR_WRONG_ETAG,
+                               _("The file was externally modified"));
 	  g_free (current_etag);
 	  goto err_out;
 	}
@@ -711,7 +878,8 @@ handle_overwrite_open (const char    *filename,
    * to a backup file and rewrite the contents of the file.
    */
   
-  if (!(original_stat.st_nlink > 1) && !is_symlink)
+  if ((flags & G_FILE_CREATE_REPLACE_DESTINATION) ||
+      (!(original_stat.st_nlink > 1) && !is_symlink))
     {
       char *dirname, *tmp_filename;
       int tmpfd;
@@ -720,23 +888,25 @@ handle_overwrite_open (const char    *filename,
       tmp_filename = g_build_filename (dirname, ".goutputstream-XXXXXX", NULL);
       g_free (dirname);
 
-      tmpfd = g_mkstemp (tmp_filename);
+      tmpfd = g_mkstemp_full (tmp_filename, (readable ? O_RDWR : O_WRONLY) | O_BINARY, mode);
       if (tmpfd == -1)
 	{
 	  g_free (tmp_filename);
 	  goto fallback_strategy;
 	}
       
-      /* try to keep permissions */
+      /* try to keep permissions (unless replacing) */
 
-      if (
+      if ( ! (flags & G_FILE_CREATE_REPLACE_DESTINATION) &&
+	   (
 #ifdef HAVE_FCHOWN
-	  fchown (tmpfd, original_stat.st_uid, original_stat.st_gid) == -1 ||
+	    fchown (tmpfd, original_stat.st_uid, original_stat.st_gid) == -1 ||
 #endif
 #ifdef HAVE_FCHMOD
-	  fchmod (tmpfd, original_stat.st_mode) == -1 ||
+	    fchmod (tmpfd, original_stat.st_mode) == -1 ||
 #endif
-	  0
+	    0
+	    )
 	  )
 	{
 	  struct stat tmp_statbuf;
@@ -763,7 +933,9 @@ handle_overwrite_open (const char    *filename,
 
   if (create_backup)
     {
+#if defined(HAVE_FCHOWN) && defined(HAVE_FCHMOD)
       struct stat tmp_statbuf;      
+#endif
       char *backup_filename;
       int bfd;
       
@@ -771,10 +943,10 @@ handle_overwrite_open (const char    *filename,
 
       if (g_unlink (backup_filename) == -1 && errno != ENOENT)
 	{
-	  g_set_error (error,
-		       G_IO_ERROR,
-		       G_IO_ERROR_CANT_CREATE_BACKUP,
-		       _("Backup file creation failed"));
+	  g_set_error_literal (error,
+                               G_IO_ERROR,
+                               G_IO_ERROR_CANT_CREATE_BACKUP,
+                               _("Backup file creation failed"));
 	  g_free (backup_filename);
 	  goto err_out;
 	}
@@ -785,10 +957,10 @@ handle_overwrite_open (const char    *filename,
 
       if (bfd == -1)
 	{
-	  g_set_error (error,
-		       G_IO_ERROR,
-		       G_IO_ERROR_CANT_CREATE_BACKUP,
-		       _("Backup file creation failed"));
+	  g_set_error_literal (error,
+                               G_IO_ERROR,
+                               G_IO_ERROR_CANT_CREATE_BACKUP,
+                               _("Backup file creation failed"));
 	  g_free (backup_filename);
 	  goto err_out;
 	}
@@ -800,10 +972,10 @@ handle_overwrite_open (const char    *filename,
 #if defined(HAVE_FCHOWN) && defined(HAVE_FCHMOD)
       if (fstat (bfd, &tmp_statbuf) != 0)
 	{
-	  g_set_error (error,
-		       G_IO_ERROR,
-		       G_IO_ERROR_CANT_CREATE_BACKUP,
-		       _("Backup file creation failed"));
+	  g_set_error_literal (error,
+                               G_IO_ERROR,
+                               G_IO_ERROR_CANT_CREATE_BACKUP,
+                               _("Backup file creation failed"));
 	  g_unlink (backup_filename);
 	  g_free (backup_filename);
 	  goto err_out;
@@ -816,10 +988,10 @@ handle_overwrite_open (const char    *filename,
 		      (original_stat.st_mode & 0707) |
 		      ((original_stat.st_mode & 07) << 3)) != 0)
 	    {
-	      g_set_error (error,
-			   G_IO_ERROR,
-			   G_IO_ERROR_CANT_CREATE_BACKUP,
-			   _("Backup file creation failed"));
+	      g_set_error_literal (error,
+                                   G_IO_ERROR,
+                                   G_IO_ERROR_CANT_CREATE_BACKUP,
+                                   _("Backup file creation failed"));
 	      g_unlink (backup_filename);
 	      close (bfd);
 	      g_free (backup_filename);
@@ -830,10 +1002,10 @@ handle_overwrite_open (const char    *filename,
 
       if (!copy_file_data (fd, bfd, NULL))
 	{
-	  g_set_error (error,
-		       G_IO_ERROR,
-		       G_IO_ERROR_CANT_CREATE_BACKUP,
-		       _("Backup file creation failed"));
+	  g_set_error_literal (error,
+                               G_IO_ERROR,
+                               G_IO_ERROR_CANT_CREATE_BACKUP,
+                               _("Backup file creation failed"));
 	  g_unlink (backup_filename);
 	  close (bfd);
 	  g_free (backup_filename);
@@ -857,31 +1029,68 @@ handle_overwrite_open (const char    *filename,
 	}
     }
 
-  /* Truncate the file at the start */
-#ifdef G_OS_WIN32
-  if (g_win32_ftruncate (fd, 0) == -1)
-#else
-  if (ftruncate (fd, 0) == -1)
-#endif
+  if (flags & G_FILE_CREATE_REPLACE_DESTINATION)
     {
-      int errsv = errno;
+      close (fd);
+      
+      if (g_unlink (filename) != 0)
+	{
+	  int errsv = errno;
+	  
+	  g_set_error (error, G_IO_ERROR,
+		       g_io_error_from_errno (errsv),
+		       _("Error removing old file: %s"),
+		       g_strerror (errsv));
+	  goto err_out2;
+	}
 
-      g_set_error (error, G_IO_ERROR,
-		   g_io_error_from_errno (errsv),
-		   _("Error truncating file: %s"),
-		   g_strerror (errsv));
-      goto err_out;
+      if (readable)
+	open_flags = O_RDWR | O_CREAT | O_BINARY;
+      else
+	open_flags = O_WRONLY | O_CREAT | O_BINARY;
+      fd = g_open (filename, open_flags, mode);
+      if (fd == -1)
+	{
+	  int errsv = errno;
+	  char *display_name = g_filename_display_name (filename);
+	  g_set_error (error, G_IO_ERROR,
+		       g_io_error_from_errno (errsv),
+		       _("Error opening file '%s': %s"),
+		       display_name, g_strerror (errsv));
+	  g_free (display_name);
+	  goto err_out2;
+	}
+    }
+  else
+    {
+      /* Truncate the file at the start */
+#ifdef G_OS_WIN32
+      if (g_win32_ftruncate (fd, 0) == -1)
+#else
+	if (ftruncate (fd, 0) == -1)
+#endif
+	  {
+	    int errsv = errno;
+	    
+	    g_set_error (error, G_IO_ERROR,
+			 g_io_error_from_errno (errsv),
+			 _("Error truncating file: %s"),
+			 g_strerror (errsv));
+	    goto err_out;
+	  }
     }
     
   return fd;
 
  err_out:
   close (fd);
+ err_out2:
   return -1;
 }
 
 GFileOutputStream *
 _g_local_file_output_stream_replace (const char        *filename,
+				     gboolean          readable,
 				     const char        *etag,
 				     gboolean           create_backup,
 				     GFileCreateFlags   flags,
@@ -892,6 +1101,8 @@ _g_local_file_output_stream_replace (const char        *filename,
   int mode;
   int fd;
   char *temp_file;
+  gboolean sync_on_close;
+  int open_flags;
 
   if (g_cancellable_set_error_if_cancelled (cancellable, error))
     return NULL;
@@ -902,17 +1113,32 @@ _g_local_file_output_stream_replace (const char        *filename,
     mode = 0600;
   else
     mode = 0666;
+  sync_on_close = FALSE;
 
   /* If the file doesn't exist, create it */
-  fd = g_open (filename, O_CREAT | O_EXCL | O_WRONLY | O_BINARY, mode);
+  open_flags = O_CREAT | O_EXCL | O_BINARY;
+  if (readable)
+    open_flags |= O_RDWR;
+  else
+    open_flags |= O_WRONLY;
+  fd = g_open (filename, open_flags, mode);
 
   if (fd == -1 && errno == EEXIST)
     {
       /* The file already exists */
-      fd = handle_overwrite_open (filename, etag, create_backup, &temp_file,
-				  cancellable, error);
+      fd = handle_overwrite_open (filename, readable, etag,
+				  create_backup, &temp_file,
+				  flags, cancellable, error);
       if (fd == -1)
 	return NULL;
+
+      /* If the final destination exists, we want to sync the newly written
+       * file to ensure the data is on disk when we rename over the destination.
+       * otherwise if we get a system crash we can lose both the new and the
+       * old file on some filesystems. (I.E. those that don't guarantee the
+       * data is written to the disk before the metadata.)
+       */
+      sync_on_close = TRUE;
     }
   else if (fd == -1)
     {
@@ -920,9 +1146,9 @@ _g_local_file_output_stream_replace (const char        *filename,
 
       if (errsv == EINVAL)
 	/* This must be an invalid filename, on e.g. FAT */
-	g_set_error (error, G_IO_ERROR,
-		     G_IO_ERROR_INVALID_FILENAME,
-		     _("Invalid filename"));
+	g_set_error_literal (error, G_IO_ERROR,
+                             G_IO_ERROR_INVALID_FILENAME,
+                             _("Invalid filename"));
       else
 	{
 	  char *display_name = g_filename_display_name (filename);
@@ -938,6 +1164,7 @@ _g_local_file_output_stream_replace (const char        *filename,
  
   stream = g_object_new (G_TYPE_LOCAL_FILE_OUTPUT_STREAM, NULL);
   stream->priv->fd = fd;
+  stream->priv->sync_on_close = sync_on_close;
   stream->priv->tmp_filename = temp_file;
   if (create_backup)
     stream->priv->backup_filename = create_backup_filename (filename);
@@ -945,3 +1172,19 @@ _g_local_file_output_stream_replace (const char        *filename,
   
   return G_FILE_OUTPUT_STREAM (stream);
 }
+
+gint
+_g_local_file_output_stream_get_fd (GLocalFileOutputStream *stream)
+{
+  g_return_val_if_fail (G_IS_LOCAL_FILE_OUTPUT_STREAM (stream), -1);
+  return stream->priv->fd;
+}
+
+#ifdef G_OS_UNIX
+static int
+g_local_file_output_stream_get_fd (GFileDescriptorBased *fd_based)
+{
+  GLocalFileOutputStream *stream = G_LOCAL_FILE_OUTPUT_STREAM (fd_based);
+  return _g_local_file_output_stream_get_fd (stream);
+}
+#endif

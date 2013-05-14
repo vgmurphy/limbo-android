@@ -21,8 +21,12 @@
  * Modified by the GLib Team and others 1997-2000.  See the AUTHORS
  * file for a list of people on the GLib Team.  See the ChangeLog
  * files for a list of changes.  These files are distributed with
- * GLib at ftp://ftp.gtk.org/pub/gtk/. 
+ * GLib at ftp://ftp.gtk.org/pub/gtk/.
  */
+
+#if defined(G_DISABLE_SINGLE_INCLUDES) && !defined (__GLIB_H_INSIDE__) && !defined (GLIB_COMPILATION)
+#error "Only <glib.h> can be included directly."
+#endif
 
 #ifndef __G_REL_H__
 #define __G_REL_H__
@@ -62,6 +66,8 @@ struct _GTuples
  * g_relation_count() counts ...
  */
 
+#ifndef G_DISABLE_DEPRECATED
+
 GRelation* g_relation_new     (gint         fields);
 void       g_relation_destroy (GRelation   *relation);
 void       g_relation_index   (GRelation   *relation,
@@ -88,7 +94,8 @@ gpointer   g_tuples_index     (GTuples     *tuples,
                                gint         index_,
                                gint         field);
 
+#endif
+
 G_END_DECLS
 
 #endif /* __G_REL_H__ */
-

@@ -437,6 +437,13 @@ else
 	../../../obj/local/$(TARGET_ARCH_ABI)/libSDL2_mixer.so
 endif
 
+glibs=../../../obj/local/$(TARGET_ARCH_ABI)/libglib-2.0.so \
+	../../../obj/local/$(TARGET_ARCH_ABI)/libgthread-2.0.so \
+	../../../obj/local/$(TARGET_ARCH_ABI)/libgmodule-2.0.so \
+	../../../obj/local/$(TARGET_ARCH_ABI)/libgobject-2.0.so
+
+iconvlib=../../../obj/local/$(TARGET_ARCH_ABI)/libiconv.so
+
 $(QEMU_PROG): $(obj-y) $(obj-$(TARGET_BASE_ARCH)-y)
 	$(LNK)     \
 	-Wl,-soname,$(QEMU_PROG) \
@@ -445,8 +452,8 @@ $(QEMU_PROG): $(obj-y) $(obj-$(TARGET_BASE_ARCH)-y)
 	$(sort $(obj-y)) \
 	$(obj-$(TARGET_BASE_ARCH)-y) \
 	$(GCC_STATIC) \
-	../../../obj/local/$(TARGET_ARCH_ABI)/libglib.a \
-	../../../obj/local/$(TARGET_ARCH_ABI)/libiconv.a \
+	$(glibs) \
+	$(iconvlib) \
 	$(sdllibs) \
 	$(USR_LIB) \
 	-llog -lm -lz -lstdc++ -lc -dl \

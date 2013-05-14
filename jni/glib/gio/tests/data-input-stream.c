@@ -19,7 +19,7 @@
  * otherwise) arising in any way out of the use of this software, even
  * if advised of the possibility of such damage.
  */
-#include <glib/gtestutils.h>
+
 #include <glib/glib.h>
 #include <gio/gio.h>
 #include <stdlib.h>
@@ -29,12 +29,36 @@
 #define MAX_BYTES	0x10000	
 
 static void
+test_basic (void)
+{
+  GInputStream *stream;
+  GInputStream *base_stream;
+  gint val;
+
+  base_stream = g_memory_input_stream_new ();
+  stream = G_INPUT_STREAM (g_data_input_stream_new (base_stream));
+
+  g_object_get (stream, "byte-order", &val, NULL);
+  g_assert_cmpint (val, ==, G_DATA_STREAM_BYTE_ORDER_BIG_ENDIAN);
+  g_object_set (stream, "byte-order", G_DATA_STREAM_BYTE_ORDER_LITTLE_ENDIAN, NULL);
+  g_assert_cmpint (g_data_input_stream_get_byte_order (G_DATA_INPUT_STREAM (stream)), ==, G_DATA_STREAM_BYTE_ORDER_LITTLE_ENDIAN);
+
+  g_object_get (stream, "newline-type", &val, NULL);
+  g_assert_cmpint (val, ==, G_DATA_STREAM_NEWLINE_TYPE_LF);
+  g_object_set (stream, "newline-type", G_DATA_STREAM_NEWLINE_TYPE_CR_LF, NULL);
+  g_assert_cmpint (g_data_input_stream_get_newline_type (G_DATA_INPUT_STREAM (stream)), ==, G_DATA_STREAM_NEWLINE_TYPE_CR_LF);
+
+  g_object_unref (stream);
+  g_object_unref (base_stream);
+}
+
+static void
 test_seek_to_start (GInputStream *stream)
 {
   GError *error = NULL;
   gboolean res = g_seekable_seek (G_SEEKABLE (stream), 0, G_SEEK_SET, NULL, &error);
   g_assert_cmpint (res, ==, TRUE);
-  g_assert (error == NULL);
+  g_assert_no_error (error);
 }
 
 static void
@@ -72,7 +96,7 @@ test_read_lines (GDataStreamNewlineType newline_type)
   /*  Add sample data */
   for (i = 0; i < MAX_LINES; i++) 
     g_memory_input_stream_add_data (G_MEMORY_INPUT_STREAM (base_stream),
-				    g_strconcat (lines[i], endl[newline_type], NULL), -1, NULL);
+				    g_strconcat (lines[i], endl[newline_type], NULL), -1, g_free);
 
   /*  Seek to the start */
   test_seek_to_start (base_stream);
@@ -88,9 +112,12 @@ test_read_lines (GDataStreamNewlineType newline_type)
       if (data)
 	{
 	  g_assert_cmpstr (data, ==, lines[line]);
-	  g_assert (error == NULL);
+          g_free (data);
+	  g_assert_no_error (error);
 	  line++;
 	}
+      if (error)
+        g_error_free (error);
     }
   g_assert_cmpint (line, ==, MAX_LINES);
   
@@ -117,6 +144,11 @@ test_read_lines_CR_LF (void)
   test_read_lines (G_DATA_STREAM_NEWLINE_TYPE_CR_LF);
 }
 
+static void
+test_read_lines_any (void)
+{
+  test_read_lines (G_DATA_STREAM_NEWLINE_TYPE_ANY);
+}
 
 static void
 test_read_until (void)
@@ -132,7 +164,8 @@ test_read_until (void)
 #define DATA_STRING		" part1 # part2 $ part3 % part4 ^"
 #define DATA_PART_LEN		7    /* number of characters between separators */
 #define DATA_SEP		"#$%^"
-  const int DATA_PARTS_NUM = strlen (DATA_SEP) * REPEATS;
+#define DATA_SEP_LEN            4
+  const int DATA_PARTS_NUM = DATA_SEP_LEN * REPEATS;
   
   base_stream = g_memory_input_stream_new ();
   stream = G_INPUT_STREAM (g_data_input_stream_new (base_stream));
@@ -151,18 +184,72 @@ test_read_until (void)
       if (data)
 	{
 	  g_assert_cmpint (strlen (data), ==, DATA_PART_LEN);
-	  g_assert (error == NULL);
+          g_free (data);
+	  g_assert_no_error (error);
 	  line++;
 	}
     }
-  g_assert (error == NULL);
+  g_assert_no_error (error);
   g_assert_cmpint (line, ==, DATA_PARTS_NUM);
-	
-	
+
   g_object_unref (base_stream);
   g_object_unref (stream);
 }
 
+static void
+test_read_upto (void)
+{
+  GInputStream *stream;
+  GInputStream *base_stream;
+  GError *error = NULL;
+  char *data;
+  int line;
+  int i;
+  guchar stop_char;
+
+#undef REPEATS
+#undef DATA_STRING
+#undef DATA_PART_LEN
+#undef DATA_SEP
+#undef DATA_SEP_LEN
+#define REPEATS			10   /* number of rounds */
+#define DATA_STRING		" part1 # part2 $ part3 \0 part4 ^"
+#define DATA_PART_LEN		7    /* number of characters between separators */
+#define DATA_SEP		"#$\0^"
+#define DATA_SEP_LEN            4
+  const int DATA_PARTS_NUM = DATA_SEP_LEN * REPEATS;
+
+  base_stream = g_memory_input_stream_new ();
+  stream = G_INPUT_STREAM (g_data_input_stream_new (base_stream));
+
+  for (i = 0; i < REPEATS; i++)
+    g_memory_input_stream_add_data (G_MEMORY_INPUT_STREAM (base_stream), DATA_STRING, 32, NULL);
+
+  /*  Test stop characters */
+  error = NULL;
+  data = (char*)1;
+  line = 0;
+  while (data)
+    {
+      gsize length = -1;
+      data = g_data_input_stream_read_upto (G_DATA_INPUT_STREAM (stream), DATA_SEP, DATA_SEP_LEN, &length, NULL, &error);
+      if (data)
+        {
+          g_assert_cmpint (strlen (data), ==, DATA_PART_LEN);
+          g_assert_no_error (error);
+          line++;
+
+          stop_char = g_data_input_stream_read_byte (G_DATA_INPUT_STREAM (stream), NULL, &error);
+          g_assert (memchr (DATA_SEP, stop_char, DATA_SEP_LEN) != NULL);
+          g_assert_no_error (error);
+        }
+    }
+  g_assert_no_error (error);
+  g_assert_cmpint (line, ==, DATA_PARTS_NUM);
+
+  g_object_unref (base_stream);
+  g_object_unref (stream);
+}
 enum TestDataType {
   TEST_DATA_BYTE = 0,
   TEST_DATA_INT16,
@@ -173,14 +260,14 @@ enum TestDataType {
   TEST_DATA_UINT64
 };
 
-#define TEST_DATA_RETYPE_BUFF(a, v)	\
-	 (a == TEST_DATA_BYTE	? *(guchar*)v : \
-	 (a == TEST_DATA_INT16	? *(gint16*)v :	 \
-	 (a == TEST_DATA_UINT16	? *(guint16*)v : \
-	 (a == TEST_DATA_INT32	? *(gint32*)v :	 \
-	 (a == TEST_DATA_UINT32	? *(guint32*)v : \
-	 (a == TEST_DATA_INT64	? *(gint64*)v :	 \
-	 *(guint64*)v )))))) 
+#define TEST_DATA_RETYPE_BUFF(a, t, v)	\
+	 (a == TEST_DATA_BYTE	? (t) *(guchar*)v : \
+	 (a == TEST_DATA_INT16	? (t) *(gint16*)v :	 \
+	 (a == TEST_DATA_UINT16	? (t) *(guint16*)v : \
+	 (a == TEST_DATA_INT32	? (t) *(gint32*)v :	 \
+	 (a == TEST_DATA_UINT32	? (t) *(guint32*)v : \
+	 (a == TEST_DATA_INT64	? (t) *(gint64*)v :	 \
+	 (t) *(guint64*)v )))))) 
 
 
 static void
@@ -216,6 +303,9 @@ test_data_array (GInputStream *stream, GInputStream *base_stream,
     case TEST_DATA_UINT64:
       data_size = 8;
       break; 
+    default:
+      g_assert_not_reached ();
+      break;
     }
 
   /*  Set flag to swap bytes if needed */
@@ -260,14 +350,19 @@ test_data_array (GInputStream *stream, GInputStream *base_stream,
 	  if (swap)
 	    data = (guint64)GUINT64_SWAP_LE_BE((guint64)data);
 	  break;
+        default:
+          g_assert_not_reached ();
+          break;
 	}
-      if ((data) && (! error))  
-	g_assert_cmpint (data, ==, TEST_DATA_RETYPE_BUFF(data_type, ((guchar*)buffer + pos)));
+      if (!error)
+	g_assert_cmpint (data, ==, TEST_DATA_RETYPE_BUFF(data_type, gint64, ((guchar*)buffer + pos)));
       
       pos += data_size;
     }
   if (pos < len + 1)
-    g_assert (error == NULL);
+    g_assert_no_error (error);
+  if (error)
+    g_error_free (error);
   g_assert_cmpint (pos - data_size, ==, len);
 }
 
@@ -276,11 +371,11 @@ test_read_int (void)
 {
   GInputStream *stream;
   GInputStream *base_stream;
-  GRand *rand;
+  GRand *randomizer;
   int i;
   gpointer buffer;
   
-  rand = g_rand_new ();
+  randomizer = g_rand_new ();
   buffer = g_malloc0 (MAX_BYTES);
   
   /*  Fill in some random data */
@@ -288,7 +383,7 @@ test_read_int (void)
     {
       guchar x = 0;
       while (! x)
-	x = (guchar)g_rand_int (rand);
+	x = (guchar)g_rand_int (randomizer);
       *(guchar*)((guchar*)buffer + sizeof(guchar) * i) = x; 
     }
 
@@ -308,7 +403,7 @@ test_read_int (void)
 
   g_object_unref (base_stream);
   g_object_unref (stream);
-  g_rand_free (rand);
+  g_rand_free (randomizer);
   g_free (buffer);
 }
 
@@ -320,10 +415,13 @@ main (int   argc,
   g_type_init ();
   g_test_init (&argc, &argv, NULL);
 
+  g_test_add_func ("/data-input-stream/basic", test_basic);
   g_test_add_func ("/data-input-stream/read-lines-LF", test_read_lines_LF);
   g_test_add_func ("/data-input-stream/read-lines-CR", test_read_lines_CR);
   g_test_add_func ("/data-input-stream/read-lines-CR-LF", test_read_lines_CR_LF);
+  g_test_add_func ("/data-input-stream/read-lines-any", test_read_lines_any);
   g_test_add_func ("/data-input-stream/read-until", test_read_until);
+  g_test_add_func ("/data-input-stream/read-upto", test_read_upto);
   g_test_add_func ("/data-input-stream/read-int", test_read_int);
 
   return g_test_run();

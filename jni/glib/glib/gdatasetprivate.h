@@ -28,7 +28,7 @@
 #ifndef __G_DATASETPRIVATE_H__
 #define __G_DATASETPRIVATE_H__
 
-#include <glib/gdataset.h>
+#include <gatomic.h>
 
 G_BEGIN_DECLS
 
@@ -36,7 +36,7 @@ G_BEGIN_DECLS
  * barriers to take effect without acquiring the global dataset mutex.
  */
 #define G_DATALIST_GET_FLAGS(datalist)				\
-  ((gsize) g_atomic_pointer_get ((gpointer*) datalist) & G_DATALIST_FLAGS_MASK)
+  ((gsize) g_atomic_pointer_get (datalist) & G_DATALIST_FLAGS_MASK)
 
 
 G_END_DECLS

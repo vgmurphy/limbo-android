@@ -37,6 +37,10 @@
 #ifdef G_OS_WIN32
 #include <windows.h>
 #include <io.h>
+
+#define fstat(a,b) _fstati64(a,b)
+#define stat _stati64
+
 #endif
 
 #include "gconvert.h"
@@ -47,10 +51,11 @@
 #include "gmessages.h"
 #include "gstdio.h"
 #include "gstrfuncs.h"
+#include "gatomic.h"
+#include "gbuffer.h"
 
 #include "glibintl.h"
 
-#include "galias.h"
 
 #ifndef _O_BINARY
 #define _O_BINARY 0
@@ -62,12 +67,41 @@
 
 struct _GMappedFile 
 {
-  gsize  length;
   gchar *contents;
+  gsize  length;
+  gpointer free_func;
+  int    ref_count;
 #ifdef G_OS_WIN32
   HANDLE mapping;
 #endif
 };
+
+/* Make sure the layout of GMappedFile is the same as GBuffer's */
+G_STATIC_ASSERT (G_STRUCT_OFFSET (GMappedFile, contents) ==
+                 G_STRUCT_OFFSET (GBuffer, data));
+G_STATIC_ASSERT (G_STRUCT_OFFSET (GMappedFile, length) ==
+                 G_STRUCT_OFFSET (GBuffer, size));
+G_STATIC_ASSERT (G_STRUCT_OFFSET (GMappedFile, ref_count) ==
+                 G_STRUCT_OFFSET (GBuffer, ref_count));
+G_STATIC_ASSERT (G_STRUCT_OFFSET (GMappedFile, free_func) ==
+                 G_STRUCT_OFFSET (GBuffer, free_func));
+
+static void
+g_mapped_file_destroy (GMappedFile *file)
+{
+  if (file->length)
+    {
+#ifdef HAVE_MMAP
+      munmap (file->contents, file->length);
+#endif
+#ifdef G_OS_WIN32
+      UnmapViewOfFile (file->contents);
+      CloseHandle (file->mapping);
+#endif
+    }
+
+  g_slice_free (GMappedFile, file);
+}
 
 /**
  * g_mapped_file_new:
@@ -87,8 +121,8 @@ struct _GMappedFile
  * will not be modified, or if all modifications of the file are done
  * atomically (e.g. using g_file_set_contents()). 
  *
- * Return value: a newly allocated #GMappedFile which must be freed
- *    with g_mapped_file_free(), or %NULL if the mapping failed. 
+ * Return value: a newly allocated #GMappedFile which must be unref'd
+ *    with g_mapped_file_unref(), or %NULL if the mapping failed.
  *
  * Since: 2.8
  */
@@ -107,9 +141,7 @@ g_mapped_file_new (const gchar  *filename,
   fd = g_open (filename, (writable ? O_RDWR : O_RDONLY) | _O_BINARY, 0);
   if (fd == -1)
     {
-	  LOGV("%s: Could not open file: %s", __func__, filename);
       int save_errno = errno;
-
       gchar *display_filename = g_filename_display_name (filename);
       
       g_set_error (error,
@@ -122,7 +154,9 @@ g_mapped_file_new (const gchar  *filename,
       return NULL;
     }
 
-  file = g_new0 (GMappedFile, 1);
+  file = g_slice_new0 (GMappedFile);
+  file->ref_count = 1;
+  file->free_func = g_mapped_file_destroy;
 
   if (fstat (fd, &st) == -1)
     {
@@ -142,7 +176,7 @@ g_mapped_file_new (const gchar  *filename,
   if (st.st_size == 0)
     {
       file->length = 0;
-      file->contents = "";
+      file->contents = NULL;
       close (fd);
       return file;
     }
@@ -204,7 +238,7 @@ g_mapped_file_new (const gchar  *filename,
 
  out:
   close (fd);
-  g_free (file);
+  g_slice_free (GMappedFile, file);
 
   return NULL;
 }
@@ -236,7 +270,9 @@ g_mapped_file_get_length (GMappedFile *file)
  * Note that the contents may not be zero-terminated,
  * even if the #GMappedFile is backed by a text file.
  *
- * Returns: the contents of @file.
+ * If the file is empty then %NULL is returned.
+ *
+ * Returns: the contents of @file, or %NULL.
  *
  * Since: 2.8
  */
@@ -252,29 +288,57 @@ g_mapped_file_get_contents (GMappedFile *file)
  * g_mapped_file_free:
  * @file: a #GMappedFile
  *
- * Unmaps the buffer of @file and frees it. 
+ * This call existed before #GMappedFile had refcounting and is currently
+ * exactly the same as g_mapped_file_unref().
  *
  * Since: 2.8
+ * Deprecated:2.22: Use g_mapped_file_unref() instead.
  */
 void
 g_mapped_file_free (GMappedFile *file)
 {
-  g_return_if_fail (file != NULL);
-
-  if (file->length)
-  {
-#ifdef HAVE_MMAP
-    munmap (file->contents, file->length);
-#endif
-#ifdef G_OS_WIN32
-    UnmapViewOfFile (file->contents);
-    CloseHandle (file->mapping);
-#endif
-  }
-
-  g_free (file);
+  g_mapped_file_unref (file);
 }
 
+/**
+ * g_mapped_file_ref:
+ * @file: a #GMappedFile
+ *
+ * Increments the reference count of @file by one.  It is safe to call
+ * this function from any thread.
+ *
+ * Return value: the passed in #GMappedFile.
+ *
+ * Since: 2.22
+ **/
+GMappedFile *
+g_mapped_file_ref (GMappedFile *file)
+{
+  g_return_val_if_fail (file != NULL, NULL);
+  g_return_val_if_fail (file->ref_count > 0, file);
 
-#define __G_MAPPED_FILE_C__
-#include "galiasdef.c"
+  g_atomic_int_inc (&file->ref_count);
+
+  return file;
+}
+
+/**
+ * g_mapped_file_unref:
+ * @file: a #GMappedFile
+ *
+ * Decrements the reference count of @file by one.  If the reference count
+ * drops to 0, unmaps the buffer of @file and frees it.
+ *
+ * It is safe to call this function from any thread.
+ *
+ * Since 2.22
+ **/
+void
+g_mapped_file_unref (GMappedFile *file)
+{
+  g_return_if_fail (file != NULL);
+  g_return_if_fail (file->ref_count > 0);
+
+  if (g_atomic_int_dec_and_test (&file->ref_count))
+    g_mapped_file_destroy (file);
+}

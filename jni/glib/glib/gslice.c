@@ -19,6 +19,7 @@
 /* MT safe */
 
 #include "config.h"
+#include "glibconfig.h"
 
 #if     defined HAVE_POSIX_MEMALIGN && defined POSIX_MEMALIGN_WITH_COMPLIANT_ALLOCS
 #  define HAVE_COMPLIANT_POSIX_MEMALIGN 1
@@ -30,10 +31,7 @@
 #include <stdlib.h>             /* posix_memalign() */
 #include <string.h>
 #include <errno.h>
-#include "gmem.h"               /* gslice.h */
-#include "gthreadprivate.h"
-#include "glib.h"
-#include "galias.h"
+
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>             /* sysconf() */
 #endif
@@ -44,6 +42,16 @@
 
 #include <stdio.h>              /* fputs/fprintf */
 
+#include "gslice.h"
+
+#include "gmain.h"
+#include "gmem.h"               /* gslice.h */
+#include "gstrfuncs.h"
+#include "gutils.h"
+#include "gtestutils.h"
+#include "gthread.h"
+#include "gthreadprivate.h"
+#include "glib_trace.h"
 
 /* the GSlice allocator is split up into 4 layers, roughly modelled after the slab
  * allocator and magazine extensions as outlined in:
@@ -325,14 +333,24 @@ g_slice_init_nomessage (void)
   /* we can only align to system page size */
   allocator->max_page_size = sys_page_size;
 #endif
+  if (allocator->config.always_malloc)
+    {
+      allocator->contention_counters = NULL;
+      allocator->magazines = NULL;
+      allocator->slab_stack = NULL;
+    }
+  else
+    {
+      allocator->contention_counters = g_new0 (guint, MAX_SLAB_INDEX (allocator));
+      allocator->magazines = g_new0 (ChunkLink*, MAX_SLAB_INDEX (allocator));
+      allocator->slab_stack = g_new0 (SlabInfo*, MAX_SLAB_INDEX (allocator));
+    }
+
   allocator->magazine_mutex = NULL;     /* _g_slice_thread_init_nomessage() */
-  allocator->magazines = g_new0 (ChunkLink*, MAX_SLAB_INDEX (allocator));
-  allocator->contention_counters = g_new0 (guint, MAX_SLAB_INDEX (allocator));
   allocator->mutex_counter = 0;
   allocator->stamp_counter = MAX_STAMP_COUNTER; /* force initial update */
   allocator->last_stamp = 0;
   allocator->slab_mutex = NULL;         /* _g_slice_thread_init_nomessage() */
-  allocator->slab_stack = g_new0 (SlabInfo*, MAX_SLAB_INDEX (allocator));
   allocator->color_accu = 0;
   magazine_cache_update_stamp();
   /* values cached for performance reasons */
@@ -824,6 +842,9 @@ g_slice_alloc (gsize mem_size)
     mem = g_malloc (mem_size);
   if (G_UNLIKELY (allocator->config.debug_blocks))
     smc_notify_alloc (mem, mem_size);
+
+  TRACE (GLIB_SLICE_ALLOC((void*)mem, mem_size));
+
   return mem;
 }
 
@@ -885,6 +906,7 @@ g_slice_free1 (gsize    mem_size,
         memset (mem_block, 0, mem_size);
       g_free (mem_block);
     }
+  TRACE (GLIB_SLICE_FREE((void*)mem_block, mem_size));
 }
 
 void
@@ -1189,7 +1211,7 @@ mem_error (const char *format,
   /* at least, put out "MEMORY-ERROR", in case we segfault during the rest of the function */
   fputs ("\n***MEMORY-ERROR***: ", stderr);
   pname = g_get_prgname();
-  fprintf (stderr, "%s[%u]: GSlice: ", pname ? pname : "", getpid());
+  fprintf (stderr, "%s[%ld]: GSlice: ", pname ? pname : "", (long)getpid());
   va_start (args, format);
   vfprintf (stderr, format, args);
   va_end (args);
@@ -1245,17 +1267,17 @@ smc_notify_free (void   *pointer,
   found_one = smc_tree_lookup (adress, &real_size);
   if (!found_one)
     {
-      fprintf (stderr, "GSlice: MemChecker: attempt to release non-allocated block: %p size=%zu\n", pointer, size);
+      fprintf (stderr, "GSlice: MemChecker: attempt to release non-allocated block: %p size=%" G_GSIZE_FORMAT "\n", pointer, size);
       return 0;
     }
   if (real_size != size && (real_size || size))
     {
-      fprintf (stderr, "GSlice: MemChecker: attempt to release block with invalid size: %p size=%zu invalid-size=%zu\n", pointer, real_size, size);
+      fprintf (stderr, "GSlice: MemChecker: attempt to release block with invalid size: %p size=%" G_GSIZE_FORMAT " invalid-size=%" G_GSIZE_FORMAT "\n", pointer, real_size, size);
       return 0;
     }
   if (!smc_tree_remove (adress))
     {
-      fprintf (stderr, "GSlice: MemChecker: attempt to release non-allocated block: %p size=%zu\n", pointer, size);
+      fprintf (stderr, "GSlice: MemChecker: attempt to release non-allocated block: %p size=%" G_GSIZE_FORMAT "\n", pointer, size);
       return 0;
     }
   return 1; /* all fine */
@@ -1471,6 +1493,3 @@ g_slice_debug_tree_statistics (void)
    */
 }
 #endif /* G_ENABLE_DEBUG */
-
-#define __G_SLICE_C__
-#include "galiasdef.c"

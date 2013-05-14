@@ -26,7 +26,7 @@ CONFIG_EXTRA += --audio-drv-list=sdl --enable-mixemu
 #CONFIG_EXTRA += --audio-card-list= --audio-drv-list=
 
 #DISABLE TSC PENTIUM FEATURE
-LIMBO_DISABLE_TSC=-DLIMBO_DISABLE_TSC
+#LIMBO_DISABLE_TSC=-DLIMBO_DISABLE_TSC
 
 ifeq ($(TARGET_ARCH), arm)
     QEMU_TARGET_CPU = armv4b
@@ -61,6 +61,7 @@ config:
 	-I../glib/gmodule -I../glib/io \
 	-I../limbo/include -I../../glib/glib \
 	-I../../glib -I../../glib/gmodule -I../../glib/io \
+	-I../../glib/android -I../glib/android \
 	-I../SDL/include -I../png -I../jpeg \
 	$(LIMBO_DISABLE_TSC) \
 	" \

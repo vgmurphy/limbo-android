@@ -20,21 +20,23 @@
  * Author: Alexander Larsson <alexl@redhat.com>
  */
 
-#include <config.h>
+#include "config.h"
 
 #include "glocaldirectorymonitor.h"
 #include "gunixmounts.h"
 #include "giomodule-priv.h"
+#include "gfile.h"
+#include "gioerror.h"
 #include "glibintl.h"
 
 #include <string.h>
 
-#include "gioalias.h"
 
 enum
 {
   PROP_0,
-  PROP_DIRNAME
+  PROP_DIRNAME,
+  PROP_FLAGS
 };
 
 static gboolean g_local_directory_monitor_cancel (GFileMonitor      *monitor);
@@ -58,8 +60,7 @@ g_local_directory_monitor_finalize (GObject *object)
       local_monitor->mount_monitor = NULL;
     }
 
-  if (G_OBJECT_CLASS (g_local_directory_monitor_parent_class)->finalize)
-    (*G_OBJECT_CLASS (g_local_directory_monitor_parent_class)->finalize) (object);
+  G_OBJECT_CLASS (g_local_directory_monitor_parent_class)->finalize (object);
 }
 
 static void
@@ -71,6 +72,9 @@ g_local_directory_monitor_set_property (GObject      *object,
   switch (property_id)
   {
     case PROP_DIRNAME:
+      /* Do nothing */
+      break;
+    case PROP_FLAGS:
       /* Do nothing */
       break;
     default:
@@ -88,6 +92,7 @@ g_local_directory_monitor_constructor (GType                  type,
   GLocalDirectoryMonitorClass *klass;
   GObjectClass *parent_class;
   GLocalDirectoryMonitor *local_monitor;
+  GFileMonitorFlags  flags = 0;
   const gchar *dirname = NULL;
   gint i;
   
@@ -105,16 +110,23 @@ g_local_directory_monitor_constructor (GType                  type,
         {
           g_warn_if_fail (G_VALUE_HOLDS_STRING (construct_properties[i].value));
           dirname = g_value_get_string (construct_properties[i].value);
-          break;
+        }
+      if (strcmp ("flags", g_param_spec_get_name (construct_properties[i].pspec)) == 0)
+        {
+          g_warn_if_fail (G_VALUE_HOLDS_FLAGS (construct_properties[i].value));
+          flags = g_value_get_flags (construct_properties[i].value);
         }
     }
 
   local_monitor->dirname = g_strdup (dirname);
+  local_monitor->flags = flags;
 
-  if (!klass->mount_notify)
+  if (!klass->mount_notify &&
+      (flags & G_FILE_MONITOR_WATCH_MOUNTS))
     {
 #ifdef G_OS_WIN32
-      g_warning ("G_OS_WIN32: no mount emulation");
+      /*claim everything was mounted */
+      local_monitor->was_mounted = TRUE;
 #else
       GUnixMountEntry *mount;
       
@@ -128,7 +140,7 @@ g_local_directory_monitor_constructor (GType                  type,
         g_unix_mount_free (mount);
 
       local_monitor->mount_monitor = g_unix_mount_monitor_new ();
-      g_signal_connect_object (local_monitor->mount_monitor, "mounts_changed",
+      g_signal_connect_object (local_monitor->mount_monitor, "mounts-changed",
 			       G_CALLBACK (mounts_changed), local_monitor, 0);
 #endif
     }
@@ -157,6 +169,16 @@ g_local_directory_monitor_class_init (GLocalDirectoryMonitorClass* klass)
                                                         G_PARAM_CONSTRUCT_ONLY|
                                                         G_PARAM_WRITABLE|
                                                         G_PARAM_STATIC_NAME|G_PARAM_STATIC_NICK|G_PARAM_STATIC_BLURB));
+  g_object_class_install_property (gobject_class,
+                                   PROP_FLAGS,
+                                   g_param_spec_flags ("flags",
+						       P_("Monitor flags"),
+						       P_("Monitor flags"),
+						       G_TYPE_FILE_MONITOR_FLAGS,
+						       0,
+						       G_PARAM_CONSTRUCT_ONLY|
+						       G_PARAM_WRITABLE|
+						       G_PARAM_STATIC_NAME|G_PARAM_STATIC_NICK|G_PARAM_STATIC_BLURB));
 
   klass->mount_notify = FALSE;
 }
@@ -178,7 +200,8 @@ mounts_changed (GUnixMountMonitor *mount_monitor,
   /* Emulate unmount detection */
 #ifdef G_OS_WIN32
   mount = NULL;
-  g_warning ("G_OS_WIN32: no mount emulation");
+  /*claim everything was mounted */
+  is_mounted = TRUE;
 #else  
   mount = g_unix_mount_at (local_monitor->dirname, NULL);
   
@@ -242,13 +265,6 @@ get_default_local_directory_monitor (gpointer data)
     return (gpointer)G_TYPE_INVALID;
 }
 
-/**
- * _g_local_directory_monitor_new:
- * @dirname: filename of the directory to monitor.
- * @flags: #GFileMonitorFlags.
- * 
- * Returns: new #GFileMonitor for the given @dirname.
- **/
 GFileMonitor*
 _g_local_directory_monitor_new (const char         *dirname,
 				GFileMonitorFlags   flags,
@@ -265,9 +281,10 @@ _g_local_directory_monitor_new (const char         *dirname,
 
   monitor = NULL;
   if (type != G_TYPE_INVALID)
-    monitor = G_FILE_MONITOR (g_object_new (type, "dirname", dirname, NULL));
+    monitor = G_FILE_MONITOR (g_object_new (type, "dirname", dirname, "flags", flags, NULL));
   else
-    g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED, _("Unable to find default local directory monitor type"));
+    g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                         _("Unable to find default local directory monitor type"));
 
   /* This is non-null on first pass here. Unref the class now.
    * This is to avoid unloading the module and then loading it
@@ -295,6 +312,3 @@ g_local_directory_monitor_cancel (GFileMonitor *monitor)
 
   return TRUE;
 }
-
-#define __G_LOCAL_DIRECTORY_MONITOR_C__
-#include "gioaliasdef.c"

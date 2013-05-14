@@ -20,15 +20,17 @@
  * Author: Alexander Larsson <alexl@redhat.com>
  */
 
-#include <config.h>
+#include "config.h"
 
 #include <glib.h>
 #include <gfileinputstream.h>
 #include <gseekable.h>
 #include "gsimpleasyncresult.h"
+#include "gcancellable.h"
+#include "gasyncresult.h"
+#include "gioerror.h"
 #include "glibintl.h"
 
-#include "gioalias.h"
 
 /**
  * SECTION:gfileinputstream
@@ -41,12 +43,10 @@
  *
  * GFileInputStream implements #GSeekable, which allows the input 
  * stream to jump to arbitrary positions in the file, provided the 
- * filesystem of the file allows it. In addition to the generic 
- * g_seekable_ API, GFileInputStream has its own API for seeking 
- * and positioning. To find the position of a file input stream, 
- * use g_file_input_stream_tell(). To find out if a file input 
- * stream supports seeking, use g_file_input_stream_can_seek().
- * To position a file input stream, use g_file_input_stream_seek().
+ * filesystem of the file allows it. To find the position of a file
+ * input stream, use g_seekable_tell(). To find out if a file input
+ * stream supports seeking, use g_seekable_stream_can_seek().
+ * To position a file input stream, use g_seekable_seek().
  **/
 
 static void       g_file_input_stream_seekable_iface_init    (GSeekableIface       *iface);
@@ -63,7 +63,7 @@ static gboolean   g_file_input_stream_seekable_truncate      (GSeekable         
 							      GCancellable         *cancellable,
 							      GError              **error);
 static void       g_file_input_stream_real_query_info_async  (GFileInputStream     *stream,
-							      char                 *attributes,
+							      const char           *attributes,
 							      int                   io_priority,
 							      GCancellable         *cancellable,
 							      GAsyncReadyCallback   callback,
@@ -126,7 +126,7 @@ g_file_input_stream_init (GFileInputStream *stream)
  **/
 GFileInfo *
 g_file_input_stream_query_info (GFileInputStream  *stream,
-                                char              *attributes,
+                                const char        *attributes,
                                 GCancellable      *cancellable,
                                 GError           **error)
 {
@@ -150,8 +150,8 @@ g_file_input_stream_query_info (GFileInputStream  *stream,
   if (class->query_info)
     info = class->query_info (stream, attributes, cancellable, error);
   else
-    g_set_error (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
-		 _("Stream doesn't support query_info"));
+    g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+                         _("Stream doesn't support query_info"));
 
   if (cancellable)
     g_cancellable_pop_current (cancellable);
@@ -199,7 +199,7 @@ async_ready_callback_wrapper (GObject      *source_object,
  **/
 void
 g_file_input_stream_query_info_async (GFileInputStream    *stream,
-                                      char                *attributes,
+                                      const char          *attributes,
                                       int                  io_priority,
                                       GCancellable        *cancellable,
                                       GAsyncReadyCallback  callback,
@@ -332,8 +332,8 @@ g_file_input_stream_seek (GFileInputStream  *stream,
 
   if (!class->seek)
     {
-      g_set_error (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
-		   _("Seek not supported on stream"));
+      g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+                           _("Seek not supported on stream"));
       return FALSE;
     }
 
@@ -376,8 +376,8 @@ g_file_input_stream_seekable_truncate (GSeekable     *seekable,
 				       GCancellable  *cancellable,
 				       GError       **error)
 {
-  g_set_error (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
-	       _("Truncate not allowed on input stream"));
+  g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+                       _("Truncate not allowed on input stream"));
   return FALSE;
 }
 
@@ -417,8 +417,8 @@ query_info_async_thread (GSimpleAsyncResult *res,
   if (class->query_info)
     info = class->query_info (G_FILE_INPUT_STREAM (object), data->attributes, cancellable, &error);
   else
-    g_set_error (&error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
-		 _("Stream doesn't support query_info"));
+    g_set_error_literal (&error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+                         _("Stream doesn't support query_info"));
 
   if (info == NULL)
     {
@@ -431,7 +431,7 @@ query_info_async_thread (GSimpleAsyncResult *res,
 
 static void
 g_file_input_stream_real_query_info_async (GFileInputStream    *stream,
-                                           char                *attributes,
+                                           const char          *attributes,
                                            int                  io_priority,
                                            GCancellable        *cancellable,
                                            GAsyncReadyCallback  callback,
@@ -466,7 +466,3 @@ g_file_input_stream_real_query_info_finish (GFileInputStream  *stream,
   
   return NULL;
 }
-
-#define __G_FILE_INPUT_STREAM_C__
-#include "gioaliasdef.c"
-

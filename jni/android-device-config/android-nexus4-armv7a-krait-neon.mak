@@ -31,7 +31,9 @@ ARCH_CFLAGS = \
 -std=gnu99 \
 -march=armv7-a \
 -mfloat-abi=softfp -mfpu=neon \
--mtune=arm7
+
+#No tuning for now
+#-mtune=arm7
 
 # Possible values: arm, thumb
 ARM_MODE=arm

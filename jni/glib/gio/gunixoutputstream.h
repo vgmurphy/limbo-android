@@ -1,5 +1,5 @@
 /* GIO - GLib Input, Output and Streaming Library
- * 
+ *
  * Copyright (C) 2006-2007 Red Hat, Inc.
  *
  * This library is free software; you can redistribute it and/or
@@ -36,7 +36,7 @@ G_BEGIN_DECLS
 
 /**
  * GUnixOutputStream:
- * 
+ *
  * Implements #GOutputStream for outputting to selectable unix file descriptors
  **/
 typedef struct _GUnixOutputStream         GUnixOutputStream;
@@ -64,11 +64,14 @@ struct _GUnixOutputStreamClass
   void (*_g_reserved5) (void);
 };
 
-GType g_unix_output_stream_get_type (void) G_GNUC_CONST;
+GType           g_unix_output_stream_get_type     (void) G_GNUC_CONST;
 
-GOutputStream *g_unix_output_stream_new (int fd,
-					 gboolean close_fd_at_close);
-
+GOutputStream * g_unix_output_stream_new          (gint     fd,
+                                                   gboolean close_fd);
+void            g_unix_output_stream_set_close_fd (GUnixOutputStream *stream,
+                                                   gboolean           close_fd);
+gboolean        g_unix_output_stream_get_close_fd (GUnixOutputStream *stream);
+gint            g_unix_output_stream_get_fd       (GUnixOutputStream *stream);
 G_END_DECLS
 
 #endif /* __G_UNIX_OUTPUT_STREAM_H__ */

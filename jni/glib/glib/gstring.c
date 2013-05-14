@@ -21,10 +21,10 @@
  * Modified by the GLib Team and others 1997-2000.  See the AUTHORS
  * file for a list of people on the GLib Team.  See the ChangeLog
  * files for a list of changes.  These files are distributed with
- * GLib at ftp://ftp.gtk.org/pub/gtk/. 
+ * GLib at ftp://ftp.gtk.org/pub/gtk/.
  */
 
-/* 
+/*
  * MT safe
  */
 
@@ -39,11 +39,46 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "glib.h"
+#include "gstring.h"
+
 #include "gprintf.h"
 
-#include "galias.h"
 
+/**
+ * SECTION: string_chunks
+ * @title: String Chunks
+ * @short_description: efficient storage of groups of strings
+ *
+ * String chunks are used to store groups of strings. Memory is
+ * allocated in blocks, and as strings are added to the #GStringChunk
+ * they are copied into the next free position in a block. When a block
+ * is full a new block is allocated.
+ *
+ * When storing a large number of strings, string chunks are more
+ * efficient than using g_strdup() since fewer calls to malloc() are
+ * needed, and less memory is wasted in memory allocation overheads.
+ *
+ * By adding strings with g_string_chunk_insert_const() it is also
+ * possible to remove duplicates.
+ *
+ * To create a new #GStringChunk use g_string_chunk_new().
+ *
+ * To add strings to a #GStringChunk use g_string_chunk_insert().
+ *
+ * To add strings to a #GStringChunk, but without duplicating strings
+ * which are already in the #GStringChunk, use
+ * g_string_chunk_insert_const().
+ *
+ * To free the entire #GStringChunk use g_string_chunk_free(). It is
+ * not possible to free individual strings.
+ **/
+
+/**
+ * GStringChunk:
+ *
+ * An opaque data structure representing String Chunks. It should only
+ * be accessed by using the following functions.
+ **/
 struct _GStringChunk
 {
   GHashTable *const_table;
@@ -60,10 +95,14 @@ struct _GStringChunk
  * g_str_equal:
  * @v1: a key
  * @v2: a key to compare with @v1
- * 
- * Compares two strings for byte-by-byte equality and returns %TRUE 
- * if they are equal. It can be passed to g_hash_table_new() as the 
+ *
+ * Compares two strings for byte-by-byte equality and returns %TRUE
+ * if they are equal. It can be passed to g_hash_table_new() as the
  * @key_equal_func parameter, when using strings as keys in a #GHashTable.
+ *
+ * Note that this function is primarily meant as a hash table comparison
+ * function. For a general-purpose, %NULL-safe string comparison function,
+ * see g_strcmp0().
  *
  * Returns: %TRUE if the two keys match
  */
@@ -247,22 +286,22 @@ g_string_chunk_insert (GStringChunk *chunk,
  * g_string_chunk_insert_const:
  * @chunk: a #GStringChunk
  * @string: the string to add
- * 
- * Adds a copy of @string to the #GStringChunk, unless the same 
- * string has already been added to the #GStringChunk with 
+ *
+ * Adds a copy of @string to the #GStringChunk, unless the same
+ * string has already been added to the #GStringChunk with
  * g_string_chunk_insert_const().
- * 
- * This function is useful if you need to copy a large number 
- * of strings but do not want to waste space storing duplicates. 
- * But you must remember that there may be several pointers to 
- * the same string, and so any changes made to the strings 
+ *
+ * This function is useful if you need to copy a large number
+ * of strings but do not want to waste space storing duplicates.
+ * But you must remember that there may be several pointers to
+ * the same string, and so any changes made to the strings
  * should be done very carefully.
- * 
- * Note that g_string_chunk_insert_const() will not return a 
- * pointer to a string added with g_string_chunk_insert(), even 
+ *
+ * Note that g_string_chunk_insert_const() will not return a
+ * pointer to a string added with g_string_chunk_insert(), even
  * if they do match.
- * 
- * Returns: a pointer to the new or existing copy of @string 
+ *
+ * Returns: a pointer to the new or existing copy of @string
  *          within the #GStringChunk
  */
 gchar*
@@ -291,26 +330,26 @@ g_string_chunk_insert_const (GStringChunk *chunk,
  * g_string_chunk_insert_len:
  * @chunk: a #GStringChunk
  * @string: bytes to insert
- * @len: number of bytes of @string to insert, or -1 to insert a 
- *     nul-terminated string 
- * 
- * Adds a copy of the first @len bytes of @string to the #GStringChunk. 
+ * @len: number of bytes of @string to insert, or -1 to insert a
+ *     nul-terminated string
+ *
+ * Adds a copy of the first @len bytes of @string to the #GStringChunk.
  * The copy is nul-terminated.
- * 
+ *
  * Since this function does not stop at nul bytes, it is the caller's
- * responsibility to ensure that @string has at least @len addressable 
+ * responsibility to ensure that @string has at least @len addressable
  * bytes.
  *
- * The characters in the returned string can be changed, if necessary, 
+ * The characters in the returned string can be changed, if necessary,
  * though you should not change anything after the end of the string.
- * 
+ *
  * Return value: a pointer to the copy of @string within the #GStringChunk
- * 
+ *
  * Since: 2.4
- **/
+ */
 gchar*
 g_string_chunk_insert_len (GStringChunk *chunk,
-			   const gchar  *string, 
+			   const gchar  *string,
 			   gssize        len)
 {
   gssize size;
@@ -322,7 +361,7 @@ g_string_chunk_insert_len (GStringChunk *chunk,
     size = strlen (string);
   else
     size = len;
-  
+
   if ((chunk->storage_next + size + 1) > chunk->this_size)
     {
       gsize new_size = nearest_power (chunk->default_size, size + 1);
@@ -338,9 +377,7 @@ g_string_chunk_insert_len (GStringChunk *chunk,
 
   *(pos + size) = '\0';
 
-  strncpy (pos, string, size);
-  if (len > 0)
-    size = strlen (pos);
+  memcpy (pos, string, size);
 
   chunk->storage_next += size + 1;
 
@@ -626,30 +663,33 @@ g_string_set_size (GString *string,
 /**
  * g_string_insert_len:
  * @string: a #GString
- * @pos: position in @string where insertion should 
+ * @pos: position in @string where insertion should
  *       happen, or -1 for at the end
  * @val: bytes to insert
  * @len: number of bytes of @val to insert
- * 
- * Inserts @len bytes of @val into @string at @pos.  
- * Because @len is provided, @val may contain embedded 
- * nuls and need not be nul-terminated. If @pos is -1, 
+ *
+ * Inserts @len bytes of @val into @string at @pos.
+ * Because @len is provided, @val may contain embedded
+ * nuls and need not be nul-terminated. If @pos is -1,
  * bytes are inserted at the end of the string.
  *
- * Since this function does not stop at nul bytes, it is 
- * the caller's responsibility to ensure that @val has at 
+ * Since this function does not stop at nul bytes, it is
+ * the caller's responsibility to ensure that @val has at
  * least @len addressable bytes.
  *
  * Returns: @string
  */
 GString*
 g_string_insert_len (GString     *string,
-		     gssize       pos,    
+		     gssize       pos,
 		     const gchar *val,
-		     gssize       len)    
+		     gssize       len)
 {
   g_return_val_if_fail (string != NULL, NULL);
-  g_return_val_if_fail (val != NULL, string);
+  g_return_val_if_fail (len == 0 || val != NULL, string);
+
+  if (len == 0)
+    return string;
 
   if (len < 0)
     len = strlen (val);
@@ -674,20 +714,20 @@ g_string_insert_len (GString     *string,
 
       /* Open up space where we are going to insert.  */
       if (pos < string->len)
-	g_memmove (string->str + pos + len, string->str + pos, string->len - pos);
+        g_memmove (string->str + pos + len, string->str + pos, string->len - pos);
 
       /* Move the source part before the gap, if any.  */
       if (offset < pos)
-	{
-	  precount = MIN (len, pos - offset);
-	  memcpy (string->str + pos, val, precount);
-	}
+        {
+          precount = MIN (len, pos - offset);
+          memcpy (string->str + pos, val, precount);
+        }
 
       /* Move the source part after the gap, if any.  */
       if (len > precount)
-	memcpy (string->str + pos + precount,
-		val + /* Already moved: */ precount + /* Space opened up: */ len,
-		len - precount);
+        memcpy (string->str + pos + precount,
+                val + /* Already moved: */ precount + /* Space opened up: */ len,
+                len - precount);
     }
   else
     {
@@ -697,7 +737,7 @@ g_string_insert_len (GString     *string,
        * of the old string to the end, opening up space
        */
       if (pos < string->len)
-	g_memmove (string->str + pos + len, string->str + pos, string->len - pos);
+        g_memmove (string->str + pos + len, string->str + pos, string->len - pos);
 
       /* insert the new string */
       if (len == 1)
@@ -744,7 +784,7 @@ gunichar_ok (gunichar c)
  * g_string_append_uri_escaped:
  * @string: a #GString
  * @unescaped: a string
- * @reserved_chars_allowed: a string of reserved characters allowed to be used
+ * @reserved_chars_allowed: a string of reserved characters allowed to be used, or %NULL
  * @allow_utf8: set %TRUE if the escaped string may include UTF8 characters
  * 
  * Appends @unescaped to @string, escaped any characters that
@@ -837,7 +877,7 @@ g_string_append_len (GString	 *string,
                      gssize       len)    
 {
   g_return_val_if_fail (string != NULL, NULL);
-  g_return_val_if_fail (val != NULL, string);
+  g_return_val_if_fail (len == 0 || val != NULL, string);
 
   return g_string_insert_len (string, -1, val, len);
 }
@@ -1479,6 +1519,3 @@ g_string_append_printf (GString     *string,
   g_string_append_vprintf (string, format, args);
   va_end (args);
 }
-
-#define __G_STRING_C__
-#include "galiasdef.c"

@@ -30,8 +30,38 @@
 
 #include "config.h"
 
-#include "glib.h"
-#include "galias.h"
+#include "gtree.h"
+
+#include "gatomic.h"
+#include "gtestutils.h"
+
+/**
+ * SECTION: trees-binary
+ * @title: Balanced Binary Trees
+ * @short_description: a sorted collection of key/value pairs optimized
+ *                     for searching and traversing in order
+ *
+ * The #GTree structure and its associated functions provide a sorted
+ * collection of key/value pairs optimized for searching and traversing
+ * in order.
+ *
+ * To create a new #GTree use g_tree_new().
+ *
+ * To insert a key/value pair into a #GTree use g_tree_insert().
+ *
+ * To lookup the value corresponding to a given key, use
+ * g_tree_lookup() and g_tree_lookup_extended().
+ *
+ * To find out the number of nodes in a #GTree, use g_tree_nnodes(). To
+ * get the height of a #GTree, use g_tree_height().
+ *
+ * To traverse a #GTree, calling a function for each node visited in
+ * the traversal, use g_tree_foreach().
+ *
+ * To remove a key/value pair use g_tree_remove().
+ *
+ * To destroy a #GTree, use g_tree_destroy().
+ **/
 
 #undef G_TREE_DEBUG
 
@@ -39,6 +69,14 @@
 
 typedef struct _GTreeNode  GTreeNode;
 
+/**
+ * GTree:
+ *
+ * The <structname>GTree</structname> struct is an opaque data
+ * structure representing a <link
+ * linkend="glib-Balanced-Binary-Trees">Balanced Binary Tree</link>. It
+ * should be accessed only by using the following functions.
+ **/
 struct _GTree
 {
   GTreeNode        *root;
@@ -47,6 +85,7 @@ struct _GTree
   GDestroyNotify    value_destroy_func;
   gpointer          key_compare_data;
   guint             nnodes;
+  gint              ref_count;
 };
 
 struct _GTreeNode
@@ -177,13 +216,14 @@ g_tree_new_full (GCompareDataFunc key_compare_func,
   
   g_return_val_if_fail (key_compare_func != NULL, NULL);
   
-  tree = g_new (GTree, 1);
+  tree = g_slice_new (GTree);
   tree->root               = NULL;
   tree->key_compare        = key_compare_func;
   tree->key_destroy_func   = key_destroy_func;
   tree->value_destroy_func = value_destroy_func;
   tree->key_compare_data   = key_compare_data;
   tree->nnodes             = 0;
+  tree->ref_count          = 1;
   
   return tree;
 }
@@ -231,18 +271,9 @@ g_tree_node_next (GTreeNode *node)
 
   return tmp;
 }
-		  
-/**
- * g_tree_destroy:
- * @tree: a #GTree.
- * 
- * Destroys the #GTree. If keys and/or values are dynamically allocated, you 
- * should either free them first or create the #GTree using g_tree_new_full().
- * In the latter case the destroy functions you supplied will be called on 
- * all keys and values before destroying the #GTree.
- **/
-void
-g_tree_destroy (GTree *tree)
+
+static void
+g_tree_remove_all (GTree *tree)
 {
   GTreeNode *node;
   GTreeNode *next;
@@ -250,7 +281,7 @@ g_tree_destroy (GTree *tree)
   g_return_if_fail (tree != NULL);
 
   node = g_tree_first_node (tree);
-  
+
   while (node)
     {
       next = g_tree_node_next (node);
@@ -264,7 +295,74 @@ g_tree_destroy (GTree *tree)
       node = next;
     }
 
-  g_free (tree);
+  tree->root = NULL;
+  tree->nnodes = 0;
+}
+
+/**
+ * g_tree_ref:
+ * @tree: a #GTree.
+ *
+ * Increments the reference count of @tree by one.  It is safe to call
+ * this function from any thread.
+ *
+ * Return value: the passed in #GTree.
+ *
+ * Since: 2.22
+ **/
+GTree *
+g_tree_ref (GTree *tree)
+{
+  g_return_val_if_fail (tree != NULL, NULL);
+
+  g_atomic_int_inc (&tree->ref_count);
+
+  return tree;
+}
+
+/**
+ * g_tree_unref:
+ * @tree: a #GTree.
+ *
+ * Decrements the reference count of @tree by one.  If the reference count
+ * drops to 0, all keys and values will be destroyed (if destroy
+ * functions were specified) and all memory allocated by @tree will be
+ * released.
+ *
+ * It is safe to call this function from any thread.
+ *
+ * Since: 2.22
+ **/
+void
+g_tree_unref (GTree *tree)
+{
+  g_return_if_fail (tree != NULL);
+
+  if (g_atomic_int_dec_and_test (&tree->ref_count))
+    {
+      g_tree_remove_all (tree);
+      g_slice_free (GTree, tree);
+    }
+}
+
+/**
+ * g_tree_destroy:
+ * @tree: a #GTree.
+ * 
+ * Removes all keys and values from the #GTree and decreases its
+ * reference count by one. If keys and/or values are dynamically
+ * allocated, you should either free them first or create the #GTree
+ * using g_tree_new_full().  In the latter case the destroy functions
+ * you supplied will be called on all keys and values before destroying
+ * the #GTree.
+ **/
+void
+g_tree_destroy (GTree *tree)
+{
+  g_return_if_fail (tree != NULL);
+
+  g_tree_remove_all (tree);
+  g_tree_unref (tree);
 }
 
 /**
@@ -841,6 +939,37 @@ g_tree_foreach (GTree         *tree,
  * instead. If you really need to visit nodes in a different order, consider
  * using an <link linkend="glib-N-ary-Trees">N-ary Tree</link>.
  **/
+/**
+ * GTraverseFunc:
+ * @key: a key of a #GTree node.
+ * @value: the value corresponding to the key.
+ * @data: user data passed to g_tree_traverse().
+ * @Returns: %TRUE to stop the traversal.
+ *
+ * Specifies the type of function passed to g_tree_traverse(). It is
+ * passed the key and value of each node, together with the @user_data
+ * parameter passed to g_tree_traverse(). If the function returns
+ * %TRUE, the traversal is stopped.
+ **/
+/**
+ * GTraverseType:
+ * @G_IN_ORDER: vists a node's left child first, then the node itself,
+ *              then its right child. This is the one to use if you
+ *              want the output sorted according to the compare
+ *              function.
+ * @G_PRE_ORDER: visits a node, then its children.
+ * @G_POST_ORDER: visits the node's children, then the node itself.
+ * @G_LEVEL_ORDER: is not implemented for <link
+ *                 linkend="glib-Balanced-Binary-Trees">Balanced Binary
+ *                 Trees</link>.  For <link
+ *                 linkend="glib-N-ary-Trees">N-ary Trees</link>, it
+ *                 vists the root node first, then its children, then
+ *                 its grandchildren, and so on. Note that this is less
+ *                 efficient than the other orders.
+ *
+ * Specifies the type of traveral performed by g_tree_traverse(),
+ * g_node_traverse() and g_node_find().
+ **/
 void
 g_tree_traverse (GTree         *tree,
 		 GTraverseFunc  traverse_func,
@@ -1283,8 +1412,3 @@ g_tree_dump (GTree *tree)
     g_tree_node_dump (tree->root, 0);
 }
 #endif
-
-
-#define __G_TREE_C__
-#include "galiasdef.c"
-

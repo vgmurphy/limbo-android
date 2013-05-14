@@ -20,26 +20,34 @@
  * Author: Alexander Larsson <alexl@redhat.com>
  */
 
-#include <config.h>
+#include "config.h"
 #include <glib.h>
 #include "glibintl.h"
 
 #include "ginputstream.h"
 #include "gseekable.h"
+#include "gcancellable.h"
+#include "gasyncresult.h"
 #include "gsimpleasyncresult.h"
+#include "gioerror.h"
 
-#include "gioalias.h"
 
 /**
  * SECTION:ginputstream
  * @short_description: Base class for implementing streaming input
  * @include: gio/gio.h
  *
- * 
- * 
+ * GInputStream has functions to read from a stream (g_input_stream_read()),
+ * to close a stream (g_input_stream_close()) and to skip some content
+ * (g_input_stream_skip()). 
+ *
+ * To copy the content of an input stream to an output stream without 
+ * manually handling the reads and writes, use g_output_stream_splice(). 
+ *
+ * All of these functions have async variants too.
  **/
 
-G_DEFINE_TYPE (GInputStream, g_input_stream, G_TYPE_OBJECT);
+G_DEFINE_ABSTRACT_TYPE (GInputStream, g_input_stream, G_TYPE_OBJECT);
 
 struct _GInputStreamPrivate {
   guint closed : 1;
@@ -82,15 +90,7 @@ static gboolean g_input_stream_real_close_finish (GInputStream         *stream,
 static void
 g_input_stream_finalize (GObject *object)
 {
-  GInputStream *stream;
-
-  stream = G_INPUT_STREAM (object);
-  
-  if (!stream->priv->closed)
-    g_input_stream_close (stream, NULL, NULL);
-
-  if (G_OBJECT_CLASS (g_input_stream_parent_class)->finalize)
-    (*G_OBJECT_CLASS (g_input_stream_parent_class)->finalize) (object);
+  G_OBJECT_CLASS (g_input_stream_parent_class)->finalize (object);
 }
 
 static void
@@ -102,9 +102,8 @@ g_input_stream_dispose (GObject *object)
   
   if (!stream->priv->closed)
     g_input_stream_close (stream, NULL, NULL);
-  
-  if (G_OBJECT_CLASS (g_input_stream_parent_class)->dispose)
-    (*G_OBJECT_CLASS (g_input_stream_parent_class)->dispose) (object);
+
+  G_OBJECT_CLASS (g_input_stream_parent_class)->dispose (object);
 }
 
 
@@ -191,8 +190,8 @@ g_input_stream_read  (GInputStream  *stream,
 
   if (class->read_fn == NULL) 
     {
-      g_set_error (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
-		   _("Input stream doesn't implement read"));
+      g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
+                           _("Input stream doesn't implement read"));
       return -1;
     }
 
@@ -348,8 +347,6 @@ g_input_stream_real_skip (GInputStream  *stream,
   char buffer[8192];
   GError *my_error;
 
-  class = G_INPUT_STREAM_GET_CLASS (stream);
-
   if (G_IS_SEEKABLE (stream) && g_seekable_can_seek (G_SEEKABLE (stream)))
     {
       if (g_seekable_seek (G_SEEKABLE (stream),
@@ -363,14 +360,14 @@ g_input_stream_real_skip (GInputStream  *stream,
   /* If not seekable, or seek failed, fall back to reading data: */
 
   class = G_INPUT_STREAM_GET_CLASS (stream);
-  
+
   read_bytes = 0;
   while (1)
     {
       my_error = NULL;
 
       ret = class->read_fn (stream, buffer, MIN (sizeof (buffer), count),
-			 cancellable, &my_error);
+                            cancellable, &my_error);
       if (ret == -1)
 	{
 	  if (read_bytes > 0 &&
@@ -380,16 +377,16 @@ g_input_stream_real_skip (GInputStream  *stream,
 	      g_error_free (my_error);
 	      return read_bytes;
 	    }
-	  
+
 	  g_propagate_error (error, my_error);
 	  return -1;
 	}
 
       count -= ret;
       read_bytes += ret;
-      
+
       if (ret == 0 || count == 0)
-	return read_bytes;
+        return read_bytes;
     }
 }
 
@@ -504,7 +501,7 @@ async_ready_close_callback_wrapper (GObject      *source_object,
  * You can then call g_input_stream_read_finish() to get the result of the 
  * operation.
  *
- * During an async request no other sync and async calls are allowed, and will
+ * During an async request no other sync and async calls are allowed on @stream, and will
  * result in %G_IO_ERROR_PENDING errors. 
  *
  * A value of @count larger than %G_MAXSSIZE will cause a %G_IO_ERROR_INVALID_ARGUMENT error.
@@ -619,35 +616,35 @@ g_input_stream_read_finish (GInputStream  *stream,
  * g_input_stream_skip_async:
  * @stream: A #GInputStream.
  * @count: the number of bytes that will be skipped from the stream
- * @io_priority: the <link linkend="io-priority">I/O priority</link> 
- * of the request. 
- * @cancellable: optional #GCancellable object, %NULL to ignore. 
+ * @io_priority: the <link linkend="io-priority">I/O priority</link>
+ * of the request.
+ * @cancellable: optional #GCancellable object, %NULL to ignore.
  * @callback: callback to call when the request is satisfied
  * @user_data: the data to pass to callback function
  *
- * Request an asynchronous skip of @count bytes from the stream into the buffer
- * starting at @buffer. When the operation is finished @callback will be called. 
- * You can then call g_input_stream_skip_finish() to get the result of the 
- * operation.
+ * Request an asynchronous skip of @count bytes from the stream.
+ * When the operation is finished @callback will be called.
+ * You can then call g_input_stream_skip_finish() to get the result
+ * of the operation.
  *
- * During an async request no other sync and async calls are allowed, and will
- * result in %G_IO_ERROR_PENDING errors. 
+ * During an async request no other sync and async calls are allowed,
+ * and will result in %G_IO_ERROR_PENDING errors.
  *
  * A value of @count larger than %G_MAXSSIZE will cause a %G_IO_ERROR_INVALID_ARGUMENT error.
  *
- * On success, the number of bytes skipped will be passed to the
- * callback. It is not an error if this is not the same as the requested size, as it
+ * On success, the number of bytes skipped will be passed to the callback.
+ * It is not an error if this is not the same as the requested size, as it
  * can happen e.g. near the end of a file, but generally we try to skip
  * as many bytes as requested. Zero is returned on end of file
  * (or if @count is zero), but never otherwise.
  *
- * Any outstanding i/o request with higher priority (lower numerical value) will
- * be executed before an outstanding request with lower priority. Default
- * priority is %G_PRIORITY_DEFAULT.
+ * Any outstanding i/o request with higher priority (lower numerical value)
+ * will be executed before an outstanding request with lower priority.
+ * Default priority is %G_PRIORITY_DEFAULT.
  *
- * The asyncronous methods have a default fallback that uses threads to implement
- * asynchronicity, so they are optional for inheriting classes. However, if you
- * override one you must override all.
+ * The asynchronous methods have a default fallback that uses threads to
+ * implement asynchronicity, so they are optional for inheriting classes.
+ * However, if you override one, you must override all.
  **/
 void
 g_input_stream_skip_async (GInputStream        *stream,
@@ -890,14 +887,14 @@ g_input_stream_set_pending (GInputStream *stream, GError **error)
   
   if (stream->priv->closed)
     {
-      g_set_error (error, G_IO_ERROR, G_IO_ERROR_CLOSED,
-		   _("Stream is already closed"));
+      g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_CLOSED,
+                           _("Stream is already closed"));
       return FALSE;
     }
   
   if (stream->priv->pending)
     {
-      g_set_error (error, G_IO_ERROR, G_IO_ERROR_PENDING,
+      g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_PENDING,
 		/* Translators: This is an error you get if there is already an
 		 * operation running against this stream when you try to start
 		 * one */
@@ -1161,13 +1158,16 @@ close_async_thread (GSimpleAsyncResult *res,
      cancellation, since we want to close things anyway, although
      possibly in a quick-n-dirty way. At least we never want to leak
      open handles */
-  
+
   class = G_INPUT_STREAM_GET_CLASS (object);
-  result = class->close_fn (G_INPUT_STREAM (object), cancellable, &error);
-  if (!result)
+  if (class->close_fn)
     {
-      g_simple_async_result_set_from_error (res, error);
-      g_error_free (error);
+      result = class->close_fn (G_INPUT_STREAM (object), cancellable, &error);
+      if (!result)
+	{
+	  g_simple_async_result_set_from_error (res, error);
+	  g_error_free (error);
+	}
     }
 }
 
@@ -1203,6 +1203,3 @@ g_input_stream_real_close_finish (GInputStream  *stream,
   g_warn_if_fail (g_simple_async_result_get_source_tag (simple) == g_input_stream_real_close_async);
   return TRUE;
 }
-
-#define __G_INPUT_STREAM_C__
-#include "gioaliasdef.c"

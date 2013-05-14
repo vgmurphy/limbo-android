@@ -57,11 +57,24 @@
  */
 #define	G_IMPLEMENT_INLINES 1
 #define	__G_UTILS_C__
-#include "glib.h"
+#include "gutils.h"
+
+#include "gfileutils.h"
+#include "ghash.h"
+#include "gslist.h"
 #include "gprintfint.h"
+#include "gthread.h"
 #include "gthreadprivate.h"
+#include "gtestutils.h"
+#include "gunicode.h"
+#include "gstrfuncs.h"
 #include "glibintl.h"
-#include "galias.h"
+
+#ifdef G_PLATFORM_WIN32
+#include "garray.h"
+#include "gconvert.h"
+#include "gwin32.h"
+#endif
 
 #ifdef	MAXPATHLEN
 #define	G_PATH_LENGTH	MAXPATHLEN
@@ -120,10 +133,6 @@
 #include <langinfo.h>
 #endif
 
-#ifdef HAVE_BIND_TEXTDOMAIN_CODESET
-#include <libintl.h>
-#endif
-
 const guint glib_major_version = GLIB_MAJOR_VERSION;
 const guint glib_minor_version = GLIB_MINOR_VERSION;
 const guint glib_micro_version = GLIB_MICRO_VERSION;
@@ -133,6 +142,8 @@ const guint glib_binary_age = GLIB_BINARY_AGE;
 #ifdef G_PLATFORM_WIN32
 
 static HMODULE glib_dll = NULL;
+
+#ifdef DLL_EXPORT
 
 BOOL WINAPI
 DllMain (HINSTANCE hinstDLL,
@@ -145,13 +156,43 @@ DllMain (HINSTANCE hinstDLL,
   return TRUE;
 }
 
+#endif
+
 gchar *
-_glib_get_installation_directory (void)
+_glib_get_dll_directory (void)
 {
+  gchar *retval;
+  gchar *p;
+  wchar_t wc_fn[MAX_PATH];
+
+#ifdef DLL_EXPORT
   if (glib_dll == NULL)
     return NULL;
+#endif
 
-  return g_win32_get_package_installation_directory_of_module (glib_dll);
+  /* This code is different from that in
+   * g_win32_get_package_installation_directory_of_module() in that
+   * here we return the actual folder where the GLib DLL is. We don't
+   * do the check for it being in a "bin" or "lib" subfolder and then
+   * returning the parent of that.
+   *
+   * In a statically built GLib, glib_dll will be NULL and we will
+   * thus look up the application's .exe file's location.
+   */
+  if (!GetModuleFileNameW (glib_dll, wc_fn, MAX_PATH))
+    return NULL;
+
+  retval = g_utf16_to_utf8 (wc_fn, -1, NULL, NULL, NULL);
+
+  p = strrchr (retval, G_DIR_SEPARATOR);
+  if (p == NULL)
+    {
+      /* Wtf? */
+      return NULL;
+    }
+  *p = '\0';
+
+  return retval;
 }
 
 #endif
@@ -587,7 +628,7 @@ debug_key_matches (const gchar *key,
 /**
  * g_parse_debug_string:
  * @string: a list of debug options separated by colons, spaces, or
- * commas; or the string "all" to set all flags, or %NULL.
+ * commas, or %NULL.
  * @keys: pointer to an array of #GDebugKey which associate 
  *     strings with bit flags.
  * @nkeys: the number of #GDebugKey<!-- -->s in the array.
@@ -596,6 +637,10 @@ debug_key_matches (const gchar *key,
  * into a %guint containing bit flags. This is used 
  * within GDK and GTK+ to parse the debug options passed on the
  * command line or through environment variables.
+ *
+ * If @string is equal to "all", all flags are set.  If @string
+ * is equal to "help", all the available keys in @keys are printed
+ * out to standard error.
  *
  * Returns: the combined set of bit flags.
  */
@@ -619,6 +664,14 @@ g_parse_debug_string  (const gchar     *string,
     {
       for (i=0; i<nkeys; i++)
 	result |= keys[i].value;
+    }
+  else if (!g_ascii_strcasecmp (string, "help"))
+    {
+      /* using stdio directly for the reason stated above */
+      fprintf (stderr, "Supported debug values: ");
+      for (i=0; i<nkeys; i++)
+	fprintf (stderr, " %s", keys[i].key);
+      fprintf (stderr, "\n");
     }
   else
     {
@@ -1486,17 +1539,17 @@ g_get_any_init_do (void)
   gchar hostname[100];
 
   g_tmp_dir = g_strdup (g_getenv ("TMPDIR"));
-  if (!g_tmp_dir)
+  if (g_tmp_dir == NULL || *g_tmp_dir == '\0')
     g_tmp_dir = g_strdup (g_getenv ("TMP"));
-  if (!g_tmp_dir)
+  if (g_tmp_dir == NULL || *g_tmp_dir == '\0')
     g_tmp_dir = g_strdup (g_getenv ("TEMP"));
 
 #ifdef G_OS_WIN32
-  if (!g_tmp_dir)
+  if (g_tmp_dir == NULL || *g_tmp_dir == '\0')
     g_tmp_dir = get_windows_directory_root ();
 #else  
 #ifdef P_tmpdir
-  if (!g_tmp_dir)
+  if (g_tmp_dir == NULL || *g_tmp_dir == '\0')
     {
       gsize k;    
       g_tmp_dir = g_strdup (P_tmpdir);
@@ -1506,7 +1559,7 @@ g_get_any_init_do (void)
     }
 #endif
   
-  if (!g_tmp_dir)
+  if (g_tmp_dir == NULL || *g_tmp_dir == '\0')
     {
       g_tmp_dir = g_strdup ("/tmp");
     }
@@ -1641,21 +1694,25 @@ g_get_any_init_do (void)
     
     if (!pw)
       {
-	//TK setpwent ();
+#ifdef BUILD_WITH_ANDROID
+	pw = getpwuid (getuid ());
+#else
+	setpwent ();
 	pw = getpwuid (getuid ());
 	endpwent ();
+#endif
       }
     if (pw)
       {
 	g_user_name = g_strdup (pw->pw_name);
 
-        /* TK
+#ifdef HAVE_STRUCT_PASSWD_PW_GECO
 	if (pw->pw_gecos && *pw->pw_gecos != '\0') 
 	  {
 	    gchar **gecos_fields;
 	    gchar **name_parts;
 
-	    // split the gecos field and substitute '&' 
+	    /* split the gecos field and substitute '&' */
 	    gecos_fields = g_strsplit (pw->pw_gecos, ",", 0);
 	    name_parts = g_strsplit (gecos_fields[0], "&", 0);
 	    pw->pw_name[0] = g_ascii_toupper (pw->pw_name[0]);
@@ -1663,7 +1720,9 @@ g_get_any_init_do (void)
 	    g_strfreev (gecos_fields);
 	    g_strfreev (name_parts);
 	  }
-    */
+#else
+  g_real_name = g_strdup (g_user_name);
+#endif
 
 	if (!g_home_dir)
 	  g_home_dir = g_strdup (pw->pw_dir);
@@ -1805,13 +1864,13 @@ g_get_real_name (void)
  * </simplelist>
  * Since applications are in general <emphasis>not</emphasis> written 
  * to deal with these situations it was considered better to make 
- * g_get_homedir() not pay attention to <envar>HOME</envar> and to 
+ * g_get_home_dir() not pay attention to <envar>HOME</envar> and to 
  * return the real home directory for the user. If applications
  * want to pay attention to <envar>HOME</envar>, they can do:
  * |[
  *  const char *homedir = g_getenv ("HOME");
  *   if (!homedir)
- *      homedir = g_get_homedir (<!-- -->);
+ *      homedir = g_get_home_dir (<!-- -->);
  * ]|
  *
  * Returns: the current user's home directory
@@ -1831,7 +1890,7 @@ g_get_home_dir (void)
  * <envar>TMP</envar>, and <envar>TEMP</envar> in that order. If none 
  * of those are defined "/tmp" is returned on UNIX and "C:\" on Windows. 
  * The encoding of the returned string is system-defined. On Windows, 
- * it is always UTF-8. The return value is never %NULL.
+ * it is always UTF-8. The return value is never %NULL or the empty string.
  *
  * Returns: the directory to use for temporary files.
  */
@@ -2000,7 +2059,7 @@ g_set_application_name (const gchar *application_name)
   G_UNLOCK (g_application_name);
 
   if (already_set)
-    g_warning ("g_set_application() name called multiple times");
+    g_warning ("g_set_application_name() called multiple times");
 }
 
 /**
@@ -2011,8 +2070,12 @@ g_set_application_name (const gchar *application_name)
  *
  * On UNIX platforms this is determined using the mechanisms described in
  * the <ulink url="http://www.freedesktop.org/Standards/basedir-spec">
- * XDG Base Directory Specification</ulink>
- * 
+ * XDG Base Directory Specification</ulink>.
+ * In this case the directory retrieved will be XDG_DATA_HOME.
+ *
+ * On Windows is the virtual folder that represents the My Documents
+ * desktop item. See documentation for CSIDL_PERSONAL.
+ *
  * Return value: a string owned by GLib that must not be modified 
  *               or freed.
  * Since: 2.6
@@ -2093,8 +2156,14 @@ g_init_user_config_dir (void)
  *
  * On UNIX platforms this is determined using the mechanisms described in
  * the <ulink url="http://www.freedesktop.org/Standards/basedir-spec">
- * XDG Base Directory Specification</ulink>
- * 
+ * XDG Base Directory Specification</ulink>.
+ * In this case the directory retrieved will be XDG_CONFIG_HOME.
+ *
+ * On Windows is the directory that serves as a common repository for
+ * application-specific data. A typical path is
+ * C:\Documents and Settings\username\Application. See documentation for
+ * CSIDL_APPDATA.
+ *
  * Return value: a string owned by GLib that must not be modified 
  *               or freed.
  * Since: 2.6
@@ -2119,8 +2188,14 @@ g_get_user_config_dir (void)
  *
  * On UNIX platforms this is determined using the mechanisms described in
  * the <ulink url="http://www.freedesktop.org/Standards/basedir-spec">
- * XDG Base Directory Specification</ulink>
- * 
+ * XDG Base Directory Specification</ulink>.
+ * In this case the directory retrieved will be XDG_CACHE_HOME.
+ *
+ * On Windows is the directory that serves as a common repository for
+ * temporary Internet files. A typical path is
+ * C:\Documents and Settings\username\Local Settings\Temporary Internet Files.
+ * See documentation for CSIDL_INTERNET_CACHE.
+ *
  * Return value: a string owned by GLib that must not be modified 
  *               or freed.
  * Since: 2.6
@@ -2219,12 +2294,57 @@ load_user_special_dirs (void)
 static void
 load_user_special_dirs (void)
 {
+  typedef HRESULT (WINAPI *t_SHGetKnownFolderPath) (const GUID *rfid,
+						    DWORD dwFlags,
+						    HANDLE hToken,
+						    PWSTR *ppszPath);
+  t_SHGetKnownFolderPath p_SHGetKnownFolderPath;
+
+  static const GUID FOLDERID_Downloads =
+    { 0x374de290, 0x123f, 0x4565, { 0x91, 0x64, 0x39, 0xc4, 0x92, 0x5e, 0x46, 0x7b } };
+  static const GUID FOLDERID_Public =
+    { 0xDFDF76A2, 0xC82A, 0x4D63, { 0x90, 0x6A, 0x56, 0x44, 0xAC, 0x45, 0x73, 0x85 } };
+
+  wchar_t *wcp;
+
+  p_SHGetKnownFolderPath = (t_SHGetKnownFolderPath) GetProcAddress (GetModuleHandle ("shell32.dll"),
+								    "SHGetKnownFolderPath");
+
   g_user_special_dirs[G_USER_DIRECTORY_DESKTOP] = get_special_folder (CSIDL_DESKTOPDIRECTORY);
   g_user_special_dirs[G_USER_DIRECTORY_DOCUMENTS] = get_special_folder (CSIDL_PERSONAL);
-  g_user_special_dirs[G_USER_DIRECTORY_DOWNLOAD] = get_special_folder (CSIDL_DESKTOPDIRECTORY); /* XXX correct ? */
+
+  if (p_SHGetKnownFolderPath == NULL)
+    {
+      g_user_special_dirs[G_USER_DIRECTORY_DOWNLOAD] = get_special_folder (CSIDL_DESKTOPDIRECTORY);
+    }
+  else
+    {
+      wcp = NULL;
+      (*p_SHGetKnownFolderPath) (&FOLDERID_Downloads, 0, NULL, &wcp);
+      g_user_special_dirs[G_USER_DIRECTORY_DOWNLOAD] = g_utf16_to_utf8 (wcp, -1, NULL, NULL, NULL);
+      if (g_user_special_dirs[G_USER_DIRECTORY_DOWNLOAD] == NULL)
+	g_user_special_dirs[G_USER_DIRECTORY_DOWNLOAD] = get_special_folder (CSIDL_DESKTOPDIRECTORY);
+      CoTaskMemFree (wcp);
+    }
+
   g_user_special_dirs[G_USER_DIRECTORY_MUSIC] = get_special_folder (CSIDL_MYMUSIC);
   g_user_special_dirs[G_USER_DIRECTORY_PICTURES] = get_special_folder (CSIDL_MYPICTURES);
-  g_user_special_dirs[G_USER_DIRECTORY_PUBLIC_SHARE] = get_special_folder (CSIDL_COMMON_DOCUMENTS);  /* XXX correct ? */
+
+  if (p_SHGetKnownFolderPath == NULL)
+    {
+      /* XXX */
+      g_user_special_dirs[G_USER_DIRECTORY_PUBLIC_SHARE] = get_special_folder (CSIDL_COMMON_DOCUMENTS);
+    }
+  else
+    {
+      wcp = NULL;
+      (*p_SHGetKnownFolderPath) (&FOLDERID_Public, 0, NULL, &wcp);
+      g_user_special_dirs[G_USER_DIRECTORY_PUBLIC_SHARE] = g_utf16_to_utf8 (wcp, -1, NULL, NULL, NULL);
+      if (g_user_special_dirs[G_USER_DIRECTORY_PUBLIC_SHARE] == NULL)
+	g_user_special_dirs[G_USER_DIRECTORY_PUBLIC_SHARE] = get_special_folder (CSIDL_COMMON_DOCUMENTS);
+      CoTaskMemFree (wcp);
+    }
+  
   g_user_special_dirs[G_USER_DIRECTORY_TEMPLATES] = get_special_folder (CSIDL_TEMPLATES);
   g_user_special_dirs[G_USER_DIRECTORY_VIDEOS] = get_special_folder (CSIDL_MYVIDEO);
 }
@@ -2390,6 +2510,59 @@ load_user_special_dirs (void)
 
 #endif /* G_OS_UNIX && !HAVE_CARBON */
 
+
+/**
+ * g_reload_user_special_dirs_cache:
+ *
+ * Resets the cache used for g_get_user_special_dir(), so
+ * that the latest on-disk version is used. Call this only
+ * if you just changed the data on disk yourself.
+ *
+ * Due to threadsafety issues this may cause leaking of strings
+ * that were previously returned from g_get_user_special_dir()
+ * that can't be freed. We ensure to only leak the data for
+ * the directories that actually changed value though.
+ *
+ * Since: 2.22
+ */
+void
+g_reload_user_special_dirs_cache (void)
+{
+  int i;
+
+  G_LOCK (g_utils_global);
+
+  if (g_user_special_dirs != NULL)
+    {
+      /* save a copy of the pointer, to check if some memory can be preserved */
+      char **old_g_user_special_dirs = g_user_special_dirs;
+      char *old_val;
+
+      /* recreate and reload our cache */
+      g_user_special_dirs = g_new0 (gchar *, G_USER_N_DIRECTORIES);
+      load_user_special_dirs ();
+
+      /* only leak changed directories */
+      for (i = 0; i < G_USER_N_DIRECTORIES; i++)
+        {
+	  old_val = old_g_user_special_dirs[i];
+	  if (g_strcmp0 (old_val, g_user_special_dirs[i]) == 0)
+            {
+	      /* don't leak */
+	      g_free (g_user_special_dirs[i]);
+	      g_user_special_dirs[i] = old_val;
+            }
+	  else
+            g_free (old_val);
+        }
+
+      /* free the old array */
+      g_free (old_g_user_special_dirs);
+    }
+
+  G_UNLOCK (g_utils_global);
+}
+
 /**
  * g_get_user_special_dir:
  * @directory: the logical id of special directory
@@ -2397,6 +2570,9 @@ load_user_special_dirs (void)
  * Returns the full path of a special directory using its logical id.
  *
  * On Unix this is done using the XDG special user directories.
+ * For compatibility with existing practise, %G_USER_DIRECTORY_DESKTOP
+ * falls back to <filename>$HOME/Desktop</filename> when XDG special
+ * user directories have not been set up. 
  *
  * Depending on the platform, the user might be able to change the path
  * of the special directory without requiring the session to restart; GLib
@@ -2457,7 +2633,7 @@ get_module_for_address (gconstpointer address)
   if (!beenhere)
     {
       p_GetModuleHandleExA =
-	(t_GetModuleHandleExA) GetProcAddress (LoadLibrary ("kernel32.dll"),
+	(t_GetModuleHandleExA) GetProcAddress (GetModuleHandle ("kernel32.dll"),
 					       "GetModuleHandleExA");
       beenhere = TRUE;
     }
@@ -2494,7 +2670,7 @@ get_module_share_dir (gconstpointer address)
 }
 
 G_CONST_RETURN gchar * G_CONST_RETURN *
-g_win32_get_system_data_dirs_for_module (gconstpointer address)
+g_win32_get_system_data_dirs_for_module (void (*address_of_function)())
 {
   GArray *data_dirs;
   HMODULE hmodule;
@@ -2503,10 +2679,10 @@ g_win32_get_system_data_dirs_for_module (gconstpointer address)
   gchar *p;
   gchar *exe_root;
       
-  if (address)
+  if (address_of_function)
     {
       G_LOCK (g_utils_global);
-      hmodule = get_module_for_address (address);
+      hmodule = get_module_for_address (address_of_function);
       if (hmodule != NULL)
 	{
 	  if (per_module_data_dirs == NULL)
@@ -2544,9 +2720,9 @@ g_win32_get_system_data_dirs_for_module (gconstpointer address)
    * subdirectory of the installation directory for the package
    * our caller is a part of.
    *
-   * The address parameter, if non-NULL, points to a function in the
-   * calling module. Use that to determine that module's installation
-   * folder, and use its "share" subfolder.
+   * The address_of_function parameter, if non-NULL, points to a
+   * function in the calling module. Use that to determine that
+   * module's installation folder, and use its "share" subfolder.
    *
    * Additionally, also use the "share" subfolder of the installation
    * locations of GLib and the .exe file being run.
@@ -2558,7 +2734,7 @@ g_win32_get_system_data_dirs_for_module (gconstpointer address)
    * function.
    */
 
-  p = get_module_share_dir (address);
+  p = get_module_share_dir (address_of_function);
   if (p)
     g_array_append_val (data_dirs, p);
     
@@ -2579,7 +2755,7 @@ g_win32_get_system_data_dirs_for_module (gconstpointer address)
 
   retval = (gchar **) g_array_free (data_dirs, FALSE);
 
-  if (address)
+  if (address_of_function)
     {
       if (hmodule != NULL)
 	g_hash_table_insert (per_module_data_dirs, hmodule, retval);
@@ -2600,7 +2776,8 @@ g_win32_get_system_data_dirs_for_module (gconstpointer address)
  * On UNIX platforms this is determined using the mechanisms described in
  * the <ulink url="http://www.freedesktop.org/Standards/basedir-spec">
  * XDG Base Directory Specification</ulink>
- * 
+ * In this case the list of directories retrieved will be XDG_DATA_DIRS.
+ *
  * On Windows the first elements in the list are the Application Data
  * and Documents folders for All Users. (These can be determined only
  * on Windows 2000 or later and are not present in the list on other
@@ -2665,8 +2842,16 @@ g_get_system_data_dirs (void)
  *
  * On UNIX platforms this is determined using the mechanisms described in
  * the <ulink url="http://www.freedesktop.org/Standards/basedir-spec">
- * XDG Base Directory Specification</ulink>
- * 
+ * XDG Base Directory Specification</ulink>.
+ * In this case the list of directories retrieved will be XDG_CONFIG_DIRS.
+ *
+ * On Windows is the directory that contains application data for all users.
+ * A typical path is C:\Documents and Settings\All Users\Application Data.
+ * This folder is used for application data that is not user specific.
+ * For example, an application can store a spell-check dictionary, a database
+ * of clip art, or a log file in the CSIDL_COMMON_APPDATA folder.
+ * This information will not roam and is available to anyone using the computer.
+ *
  * Return value: a %NULL-terminated array of strings owned by GLib that must 
  *               not be modified or freed.
  * Since: 2.6
@@ -2949,9 +3134,12 @@ guess_category_value (const gchar *category_name)
    * by Windows and the Microsoft C runtime (in the "English_United
    * States" format) translated into the Unixish format.
    */
-  retval = g_win32_getlocale ();
-  if ((retval != NULL) && (retval[0] != '\0'))
+  {
+    char *locale = g_win32_getlocale ();
+    retval = g_intern_string (locale);
+    g_free (locale);
     return retval;
+  }
 #endif  
 
   return NULL;
@@ -3112,6 +3300,84 @@ g_int_hash (gconstpointer v)
 }
 
 /**
+ * g_int64_equal:
+ * @v1: a pointer to a #gint64 key.
+ * @v2: a pointer to a #gint64 key to compare with @v1.
+ *
+ * Compares the two #gint64 values being pointed to and returns 
+ * %TRUE if they are equal.
+ * It can be passed to g_hash_table_new() as the @key_equal_func
+ * parameter, when using pointers to 64-bit integers as keys in a #GHashTable.
+ * 
+ * Returns: %TRUE if the two keys match.
+ *
+ * Since: 2.22
+ */
+gboolean
+g_int64_equal (gconstpointer v1,
+               gconstpointer v2)
+{
+  return *((const gint64*) v1) == *((const gint64*) v2);
+}
+
+/**
+ * g_int64_hash:
+ * @v: a pointer to a #gint64 key
+ *
+ * Converts a pointer to a #gint64 to a hash value.
+ * It can be passed to g_hash_table_new() as the @hash_func parameter, 
+ * when using pointers to 64-bit integers values as keys in a #GHashTable.
+ *
+ * Returns: a hash value corresponding to the key.
+ *
+ * Since: 2.22
+ */
+guint
+g_int64_hash (gconstpointer v)
+{
+  return (guint) *(const gint64*) v;
+}
+
+/**
+ * g_double_equal:
+ * @v1: a pointer to a #gdouble key.
+ * @v2: a pointer to a #gdouble key to compare with @v1.
+ *
+ * Compares the two #gdouble values being pointed to and returns 
+ * %TRUE if they are equal.
+ * It can be passed to g_hash_table_new() as the @key_equal_func
+ * parameter, when using pointers to doubles as keys in a #GHashTable.
+ * 
+ * Returns: %TRUE if the two keys match.
+ *
+ * Since: 2.22
+ */
+gboolean
+g_double_equal (gconstpointer v1,
+                gconstpointer v2)
+{
+  return *((const gdouble*) v1) == *((const gdouble*) v2);
+}
+
+/**
+ * g_double_hash:
+ * @v: a pointer to a #gdouble key
+ *
+ * Converts a pointer to a #gdouble to a hash value.
+ * It can be passed to g_hash_table_new() as the @hash_func parameter, 
+ * when using pointers to doubles as keys in a #GHashTable.
+ *
+ * Returns: a hash value corresponding to the key.
+ *
+ * Since: 2.22
+ */
+guint
+g_double_hash (gconstpointer v)
+{
+  return (guint) *(const gdouble*) v;
+}
+
+/**
  * g_nullify_pointer:
  * @nullify_location: the memory address of the pointer.
  * 
@@ -3231,10 +3497,10 @@ glib_gettext (const gchar *str)
       _glib_gettext_initialized = TRUE;
     }
   
-  return dgettext (GETTEXT_PACKAGE, str);
+  return g_dgettext (GETTEXT_PACKAGE, str);
 }
 
-#ifdef G_OS_WIN32
+#if defined (G_OS_WIN32) && !defined (_WIN64)
 
 /* Binary compatibility versions. Not for newly compiled code. */
 
@@ -3353,6 +3619,3 @@ g_get_tmp_dir (void)
 }
 
 #endif
-
-#define __G_UTILS_C__
-#include "galiasdef.c"

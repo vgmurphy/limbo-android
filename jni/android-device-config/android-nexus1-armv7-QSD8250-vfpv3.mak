@@ -4,15 +4,16 @@ ARCH_CFLAGS += \
 -std=gnu99 \
 -march=armv7-a \
 -mcpu=arm7 \
--mfloat-abi=softfp -mfpu=vfpv3 \
--mtune=arm7
+-mfloat-abi=softfp -mfpu=vfpv3
+
+#-mtune=arm7
 
 # Possible values: arm, thumb
 ARM_MODE=arm
 
 # Suppress some warnings
 ARCH_CFLAGS += -Wno-psabi
-ARCH_CFLAGS += -O3
+ARCH_CFLAGS += -O2
 
 # Smaller code generation for shared libraries, usually faster
 # if doesn't work use -fPIC

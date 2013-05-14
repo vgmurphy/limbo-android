@@ -18,10 +18,9 @@
  */
 #ifndef __G_GNULIB_H__
 
-#include <config.h>
+#include "config.h"
 #include <stdlib.h>
 #include "glib/glib.h"
-#include "glib/galias.h"
 
 /* Private namespace for gnulib functions */
 #define asnprintf        _g_gnulib_asnprintf

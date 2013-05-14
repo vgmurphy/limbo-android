@@ -32,9 +32,9 @@
 #include <sys/inotify.h>
 
 /* Timings for pairing MOVED_TO / MOVED_FROM events */
-#define PROCESS_EVENTS_TIME 1000 /* milliseconds (1 hz) */
+#define PROCESS_EVENTS_TIME 1000 /* 1000 milliseconds (1 hz) */
 #define DEFAULT_HOLD_UNTIL_TIME 0 /* 0 millisecond */
-#define MOVE_HOLD_UNTIL_TIME 0 /* 0 milliseconds */
+#define MOVE_HOLD_UNTIL_TIME 500 /* 500 microseconds or 0.5 milliseconds */
 
 static int inotify_instance_fd = -1;
 static GQueue *events_to_process = NULL;
@@ -187,10 +187,17 @@ gboolean _ik_startup (void (*cb)(ik_event_t *event))
   /* Ignore multi-calls */
   if (initialized) 
     return inotify_instance_fd >= 0;
-  
+
   initialized = TRUE;
-  inotify_instance_fd = inotify_init ();
-  
+
+#ifdef HAVE_INOTIFY_INIT1
+  inotify_instance_fd = inotify_init1 (IN_CLOEXEC);
+#else
+  inotify_instance_fd = -1;
+#endif
+  if (inotify_instance_fd < 0)
+    inotify_instance_fd = inotify_init ();
+
   if (inotify_instance_fd < 0)
     return FALSE;
 
@@ -201,6 +208,7 @@ gboolean _ik_startup (void (*cb)(ik_event_t *event))
   g_io_channel_set_flags (inotify_read_ioc, G_IO_FLAG_NONBLOCK, NULL);
 
   source = g_source_new (&ik_source_funcs, sizeof (GSource));
+  g_source_set_name (source, "GIO Inotify");
   g_source_add_poll (source, &ik_poll_fd);
   g_source_set_callback (source, ik_read_callback, NULL, NULL);
   g_source_attach (source, NULL);

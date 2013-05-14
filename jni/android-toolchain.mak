@@ -5,13 +5,13 @@ TARGET_ARCH ?= arm
 NDK_ROOT = /home/dev/tools/android-ndk-r8e
 MAKE += 
 #GCC_VERSION = 4.4.3
-GCC_VERSION = 4.6
-#GCC_VERSION = 4.7
+#GCC_VERSION = 4.6
+GCC_VERSION = 4.7
 NDK_PLATFORM = platforms/android-14
 
 #For ARM only
 #Possible values:armeabi, armeabi-v7a
-ARMEABI=armeabi
+ARMEABI=armeabi-v7a
 
 ################ No modifications below this line are necessary #####################
 

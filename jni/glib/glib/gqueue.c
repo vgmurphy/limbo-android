@@ -26,13 +26,14 @@
 
 #include "config.h"
 
-#include "glib.h"
-#include "galias.h"
+#include "gqueue.h"
+
+#include "gtestutils.h"
 
 /**
  * g_queue_new:
  *
- * Creates a new #GQueue. 
+ * Creates a new #GQueue.
  *
  * Returns: a new #GQueue.
  **/
@@ -1008,6 +1009,3 @@ g_queue_insert_sorted (GQueue           *queue,
   else
     g_queue_push_tail (queue, data);
 }
-
-#define __G_QUEUE_C__
-#include "galiasdef.c"

@@ -21,22 +21,21 @@
  * Modified by the GLib Team and others 1997-2000.  See the AUTHORS
  * file for a list of people on the GLib Team.  See the ChangeLog
  * files for a list of changes.  These files are distributed with
- * GLib at ftp://ftp.gtk.org/pub/gtk/. 
+ * GLib at ftp://ftp.gtk.org/pub/gtk/.
  */
 
-/* 
- * MT safe ; except for g_on_error_stack_trace, but who wants thread safety 
+/*
+ * MT safe ; except for g_on_error_stack_trace, but who wants thread safety
  * then
  */
 
 #include "config.h"
+#include "glibconfig.h"
 
 #include <signal.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "glib.h"
-#include "gprintfint.h"
 
 #ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
@@ -61,11 +60,18 @@
 #include <string.h> /* for bzero on BSD systems */
 
 #ifdef G_OS_WIN32
-#  define STRICT		/* Strict typing, please */
+#  define STRICT                /* Strict typing, please */
 #  define _WIN32_WINDOWS 0x0401 /* to get IsDebuggerPresent */
 #  include <windows.h>
 #  undef STRICT
 #endif
+
+#include "gbacktrace.h"
+
+#include "gtypes.h"
+#include "gmain.h"
+#include "gprintfint.h"
+
 
 #ifndef NO_FD_SET
 #  define SELECT_MASK fd_set
@@ -77,7 +83,6 @@
 #  endif
 #endif
 
-#include "galias.h"
 
 #ifndef G_OS_WIN32
 static void stack_trace (char **args);
@@ -97,27 +102,27 @@ g_on_error_query (const gchar *prg_name)
 
   if (!prg_name)
     prg_name = g_get_prgname ();
-  
+
  retry:
-  
+
   if (prg_name)
     _g_fprintf (stdout,
-		"%s (pid:%u): %s%s%s: ",
-		prg_name,
-		(guint) getpid (),
-		query1,
-		query2,
-		query3);
+                "%s (pid:%u): %s%s%s: ",
+                prg_name,
+                (guint) getpid (),
+                query1,
+                query2,
+                query3);
   else
     _g_fprintf (stdout,
-		"(process:%u): %s%s: ",
-		(guint) getpid (),
-		query1,
-		query3);
+                "(process:%u): %s%s: ",
+                (guint) getpid (),
+                query1,
+                query3);
   fflush (stdout);
-  
+
   if (isatty(0) && isatty(1))
-    fgets (buf, 8, stdin); 
+    fgets (buf, 8, stdin);
   else
     strcpy (buf, "E\n");
 
@@ -125,20 +130,20 @@ g_on_error_query (const gchar *prg_name)
       && buf[1] == '\n')
     _exit (0);
   else if ((buf[0] == 'P' || buf[0] == 'p')
-	   && buf[1] == '\n')
+           && buf[1] == '\n')
     return;
   else if (prg_name
-	   && (buf[0] == 'S' || buf[0] == 's')
-	   && buf[1] == '\n')
+           && (buf[0] == 'S' || buf[0] == 's')
+           && buf[1] == '\n')
     {
       g_on_error_stack_trace (prg_name);
       goto retry;
     }
   else if ((buf[0] == 'H' || buf[0] == 'h')
-	   && buf[1] == '\n')
+           && buf[1] == '\n')
     {
       while (glib_on_error_halt)
-	;
+        ;
       glib_on_error_halt = TRUE;
       return;
     }
@@ -147,10 +152,10 @@ g_on_error_query (const gchar *prg_name)
 #else
   if (!prg_name)
     prg_name = g_get_prgname ();
-  
+
   MessageBox (NULL, "g_on_error_query called, program terminating",
-	      (prg_name && *prg_name) ? prg_name : NULL,
-	      MB_OK|MB_ICONERROR);
+              (prg_name && *prg_name) ? prg_name : NULL,
+              MB_OK|MB_ICONERROR);
   _exit(0);
 #endif
 }
@@ -212,7 +217,7 @@ stack_trace (char **args)
   SELECT_MASK fdset;
   SELECT_MASK readset;
   struct timeval tv;
-  int sel, index, state;
+  int sel, idx, state;
   char buffer[256];
   char c;
 
@@ -249,7 +254,7 @@ stack_trace (char **args)
   write (in_fd[1], "p x = 0\n", 8);
   write (in_fd[1], "quit\n", 5);
 
-  index = 0;
+  idx = 0;
   state = 0;
 
   while (1)
@@ -272,18 +277,18 @@ stack_trace (char **args)
                   if (c == '#')
                     {
                       state = 1;
-                      index = 0;
-                      buffer[index++] = c;
+                      idx = 0;
+                      buffer[idx++] = c;
                     }
                   break;
                 case 1:
-                  buffer[index++] = c;
+                  buffer[idx++] = c;
                   if ((c == '\n') || (c == '\r'))
                     {
-                      buffer[index] = 0;
+                      buffer[idx] = 0;
                       _g_fprintf (stdout, "%s", buffer);
                       state = 0;
-                      index = 0;
+                      idx = 0;
                     }
                   break;
                 default:
@@ -303,6 +308,3 @@ stack_trace (char **args)
 }
 
 #endif /* !G_OS_WIN32 */
-
-#define __G_BACKTRACE_C__
-#include "galiasdef.c"

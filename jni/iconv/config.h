@@ -926,4 +926,4 @@
 # define DLL_VARIABLE
 #endif
 
-#include "../../iconv-config.h"
+#include "../iconv-config.h"

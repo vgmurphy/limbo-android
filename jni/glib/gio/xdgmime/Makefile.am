@@ -13,14 +13,11 @@ libxdgmime_la_SOURCES = \
 	xdgmimecache.h	\
 	xdgmimeglob.c 	\
 	xdgmimeglob.h 	\
+	xdgmimeicon.c	\
+	xdgmimeicon.h	\
 	xdgmimeint.c 	\
 	xdgmimeint.h 	\
 	xdgmimemagic.c  \
 	xdgmimemagic.h	\
 	xdgmimeparent.c	\
 	xdgmimeparent.h
-
-noinst_PROGRAMS = test-mime
-
-test_mime_LDADD = libxdgmime.la
-test_mime_SOURCES = test-mime.c

@@ -19,7 +19,9 @@
  * otherwise) arising in any way out of the use of this software, even
  * if advised of the possibility of such damage.
  */
-#include <glib/gtestutils.h>
+
+#include <glib.h>
+
 #include <stdlib.h>
 
 /* test assertion variants */
@@ -43,6 +45,20 @@ test_assertions (void)
   g_assert_cmpstr ("foo", <, "fzz");
   g_assert_cmpstr ("fzz", >, "faa");
   g_assert_cmpstr ("fzz", ==, "fzz");
+
+  if (g_test_trap_fork (0, G_TEST_TRAP_SILENCE_STDERR))
+    {
+      g_assert_cmpstr ("fzz", !=, "fzz");
+    }
+  g_test_trap_assert_failed ();
+  g_test_trap_assert_stderr ("*assertion failed*");
+
+  if (g_test_trap_fork (0, G_TEST_TRAP_SILENCE_STDERR))
+    {
+      g_assert_cmpint (4, !=, 4);
+    }
+  g_test_trap_assert_failed ();
+  g_test_trap_assert_stderr ("*assertion failed*");
 }
 
 /* test g_test_timer* API */
@@ -177,6 +193,49 @@ test_data_test (gconstpointer test_data)
   g_assert (test_data == (void*) 0xc0c0baba);
 }
 
+static void
+test_random_conversions (void)
+{
+  /* very simple conversion test using random numbers */
+  int vint = g_test_rand_int();
+  char *err, *str = g_strdup_printf ("%d", vint);
+  gint64 vint64 = g_ascii_strtoll (str, &err, 10);
+  g_assert_cmphex (vint, ==, vint64);
+  g_assert (!err || *err == 0);
+  g_free (str);
+}
+
+static gboolean
+fatal_handler (const gchar    *log_domain,
+               GLogLevelFlags  log_level,
+               const gchar    *message,
+               gpointer        user_data)
+{
+  return FALSE;
+}
+
+static void
+test_fatal_log_handler (void)
+{
+  g_test_log_set_fatal_handler (fatal_handler, NULL);
+  if (g_test_trap_fork (0, G_TEST_TRAP_SILENCE_STDERR))
+    {
+      g_str_has_prefix (NULL, "file://");
+      g_critical ("Test passing");
+      exit (0);
+    }
+  g_test_trap_assert_passed ();
+
+  g_test_log_set_fatal_handler (NULL, NULL);
+  if (g_test_trap_fork (0, G_TEST_TRAP_SILENCE_STDERR))
+    g_error ("Test failing");
+  g_test_trap_assert_failed ();
+
+  if (g_test_trap_fork (0, G_TEST_TRAP_SILENCE_STDERR))
+    g_str_has_prefix (NULL, "file://");
+  g_test_trap_assert_failed ();
+}
+
 int
 main (int   argc,
       char *argv[])
@@ -185,6 +244,7 @@ main (int   argc,
 
   g_test_add_func ("/random-generator/rand-1", test_rand1);
   g_test_add_func ("/random-generator/rand-2", test_rand2);
+  g_test_add_func ("/random-generator/random-conversions", test_random_conversions);
   g_test_add_func ("/misc/assertions", test_assertions);
   g_test_add_data_func ("/misc/test-data", (void*) 0xc0c0baba, test_data_test);
   g_test_add ("/misc/primetoul", Fixturetest, (void*) 0xc0cac01a, fixturetest_setup, fixturetest_test, fixturetest_teardown);
@@ -194,6 +254,7 @@ main (int   argc,
   g_test_add_func ("/forking/patterns", test_fork_patterns);
   if (g_test_slow())
     g_test_add_func ("/forking/timeout", test_fork_timeout);
+  g_test_add_func ("/misc/fatal-log-handler", test_fatal_log_handler);
 
   return g_test_run();
 }

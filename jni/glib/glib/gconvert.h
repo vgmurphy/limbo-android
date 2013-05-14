@@ -21,8 +21,12 @@
  * Modified by the GLib Team and others 1997-2000.  See the AUTHORS
  * file for a list of people on the GLib Team.  See the ChangeLog
  * files for a list of changes.  These files are distributed with
- * GLib at ftp://ftp.gtk.org/pub/gtk/. 
+ * GLib at ftp://ftp.gtk.org/pub/gtk/.
  */
+
+#if defined(G_DISABLE_SINGLE_INCLUDES) && !defined (__GLIB_H_INSIDE__) && !defined (GLIB_COMPILATION)
+#error "Only <glib.h> can be included directly."
+#endif
 
 #ifndef __G_CONVERT_H__
 #define __G_CONVERT_H__
@@ -31,7 +35,19 @@
 
 G_BEGIN_DECLS
 
-typedef enum 
+/**
+ * GConvertError:
+ * @G_CONVERT_ERROR_NO_CONVERSION: Conversion between the requested character
+ *     sets is not supported.
+ * @G_CONVERT_ERROR_ILLEGAL_SEQUENCE: Invalid byte sequence in conversion input.
+ * @G_CONVERT_ERROR_FAILED: Conversion failed for some reason.
+ * @G_CONVERT_ERROR_PARTIAL_INPUT: Partial character sequence at end of input.
+ * @G_CONVERT_ERROR_BAD_URI: URI is invalid.
+ * @G_CONVERT_ERROR_NOT_ABSOLUTE_PATH: Pathname is not an absolute path.
+ *
+ * Error codes returned by character set conversion routines.
+ */
+typedef enum
 {
   G_CONVERT_ERROR_NO_CONVERSION,
   G_CONVERT_ERROR_ILLEGAL_SEQUENCE,
@@ -41,10 +57,22 @@ typedef enum
   G_CONVERT_ERROR_NOT_ABSOLUTE_PATH
 } GConvertError;
 
+/**
+ * G_CONVERT_ERROR:
+ *
+ * Error domain for character set conversions. Errors in this domain will
+ * be from the #GConvertError enumeration. See #GError for information on
+ * error domains.
+ */
 #define G_CONVERT_ERROR g_convert_error_quark()
 GQuark g_convert_error_quark (void);
 
-/* Thin wrappers around iconv
+/**
+ * GIconv:
+ *
+ * The <structname>GIConv</structname> struct wraps an
+ * iconv() conversion descriptor. It contains private data
+ * and should only be accessed using the following functions.
  */
 typedef struct _GIConv *GIConv;
 
@@ -75,7 +103,7 @@ gchar* g_convert_with_fallback (const gchar  *str,
 				gssize        len,            
 				const gchar  *to_codeset,
 				const gchar  *from_codeset,
-				gchar        *fallback,
+				const gchar  *fallback,
 				gsize        *bytes_read,     
 				gsize        *bytes_written,  
 				GError      **error) G_GNUC_MALLOC;

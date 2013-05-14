@@ -21,8 +21,12 @@
  * Modified by the GLib Team and others 1997-2000.  See the AUTHORS
  * file for a list of people on the GLib Team.  See the ChangeLog
  * files for a list of changes.  These files are distributed with
- * GLib at ftp://ftp.gtk.org/pub/gtk/. 
+ * GLib at ftp://ftp.gtk.org/pub/gtk/.
  */
+
+#if defined(G_DISABLE_SINGLE_INCLUDES) && !defined (__GLIB_H_INSIDE__) && !defined (GLIB_COMPILATION)
+#error "Only <glib.h> can be included directly."
+#endif
 
 #ifndef __G_HASH_H__
 #define __G_HASH_H__
@@ -109,9 +113,22 @@ void        g_hash_table_unref             (GHashTable     *hash_table);
 
 #ifndef G_DISABLE_DEPRECATED
 
-/* The following two functions are deprecated and will be removed in
- * the next major release. They do no good. */
+/**
+ * g_hash_table_freeze:
+ * @hash_table: a #GHashTable
+ *
+ * This function is deprecated and will be removed in the next major
+ * release of GLib. It does nothing.
+ **/
 #define g_hash_table_freeze(hash_table) ((void)0)
+
+/**
+ * g_hash_table_thaw:
+ * @hash_table: a #GHashTable
+ *
+ * This function is deprecated and will be removed in the next major
+ * release of GLib. It does nothing.
+ **/
 #define g_hash_table_thaw(hash_table) ((void)0)
 
 #endif /* G_DISABLE_DEPRECATED */
@@ -126,6 +143,14 @@ gboolean g_int_equal (gconstpointer  v1,
                       gconstpointer  v2);
 guint    g_int_hash  (gconstpointer  v);
 
+gboolean g_int64_equal (gconstpointer  v1,
+                        gconstpointer  v2);
+guint    g_int64_hash  (gconstpointer  v);
+
+gboolean g_double_equal (gconstpointer  v1,
+                         gconstpointer  v2);
+guint    g_double_hash  (gconstpointer  v);
+
 /* This "hash" function will just return the key's address as an
  * unsigned integer. Useful for hashing on plain addresses or
  * simple integer values.
@@ -139,4 +164,3 @@ gboolean g_direct_equal (gconstpointer  v1,
 G_END_DECLS
 
 #endif /* __G_HASH_H__ */
-

@@ -57,10 +57,8 @@ static gchar* _g_module_get_member(const gchar* file_name)
   int fd;
 
   fd = open(file_name, O_RDONLY);
-  if (fd == -1){
-	LOGV("%s: Could not open file: %s", __func__, file_name);
+  if (fd == -1)
     return NULL;
-  }
 
   if (read(fd, (void*)&file_header, FL_HSZ) != FL_HSZ)
     goto exit;

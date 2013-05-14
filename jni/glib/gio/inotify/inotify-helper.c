@@ -32,13 +32,11 @@
 #include <sys/inotify.h>
 #include <gio/glocalfile.h>
 #include <gio/gfilemonitor.h>
+#include <gio/gfile.h>
 #include "inotify-helper.h"
 #include "inotify-missing.h"
 #include "inotify-path.h"
 #include "inotify-diag.h"
-
-#include "gioalias.h"
-
 
 static gboolean ih_debug_enabled = FALSE;
 #define IH_W if (ih_debug_enabled) g_warning 
@@ -85,7 +83,6 @@ _ih_startup (void)
   result = _ip_startup (ih_event_callback);
   if (!result)
     {
-      g_warning ("Could not initialize inotify\n");
       G_UNLOCK (inotify_lock);
       return FALSE;
     }
@@ -101,7 +98,7 @@ _ih_startup (void)
   return TRUE;
 }
 
-/**
+/*
  * Adds a subscription to be monitored.
  */
 gboolean
@@ -116,7 +113,7 @@ _ih_sub_add (inotify_sub *sub)
   return TRUE;
 }
 
-/**
+/*
  * Cancels a subscription which was being monitored.
  */
 gboolean
@@ -137,6 +134,32 @@ _ih_sub_cancel (inotify_sub *sub)
   return TRUE;
 }
 
+static char *
+_ih_fullpath_from_event (ik_event_t *event, const char *dirname)
+{
+  char *fullpath;
+
+  if (event->name)
+    fullpath = g_strdup_printf ("%s/%s", dirname, event->name);
+  else
+    fullpath = g_strdup_printf ("%s/", dirname);
+
+   return fullpath;
+}
+
+
+static gboolean
+ih_event_is_paired_move (ik_event_t *event)
+{
+  if (event->pair)
+    {
+      ik_event_t *paired = event->pair;
+      /* intofiy(7): IN_MOVE == IN_MOVED_FROM | IN_MOVED_TO */
+      return (event->mask | paired->mask) & IN_MOVE;
+    }
+
+    return FALSE;
+}
 
 static void
 ih_event_callback (ik_event_t  *event, 
@@ -144,24 +167,32 @@ ih_event_callback (ik_event_t  *event,
 {
   gchar *fullpath;
   GFileMonitorEvent eflags;
-  GFile* parent;
   GFile* child;
-  
+  GFile* other;
+
   eflags = ih_mask_to_EventFlags (event->mask);
-  parent = g_file_new_for_path (sub->dirname);
-  if (event->name)
-    fullpath = g_strdup_printf ("%s/%s", sub->dirname, event->name);
-  else
-    fullpath = g_strdup_printf ("%s/", sub->dirname);
-  
+  fullpath = _ih_fullpath_from_event (event, sub->dirname);
   child = g_file_new_for_path (fullpath);
   g_free (fullpath);
 
+  if (ih_event_is_paired_move (event) && sub->pair_moves)
+    {
+      const char *parent_dir = (char *) _ip_get_path_for_wd (event->pair->wd);
+      fullpath = _ih_fullpath_from_event (event->pair, parent_dir);
+      other = g_file_new_for_path (fullpath);
+      g_free (fullpath);
+      eflags = G_FILE_MONITOR_EVENT_MOVED;
+      event->pair = NULL; /* prevents the paired event to be emitted as well */
+    }
+  else
+    other = NULL;
+
   g_file_monitor_emit_event (G_FILE_MONITOR (sub->user_data),
-			     child, NULL, eflags);
+			     child, other, eflags);
 
   g_object_unref (child);
-  g_object_unref (parent);
+  if (other)
+    g_object_unref (other);
 }
 
 static void
@@ -170,10 +201,7 @@ ih_not_missing_callback (inotify_sub *sub)
   gchar *fullpath;
   GFileMonitorEvent eflags;
   guint32 mask;
-  GFile* parent;
   GFile* child;
-  
-  parent = g_file_new_for_path (sub->dirname);
 
   if (sub->filename)
     {
@@ -200,7 +228,6 @@ ih_not_missing_callback (inotify_sub *sub)
 			     child, NULL, eflags);
 
   g_object_unref (child);
-  g_object_unref (parent);
 }
 
 /* Transforms a inotify event to a GVFS event. */

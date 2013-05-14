@@ -20,12 +20,17 @@
  * Author: Alexander Larsson <alexl@redhat.com>
  */
 
-#include <config.h>
+#include "config.h"
 
 #include "gfileicon.h"
+#include "gfile.h"
+#include "gicon.h"
+#include "glibintl.h"
+#include "gloadableicon.h"
+#include "ginputstream.h"
 #include "gsimpleasyncresult.h"
+#include "gioerror.h"
 
-#include "gioalias.h"
 
 /**
  * SECTION:gfileicon
@@ -58,13 +63,56 @@ struct _GFileIconClass
   GObjectClass parent_class;
 };
 
+enum
+{
+  PROP_0,
+  PROP_FILE
+};
+
 G_DEFINE_TYPE_WITH_CODE (GFileIcon, g_file_icon, G_TYPE_OBJECT,
-			 G_IMPLEMENT_INTERFACE (G_TYPE_ICON,
-						g_file_icon_icon_iface_init);
-			 G_IMPLEMENT_INTERFACE (G_TYPE_LOADABLE_ICON,
-						g_file_icon_loadable_icon_iface_init);
-			 )
-  
+                         G_IMPLEMENT_INTERFACE (G_TYPE_ICON,
+                                                g_file_icon_icon_iface_init)
+                         G_IMPLEMENT_INTERFACE (G_TYPE_LOADABLE_ICON,
+                                                g_file_icon_loadable_icon_iface_init))
+
+static void
+g_file_icon_get_property (GObject    *object,
+                          guint       prop_id,
+                          GValue     *value,
+                          GParamSpec *pspec)
+{
+  GFileIcon *icon = G_FILE_ICON (object);
+
+  switch (prop_id)
+    {
+      case PROP_FILE:
+        g_value_set_object (value, icon->file);
+        break;
+
+      default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+    }
+}
+
+static void
+g_file_icon_set_property (GObject      *object,
+                          guint         prop_id,
+                          const GValue *value,
+                          GParamSpec   *pspec)
+{
+  GFileIcon *icon = G_FILE_ICON (object);
+
+  switch (prop_id)
+    {
+      case PROP_FILE:
+        icon->file = G_FILE (g_value_dup_object (value));
+        break;
+
+      default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+    }
+}
+
 static void
 g_file_icon_finalize (GObject *object)
 {
@@ -73,9 +121,8 @@ g_file_icon_finalize (GObject *object)
   icon = G_FILE_ICON (object);
 
   g_object_unref (icon->file);
-  
-  if (G_OBJECT_CLASS (g_file_icon_parent_class)->finalize)
-    (*G_OBJECT_CLASS (g_file_icon_parent_class)->finalize) (object);
+
+  G_OBJECT_CLASS (g_file_icon_parent_class)->finalize (object);
 }
 
 static void
@@ -83,7 +130,21 @@ g_file_icon_class_init (GFileIconClass *klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   
+  gobject_class->get_property = g_file_icon_get_property;
+  gobject_class->set_property = g_file_icon_set_property;
   gobject_class->finalize = g_file_icon_finalize;
+
+  /**
+   * GFileIcon:file:
+   *
+   * The file containing the icon.
+   */
+  g_object_class_install_property (gobject_class, PROP_FILE,
+                                   g_param_spec_object ("file",
+                                                        P_("file"),
+                                                        P_("The file containing the icon"),
+                                                        G_TYPE_FILE,
+                                                        G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_NAME | G_PARAM_STATIC_BLURB | G_PARAM_STATIC_NICK));
 }
 
 static void
@@ -102,14 +163,9 @@ g_file_icon_init (GFileIcon *file)
 GIcon *
 g_file_icon_new (GFile *file)
 {
-  GFileIcon *icon;
-
   g_return_val_if_fail (G_IS_FILE (file), NULL);
 
-  icon = g_object_new (G_TYPE_FILE_ICON, NULL);
-  icon->file = g_object_ref (file);
-  
-  return G_ICON (icon);
+  return G_ICON (g_object_new (G_TYPE_FILE_ICON, "file", file, NULL));
 }
 
 /**
@@ -146,12 +202,66 @@ g_file_icon_equal (GIcon *icon1,
   return g_file_equal (file1->file, file2->file);
 }
 
+static gboolean
+g_file_icon_to_tokens (GIcon *icon,
+		       GPtrArray *tokens,
+                       gint  *out_version)
+{
+  GFileIcon *file_icon = G_FILE_ICON (icon);
+
+  g_return_val_if_fail (out_version != NULL, FALSE);
+
+  *out_version = 0;
+
+  g_ptr_array_add (tokens, g_file_get_uri (file_icon->file));
+  return TRUE;
+}
+
+static GIcon *
+g_file_icon_from_tokens (gchar  **tokens,
+                         gint     num_tokens,
+                         gint     version,
+                         GError **error)
+{
+  GIcon *icon;
+  GFile *file;
+
+  icon = NULL;
+
+  if (version != 0)
+    {
+      g_set_error (error,
+                   G_IO_ERROR,
+                   G_IO_ERROR_INVALID_ARGUMENT,
+                   _("Can't handle version %d of GFileIcon encoding"),
+                   version);
+      goto out;
+    }
+
+  if (num_tokens != 1)
+    {
+      g_set_error_literal (error,
+                           G_IO_ERROR,
+                           G_IO_ERROR_INVALID_ARGUMENT,
+                           _("Malformed input data for GFileIcon"));
+      goto out;
+    }
+
+  file = g_file_new_for_uri (tokens[0]);
+  icon = g_file_icon_new (file);
+  g_object_unref (file);
+
+ out:
+  return icon;
+}
 
 static void
 g_file_icon_icon_iface_init (GIconIface *iface)
 {
   iface->hash = g_file_icon_hash;
   iface->equal = g_file_icon_equal;
+  iface->to_tokens = g_file_icon_to_tokens;
+  iface->from_tokens = g_file_icon_from_tokens;
 }
 
 
@@ -272,6 +382,3 @@ g_file_icon_loadable_icon_iface_init (GLoadableIconIface *iface)
   iface->load_async = g_file_icon_load_async;
   iface->load_finish = g_file_icon_load_finish;
 }
-
-#define __G_FILE_ICON_C__
-#include "gioaliasdef.c"

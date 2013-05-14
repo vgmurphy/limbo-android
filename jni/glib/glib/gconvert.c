@@ -21,12 +21,16 @@
  */
 
 #include "config.h"
+#include "glibconfig.h"
 
-#include "glib.h"
-
-#ifndef G_OS_WIN32
+#ifdef G_OS_WIN32
+#include "win_iconv.c"
+#else
+#ifdef USE_LIBICONV_GNU
 #include <iconv.h>
 #endif
+#endif
+
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
@@ -36,14 +40,25 @@
 #include "gthreadprivate.h"
 #include "gunicode.h"
 
-#ifdef G_OS_WIN32
-#include "win_iconv.c"
-#endif
-
 #ifdef G_PLATFORM_WIN32
 #define STRICT
 #include <windows.h>
 #undef STRICT
+#endif
+
+#include "gconvert.h"
+
+#include "gprintfint.h"
+#include "gslist.h"
+#include "gstrfuncs.h"
+#include "gtestutils.h"
+#include "gthread.h"
+#include "gthreadprivate.h"
+#include "gunicode.h"
+
+#ifdef NEED_ICONV_CACHE
+#include "glist.h"
+#include "ghash.h"
 #endif
 
 #include "glibintl.h"
@@ -55,7 +70,133 @@
 #error GNU libiconv not in use but included iconv.h is from libiconv
 #endif
 
-#include "galias.h"
+
+/**
+ * SECTION:conversions
+ * @title: Character Set Conversion
+ * @short_description: Convert strings between different character sets
+ *
+ * The g_convert() family of function wraps the functionality of iconv(). In
+ * addition to pure character set conversions, GLib has functions to deal
+ * with the extra complications of encodings for file names.
+ *
+ * <refsect2 id="file-name-encodings">
+ * <title>File Name Encodings</title>
+ * <para>
+ * Historically, Unix has not had a defined encoding for file
+ * names:  a file name is valid as long as it does not have path
+ * separators in it ("/").  However, displaying file names may
+ * require conversion:  from the character set in which they were
+ * created, to the character set in which the application
+ * operates.  Consider the Spanish file name
+ * "<filename>Presentaci&oacute;n.sxi</filename>".  If the
+ * application which created it uses ISO-8859-1 for its encoding,
+ * </para>
+ * <programlisting id="filename-iso8859-1">
+ * Character:  P  r  e  s  e  n  t  a  c  i  &oacute;  n  .  s  x  i
+ * Hex code:   50 72 65 73 65 6e 74 61 63 69 f3 6e 2e 73 78 69
+ * </programlisting>
+ * <para>
+ * However, if the application use UTF-8, the actual file name on
+ * disk would look like this:
+ * </para>
+ * <programlisting id="filename-utf-8">
+ * Character:  P  r  e  s  e  n  t  a  c  i  &oacute;     n  .  s  x  i
+ * Hex code:   50 72 65 73 65 6e 74 61 63 69 c3 b3 6e 2e 73 78 69
+ * </programlisting>
+ * <para>
+ * Glib uses UTF-8 for its strings, and GUI toolkits like GTK+
+ * that use Glib do the same thing.  If you get a file name from
+ * the file system, for example, from readdir(3) or from g_dir_read_name(),
+ * and you wish to display the file name to the user, you
+ * <emphasis>will</emphasis> need to convert it into UTF-8.  The
+ * opposite case is when the user types the name of a file he
+ * wishes to save:  the toolkit will give you that string in
+ * UTF-8 encoding, and you will need to convert it to the
+ * character set used for file names before you can create the
+ * file with open(2) or fopen(3).
+ * </para>
+ * <para>
+ * By default, Glib assumes that file names on disk are in UTF-8
+ * encoding.  This is a valid assumption for file systems which
+ * were created relatively recently:  most applications use UTF-8
+ * encoding for their strings, and that is also what they use for
+ * the file names they create.  However, older file systems may
+ * still contain file names created in "older" encodings, such as
+ * ISO-8859-1. In this case, for compatibility reasons, you may
+ * want to instruct Glib to use that particular encoding for file
+ * names rather than UTF-8.  You can do this by specifying the
+ * encoding for file names in the <link
+ * linkend="G_FILENAME_ENCODING"><envar>G_FILENAME_ENCODING</envar></link>
+ * environment variable.  For example, if your installation uses
+ * ISO-8859-1 for file names, you can put this in your
+ * <filename>~/.profile</filename>:
+ * </para>
+ * <programlisting>
+ * export G_FILENAME_ENCODING=ISO-8859-1
+ * </programlisting>
+ * <para>
+ * Glib provides the functions g_filename_to_utf8() and
+ * g_filename_from_utf8() to perform the necessary conversions. These
+ * functions convert file names from the encoding specified in
+ * <envar>G_FILENAME_ENCODING</envar> to UTF-8 and vice-versa.
+ * <xref linkend="file-name-encodings-diagram"/> illustrates how
+ * these functions are used to convert between UTF-8 and the
+ * encoding for file names in the file system.
+ * </para>
+ * <figure id="file-name-encodings-diagram">
+ * <title>Conversion between File Name Encodings</title>
+ * <graphic fileref="file-name-encodings.png" format="PNG"/>
+ * </figure>
+ * <refsect3 id="file-name-encodings-checklist">
+ * <title>Checklist for Application Writers</title>
+ * <para>
+ * This section is a practical summary of the detailed
+ * description above.  You can use this as a checklist of
+ * things to do to make sure your applications process file
+ * name encodings correctly.
+ * </para>
+ * <orderedlist>
+ * <listitem><para>
+ * If you get a file name from the file system from a function
+ * such as readdir(3) or gtk_file_chooser_get_filename(),
+ * you do not need to do any conversion to pass that
+ * file name to functions like open(2), rename(2), or
+ * fopen(3) &mdash; those are "raw" file names which the file
+ * system understands.
+ * </para></listitem>
+ * <listitem><para>
+ * If you need to display a file name, convert it to UTF-8 first by
+ * using g_filename_to_utf8(). If conversion fails, display a string like
+ * "<literal>Unknown file name</literal>". <emphasis>Do not</emphasis>
+ * convert this string back into the encoding used for file names if you
+ * wish to pass it to the file system; use the original file name instead.
+ * For example, the document window of a word processor could display
+ * "Unknown file name" in its title bar but still let the user save the
+ * file, as it would keep the raw file name internally. This can happen
+ * if the user has not set the <envar>G_FILENAME_ENCODING</envar>
+ * environment variable even though he has files whose names are not
+ * encoded in UTF-8.
+ * </para></listitem>
+ * <listitem><para>
+ * If your user interface lets the user type a file name for saving or
+ * renaming, convert it to the encoding used for file names in the file
+ * system by using g_filename_from_utf8(). Pass the converted file name
+ * to functions like fopen(3). If conversion fails, ask the user to enter
+ * a different file name. This can happen if the user types Japanese
+ * characters when <envar>G_FILENAME_ENCODING</envar> is set to
+ * <literal>ISO-8859-1</literal>, for example.
+ * </para></listitem>
+ * </orderedlist>
+ * </refsect3>
+ * </refsect2>
+ */
+
+/* We try to terminate strings in unknown charsets with this many zero bytes
+ * to ensure that multibyte strings really are nul-terminated when we return
+ * them from g_convert() and friends.
+ */
+#define NUL_TERMINATOR_LENGTH 4
 
 GQuark 
 g_convert_error_quark (void)
@@ -63,6 +204,7 @@ g_convert_error_quark (void)
   return g_quark_from_static_string ("g_convert_error");
 }
 
+#ifdef USE_LIBICONV_GNU
 static gboolean
 try_conversion (const char *to_codeset,
 		const char *from_codeset,
@@ -95,6 +237,7 @@ try_to_aliases (const char **to_aliases,
 
   return FALSE;
 }
+#endif /* USE_LIBICONV_GNU */
 
 G_GNUC_INTERNAL extern const char ** 
 _g_charset_get_aliases (const char *canonical_name);
@@ -118,6 +261,7 @@ GIConv
 g_iconv_open (const gchar  *to_codeset,
 	      const gchar  *from_codeset)
 {
+#ifdef USE_LIBICONV_GNU
   iconv_t cd;
   
   if (!try_conversion (to_codeset, from_codeset, &cd))
@@ -146,6 +290,9 @@ g_iconv_open (const gchar  *to_codeset,
 
  out:
   return (cd == (iconv_t)-1) ? (GIConv)-1 : (GIConv)cd;
+#else
+  return (GIConv)-1;
+#endif /* USE_LIBICONV_GNU */
 }
 
 /**
@@ -172,9 +319,13 @@ g_iconv (GIConv   converter,
 	 gchar  **outbuf,
 	 gsize   *outbytes_left)
 {
+#ifdef USE_LIBICONV_GNU
   iconv_t cd = (iconv_t)converter;
 
   return iconv (cd, inbuf, inbytes_left, outbuf, outbytes_left);
+#else
+  return -1;
+#endif /* USE_LIBICONV_GNU */
 }
 
 /**
@@ -195,13 +346,18 @@ g_iconv (GIConv   converter,
 gint
 g_iconv_close (GIConv converter)
 {
+#ifdef USE_LIBICONV_GNU
   iconv_t cd = (iconv_t)converter;
 
   return iconv_close (cd);
+#else
+  return -1;
+#endif /* USE_LIBICONV_GNU */
 }
 
 
 #ifdef NEED_ICONV_CACHE
+#ifdef USE_LIBICONV_GNU
 
 #define ICONV_CACHE_SIZE   (16)
 
@@ -488,6 +644,7 @@ close_converter (GIConv converter)
   return 0;
 }
 
+#endif /* USE_LIBICONV_GNU */
 #else  /* !NEED_ICONV_CACHE */
 
 static GIConv
@@ -595,9 +752,9 @@ g_convert_with_iconv (const gchar *str,
 
   p = str;
   inbytes_remaining = len;
-  outbuf_size = len + 1; /* + 1 for nul in case len == 1 */
+  outbuf_size = len + NUL_TERMINATOR_LENGTH;
   
-  outbytes_remaining = outbuf_size - 1; /* -1 for nul */
+  outbytes_remaining = outbuf_size - NUL_TERMINATOR_LENGTH;
   outp = dest = g_malloc (outbuf_size);
 
   while (!done && !have_error)
@@ -623,20 +780,23 @@ g_convert_with_iconv (const gchar *str,
 		dest = g_realloc (dest, outbuf_size);
 		
 		outp = dest + used;
-		outbytes_remaining = outbuf_size - used - 1; /* -1 for nul */
+		outbytes_remaining = outbuf_size - used - NUL_TERMINATOR_LENGTH;
 	      }
 	      break;
 	    case EILSEQ:
 	      if (error)
-		g_set_error (error, G_CONVERT_ERROR, G_CONVERT_ERROR_ILLEGAL_SEQUENCE,
-			     _("Invalid byte sequence in conversion input"));
+		g_set_error_literal (error, G_CONVERT_ERROR, G_CONVERT_ERROR_ILLEGAL_SEQUENCE,
+                                     _("Invalid byte sequence in conversion input"));
 	      have_error = TRUE;
 	      break;
 	    default:
-	      if (error)
-		g_set_error (error, G_CONVERT_ERROR, G_CONVERT_ERROR_FAILED,
-			     _("Error during conversion: %s"),
-			     g_strerror (errno));
+              {
+                int errsv = errno;
+                
+                g_set_error (error, G_CONVERT_ERROR, G_CONVERT_ERROR_FAILED,
+                             _("Error during conversion: %s"),
+                             g_strerror (errsv));
+              }
 	      have_error = TRUE;
 	      break;
 	    }
@@ -654,7 +814,7 @@ g_convert_with_iconv (const gchar *str,
 	}
     }
 
-  *outp = '\0';
+  memset (outp, 0, NUL_TERMINATOR_LENGTH);
   
   if (bytes_read)
     *bytes_read = p - str;
@@ -665,8 +825,8 @@ g_convert_with_iconv (const gchar *str,
           if (!have_error)
             {
 	      if (error)
-		g_set_error (error, G_CONVERT_ERROR, G_CONVERT_ERROR_PARTIAL_INPUT,
-			     _("Partial character sequence at end of input"));
+		g_set_error_literal (error, G_CONVERT_ERROR, G_CONVERT_ERROR_PARTIAL_INPUT,
+                                     _("Partial character sequence at end of input"));
               have_error = TRUE;
             }
 	}
@@ -799,7 +959,7 @@ g_convert_with_fallback (const gchar *str,
 			 gssize       len,    
 			 const gchar *to_codeset,
 			 const gchar *from_codeset,
-			 gchar       *fallback,
+			 const gchar *fallback,
 			 gsize       *bytes_read,
 			 gsize       *bytes_written,
 			 GError     **error)
@@ -881,8 +1041,8 @@ g_convert_with_fallback (const gchar *str,
    */
   p = utf8;
 
-  outbuf_size = len + 1; /* + 1 for nul in case len == 1 */
-  outbytes_remaining = outbuf_size - 1; /* -1 for nul */
+  outbuf_size = len + NUL_TERMINATOR_LENGTH;
+  outbytes_remaining = outbuf_size - NUL_TERMINATOR_LENGTH;
   outp = dest = g_malloc (outbuf_size);
 
   while (!done && !have_error)
@@ -906,7 +1066,7 @@ g_convert_with_fallback (const gchar *str,
 		dest = g_realloc (dest, outbuf_size);
 		
 		outp = dest + used;
-		outbytes_remaining = outbuf_size - used - 1; /* -1 for nul */
+		outbytes_remaining = outbuf_size - used - NUL_TERMINATOR_LENGTH;
 		
 		break;
 	      }
@@ -940,9 +1100,14 @@ g_convert_with_fallback (const gchar *str,
 		}
 	      /* fall thru if p is NULL */
 	    default:
-	      g_set_error (error, G_CONVERT_ERROR, G_CONVERT_ERROR_FAILED,
-			   _("Error during conversion: %s"),
-			   g_strerror (errno));
+              {
+                int errsv = errno;
+
+                g_set_error (error, G_CONVERT_ERROR, G_CONVERT_ERROR_FAILED,
+                             _("Error during conversion: %s"),
+                             g_strerror (errsv));
+              }
+
 	      have_error = TRUE;
 	      break;
 	    }
@@ -970,7 +1135,7 @@ g_convert_with_fallback (const gchar *str,
 
   /* Cleanup
    */
-  *outp = '\0';
+  memset (outp, 0, NUL_TERMINATOR_LENGTH);
   
   close_converter (cd);
 
@@ -1013,8 +1178,8 @@ strdup_len (const gchar *string,
       if (bytes_written)
 	*bytes_written = 0;
 
-      g_set_error (error, G_CONVERT_ERROR, G_CONVERT_ERROR_ILLEGAL_SEQUENCE,
-		   _("Invalid byte sequence in conversion input"));
+      g_set_error_literal (error, G_CONVERT_ERROR, G_CONVERT_ERROR_ILLEGAL_SEQUENCE,
+                           _("Invalid byte sequence in conversion input"));
       return NULL;
     }
   
@@ -1331,11 +1496,14 @@ g_filename_to_utf8 (const gchar *opsysstring,
 		      "UTF-8", charset, bytes_read, bytes_written, error);
 }
 
-#ifdef G_OS_WIN32
+#if defined (G_OS_WIN32) && !defined (_WIN64)
 
 #undef g_filename_to_utf8
 
-/* Binary compatibility version. Not for newly compiled code. */
+/* Binary compatibility version. Not for newly compiled code. Also not needed for
+ * 64-bit versions as there should be no old deployed binaries that would use
+ * the old versions.
+ */
 
 gchar*
 g_filename_to_utf8 (const gchar *opsysstring, 
@@ -1396,7 +1564,7 @@ g_filename_from_utf8 (const gchar *utf8string,
 		      charset, "UTF-8", bytes_read, bytes_written, error);
 }
 
-#ifdef G_OS_WIN32
+#if defined (G_OS_WIN32) && !defined (_WIN64)
 
 #undef g_filename_from_utf8
 
@@ -1831,7 +1999,7 @@ g_filename_from_uri (const gchar *uri,
   return result;
 }
 
-#ifdef G_OS_WIN32
+#if defined (G_OS_WIN32) && !defined (_WIN64)
 
 #undef g_filename_from_uri
 
@@ -1890,8 +2058,8 @@ g_filename_to_uri (const gchar *filename,
       !(g_utf8_validate (hostname, -1, NULL)
 	&& hostname_validate (hostname)))
     {
-      g_set_error (error, G_CONVERT_ERROR, G_CONVERT_ERROR_ILLEGAL_SEQUENCE,
-		   _("Invalid hostname"));
+      g_set_error_literal (error, G_CONVERT_ERROR, G_CONVERT_ERROR_ILLEGAL_SEQUENCE,
+                           _("Invalid hostname"));
       return NULL;
     }
   
@@ -1906,7 +2074,7 @@ g_filename_to_uri (const gchar *filename,
   return escaped_uri;
 }
 
-#ifdef G_OS_WIN32
+#if defined (G_OS_WIN32) && !defined (_WIN64)
 
 #undef g_filename_to_uri
 
@@ -2108,6 +2276,3 @@ g_filename_display_name (const gchar *filename)
 
   return display_name;
 }
-
-#define __G_CONVERT_C__
-#include "galiasdef.c"

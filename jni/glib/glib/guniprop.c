@@ -26,12 +26,18 @@
 #include <string.h>
 #include <locale.h>
 
-#include "glib.h"
+#include "gmem.h"
+#include "gstring.h"
+#include "gtestutils.h"
+#include "gtypes.h"
+#include "gunicode.h"
 #include "gunichartables.h"
 #include "gmirroringtable.h"
 #include "gscripttable.h"
 #include "gunicodeprivate.h"
-#include "galias.h"
+#ifdef G_OS_WIN32
+#include "gwin32.h"
+#endif
 
 #define ATTR_TABLE(Page) (((Page) <= G_UNICODE_LAST_PAGE_PART1) \
                           ? attr_table_part1[Page] \
@@ -175,10 +181,9 @@ g_unichar_isgraph (gunichar c)
 	      OR (G_UNICODE_CONTROL,
 	      OR (G_UNICODE_FORMAT,
 	      OR (G_UNICODE_UNASSIGNED,
-	      OR (G_UNICODE_PRIVATE_USE,
 	      OR (G_UNICODE_SURROGATE,
 	      OR (G_UNICODE_SPACE_SEPARATOR,
-	     0)))))));
+	     0))))));
 }
 
 /**
@@ -216,9 +221,8 @@ g_unichar_isprint (gunichar c)
 	      OR (G_UNICODE_CONTROL,
 	      OR (G_UNICODE_FORMAT,
 	      OR (G_UNICODE_UNASSIGNED,
-	      OR (G_UNICODE_PRIVATE_USE,
 	      OR (G_UNICODE_SURROGATE,
-	     0))))));
+	     0)))));
 }
 
 /**
@@ -377,7 +381,10 @@ g_unichar_isxdigit (gunichar c)
 gboolean
 g_unichar_isdefined (gunichar c)
 {
-  return TYPE (c) != G_UNICODE_UNASSIGNED;
+  return !IS (TYPE(c),
+	      OR (G_UNICODE_UNASSIGNED,
+	      OR (G_UNICODE_SURROGATE,
+	     0)));
 }
 
 /**
@@ -478,6 +485,10 @@ g_unichar_iswide (gunichar c)
  * the converse is not necessarily true.  See the
  * <ulink url="http://www.unicode.org/reports/tr11/">Unicode Standard
  * Annex #11</ulink> for details.
+ *
+ * If a character passes the g_unichar_iswide() test then it will also pass
+ * this test, but not the other way around.  Note that some characters may
+ * pas both this test and g_unichar_iszerowidth().
  * 
  * Return value: %TRUE if the character is wide in legacy East Asian locales
  *
@@ -1291,7 +1302,3 @@ g_unichar_get_script (gunichar ch)
   else 
     return g_unichar_get_script_bsearch (ch); 
 }
-
-
-#define __G_UNIPROP_C__
-#include "galiasdef.c"

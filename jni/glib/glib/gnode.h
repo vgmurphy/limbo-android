@@ -21,8 +21,12 @@
  * Modified by the GLib Team and others 1997-2000.  See the AUTHORS
  * file for a list of people on the GLib Team.  See the ChangeLog
  * files for a list of changes.  These files are distributed with
- * GLib at ftp://ftp.gtk.org/pub/gtk/. 
+ * GLib at ftp://ftp.gtk.org/pub/gtk/.
  */
+
+#if defined(G_DISABLE_SINGLE_INCLUDES) && !defined (__GLIB_H_INSIDE__) && !defined (GLIB_COMPILATION)
+#error "Only <glib.h> can be included directly."
+#endif
 
 #ifndef __G_NODE_H__
 #define __G_NODE_H__
@@ -246,7 +250,8 @@ GNode*	 g_node_last_sibling	 (GNode		  *node);
  *
  * Gets the previous sibling of a #GNode.
  *
- * Returns: the previous sibling of @node, or %NULL if @node is %NULL
+ * Returns: the previous sibling of @node, or %NULL if @node is the first
+ *     node or %NULL
  */
 #define	 g_node_prev_sibling(node)	((node) ? \
 					 ((GNode*) (node))->prev : NULL)
@@ -257,7 +262,8 @@ GNode*	 g_node_last_sibling	 (GNode		  *node);
  *
  * Gets the next sibling of a #GNode.
  *
- * Returns: the next sibling of @node, or %NULL if @node is %NULL
+ * Returns: the next sibling of @node, or %NULL if @node is the last node
+ *     or %NULL
  */
 #define	 g_node_next_sibling(node)	((node) ? \
 					 ((GNode*) (node))->next : NULL)
@@ -278,6 +284,7 @@ GNode*	 g_node_last_sibling	 (GNode		  *node);
 void     g_node_push_allocator  (gpointer          dummy);
 void     g_node_pop_allocator   (void);
 #endif
+
 G_END_DECLS
 
 #endif /* __G_NODE_H__ */

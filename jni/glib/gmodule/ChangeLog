@@ -1,22 +1,155 @@
-2008-09-12  Matthias Clasen  <mclasen@redhat.com>
+=== ChangeLog discontinued ===
 
-	* === Released 2.16.6 ===
+	With the move to git, GLib is switching from a ChangeLog file
+	to relying on commit messages to provide change history. Please
+	see README.commits for guidance on the expected message format.
 
-2008-07-19  Matthias Clasen  <mclasen@redhat.com>
+2009-03-13  Matthias Clasen  <mclasen@redhat.com>
 
-	* === Released 2.16.5 === 
+	* === Released 2.20.0 ===
 
-2008-07-01  Matthias Clasen  <mclasen@redhat.com>
+2009-03-02  Matthias Clasen <mclasen@redhat.com>
+
+	* === Released 2.19.10 ===
+
+2009-03-02  Matthias Clasen <mclasen@redhat.com>
+
+	* === Released 2.19.9 ===
+
+2009-03-01  Matthias Clasen  <mclasen@redhat.com>
+
+	Bug 71704 - Header file include order
+
+	* gmodule.c: Include gmodule.h before io.h.
+	Pointed out by Kazuki Iwamoto
+
+2009-02-17  Matthias Clasen  <mclasen@redhat.com>
+
+	* === Released 2.19.8 ===
+
+2009-02-16  Matthias Clasen  <mclasen@redhat.com>
+
+	* === Released 2.19.7 ===
+
+2009-02-02  Matthias Clasen  <mclasen@redhat.com>
+
+	* === Released 2.19.6 ===
+
+2009-01-19  Matthias Clasen  <mclasen@redhat.com>
+
+	* === Released 2.19.5 ===
+
+2009-01-05  Matthias Clasen  <mclasen@redhat.com>
+
+	* === Released 2.19.4 ===
+
+2008-12-15  Matthias Clasen <mclasen@redhat.com>
+
+	* === Released 2.19.3 ===
+
+2008-12-01  Matthias Clasen  <mclasen@redhat.com>
+
+	* === Released 2.19.2 ===
+
+2008-12-01  Matthias Clasen  <mclasen@redhat.com>
+
+	* === Released 2.19.1 ===
+
+2008-10-16  Matthias Clasen <mclasen@redhat.com>
+
+	* === Released 2.19.0 ===
+
+2008-09-26  Tor Lillqvist  <tml@novell.com>
+
+	* gmodule-win32.c: Improve error reporting: When g_module_open()
+	fails, include the name of the module passed to LoadLibrary() in
+	what g_module_error() returns.
+
+2008-09-17  Matthias Clasen  <mclasen@redhat.com>
+
+	* === Released 2.18.1 ===
+
+2008-09-08  Tor Lillqvist  <tml@novell.com>
+
+	Bug 551408 - gmodule.def generated to builddir, but required in srcdir
+
+	* Makefile.am: Use gmodule.def from builddir, not srcdir.
+
+2008-09-02  Matthias Clasen  <mclasen@redhat.com>
+
+	* === Released 2.18.0 ===
+
+2008-08-18  Matthias Clasen  <mclasen@redhat.com>
+
+	* === Released 2.17.7 ===
+
+2008-08-04  Matthias Clasen  <mclasen@redhat.com>
+
+	* === Released 2.17.6 ===
+
+2008-08-04  Matthias Clasen  <mclasen@redhat.com>
+
+	* === Released 2.17.5 ===
+
+2008-08-01  Hans Breuer  <hans@breuer.org>
+
+	* makefile.msc.in : adapt to gmodule.symbols usage
+
+2008-07-27  Tor Lillqvist  <tml@novell.com>
+
+	* gmodule.symbols: New file.
+
+	* gmodule.c: Bypass the Windows ABI compatibility symbols on
+	64-bit Windows. Thus no need to keep the file name in system
+	codepage around on 64-bit Windows either.
 	
-	* === Released 2.16.4 ===
+	* Makefile.am: Produce gmodule.def from gmodule.symbols. Dist
+	gmodule.symbols instead of gmodule.def.
 
-2008-04-08  Matthias Clasen  <mclasen@redhat.com>
+	* gmodule.def: Drop from SVN.
 
-	* === Released 2.16.3 ===
+2008-07-27  Tor Lillqvist  <tml@novell.com>
 
-2008-03-31  Matthias Clasen  <mclasen@redhat.com>
+	* Makefile.am (gmodule-2.0.lib): Pass appropriate -machine flag to
+	lib.exe.
 
-	* === Released 2.16.2 ===
+2008-07-21  Matthias Clasen  <mclasen2redhat.com>
+
+	* === Released 2.17.4 ===
+
+2008-07-02  Matthias Clasen  <mclasen@redhat.com>
+
+	* === Released 2.17.3 ===
+
+2008-06-12  Matthias Clasen  <mclasen@redhat.com>
+	
+	* === Released 2.17.2 ===
+
+2008-06-12  Matthias Clasen  <mclasen@redhat.com>
+
+	* === Released 2.17.1 ===
+
+2008-05-28  Michael Natterer  <mitch@imendio.com>
+
+	* Makefile.am: don't define G_DISABLE_SINGLE_INCLUDES, it's in
+	the global CPPFLAGS now.
+
+2008-05-27  Matthias Clasen  <mclasen@redhat.com>
+
+	* === Released 2.17.0 ===
+
+2008-05-05  Michael Natterer  <mitch@imendio.com>
+
+	* Makefile.am. build with G_DISABLE_SINGLE_INCLUDES to prevent
+	code from being checked in that breaks the build of applications
+	which use G_DISABLE_SINGLE_INCLUDES.
+
+	* gmodule.c: #include "glib.h" instead of "glibconfig.h"
+
+2008-03-16  Tor Lillqvist  <tml@novell.com>
+
+	* Makefile.am: Define gmodule_def locally here instead of using an
+	Autoconf variable.
 
 2008-03-10  Matthias Clasen  <mclasen@redhat.com>
 	

@@ -20,20 +20,22 @@
  * Author: Alexander Larsson <alexl@redhat.com>
  */
 
-#include <config.h>
+#include "config.h"
 
+#include "gioenumtypes.h"
 #include "glocalfilemonitor.h"
 #include "giomodule-priv.h"
+#include "gioerror.h"
 #include "glibintl.h"
 
 #include <string.h>
 
-#include "gioalias.h"
 
 enum
 {
   PROP_0,
-  PROP_FILENAME
+  PROP_FILENAME,
+  PROP_FLAGS
 };
 
 G_DEFINE_ABSTRACT_TYPE (GLocalFileMonitor, g_local_file_monitor, G_TYPE_FILE_MONITOR)
@@ -54,6 +56,9 @@ g_local_file_monitor_set_property (GObject      *object,
     case PROP_FILENAME:
       /* Do nothing */
       break;
+    case PROP_FLAGS:
+      /* Do nothing as well */
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -70,6 +75,7 @@ g_local_file_monitor_constructor (GType                  type,
   GObjectClass *parent_class;
   GLocalFileMonitor *local_monitor;
   const gchar *filename = NULL;
+  GFileMonitorFlags flags = 0;
   gint i;
   
   klass = G_LOCAL_FILE_MONITOR_CLASS (g_type_class_peek (G_TYPE_LOCAL_FILE_MONITOR));
@@ -86,13 +92,18 @@ g_local_file_monitor_constructor (GType                  type,
         {
           g_warn_if_fail (G_VALUE_HOLDS_STRING (construct_properties[i].value));
           filename = g_value_get_string (construct_properties[i].value);
-          break;
+        }
+      else if (strcmp ("flags", g_param_spec_get_name (construct_properties[i].pspec)) == 0)
+        {
+          g_warn_if_fail (G_VALUE_HOLDS_FLAGS (construct_properties[i].value));
+          flags = g_value_get_flags (construct_properties[i].value);
         }
     }
 
   g_warn_if_fail (filename != NULL);
 
   local_monitor->filename = g_strdup (filename);
+  local_monitor->flags = flags;
   return obj;
 }
 
@@ -106,8 +117,7 @@ g_local_file_monitor_finalize (GObject *object)
       local_monitor->filename = NULL;
     }
 
-  if (G_OBJECT_CLASS (g_local_file_monitor_parent_class)->finalize)
-    (*G_OBJECT_CLASS (g_local_file_monitor_parent_class)->finalize) (object);
+  G_OBJECT_CLASS (g_local_file_monitor_parent_class)->finalize (object);
 }
 
 static void g_local_file_monitor_class_init (GLocalFileMonitorClass *klass)
@@ -127,6 +137,17 @@ static void g_local_file_monitor_class_init (GLocalFileMonitorClass *klass)
                                                         G_PARAM_CONSTRUCT_ONLY|
                                                         G_PARAM_WRITABLE|
                                                         G_PARAM_STATIC_NAME|G_PARAM_STATIC_NICK|G_PARAM_STATIC_BLURB));
+
+  g_object_class_install_property (gobject_class,
+                                   PROP_FLAGS,
+                                   g_param_spec_flags ("flags",
+						       P_("Monitor flags"),
+						       P_("Monitor flags"),
+						       G_TYPE_FILE_MONITOR_FLAGS,
+						       0,
+						       G_PARAM_CONSTRUCT_ONLY|
+						       G_PARAM_WRITABLE|
+						       G_PARAM_STATIC_NAME|G_PARAM_STATIC_NICK|G_PARAM_STATIC_BLURB));
 }
 
 static gpointer
@@ -169,13 +190,6 @@ get_default_local_file_monitor (gpointer data)
     return (gpointer)G_TYPE_INVALID;
 }
 
-/**
- * g_local_file_monitor_new:
- * @pathname: path name to monitor.
- * @flags: #GFileMonitorFlags.
- * 
- * Returns: a new #GFileMonitor for the given @pathname. 
- **/
 GFileMonitor*
 _g_local_file_monitor_new (const char         *pathname,
 			   GFileMonitorFlags   flags,
@@ -192,9 +206,10 @@ _g_local_file_monitor_new (const char         *pathname,
 
   monitor = NULL;
   if (type != G_TYPE_INVALID)
-    monitor = G_FILE_MONITOR (g_object_new (type, "filename", pathname, NULL));
+    monitor = G_FILE_MONITOR (g_object_new (type, "filename", pathname, "flags", flags, NULL));
   else
-    g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED, _("Unable to find default local file monitor type"));
+    g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                         _("Unable to find default local file monitor type"));
 
   /* This is non-null on first pass here. Unref the class now.
    * This is to avoid unloading the module and then loading it
@@ -207,6 +222,3 @@ _g_local_file_monitor_new (const char         *pathname,
   
   return monitor;
 }
-
-#define __G_LOCAL_FILE_MONITOR_C__
-#include "gioaliasdef.c"

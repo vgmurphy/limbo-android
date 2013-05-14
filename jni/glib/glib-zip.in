@@ -14,10 +14,16 @@ cp -p @abs_srcdir@/COPYING share/doc/glib-@GLIB_VERSION@
 mkdir -p share/doc/glib-dev-@GLIB_VERSION@
 cp -p @abs_srcdir@/COPYING share/doc/glib-dev-@GLIB_VERSION@
 
+if test @LIB_EXE_MACHINE_FLAG@ = X64; then
+  helperbits=64
+else
+  helperbits=32
+fi
+
 rm $ZIP
 zip $ZIP -@ <<EOF
-bin/gspawn-win32-helper.exe
-bin/gspawn-win32-helper-console.exe
+bin/gspawn-win${helperbits}-helper.exe
+bin/gspawn-win${helperbits}-helper-console.exe
 bin/libglib-2.0-@LT_CURRENT_MINUS_AGE@.dll
 bin/libgio-2.0-@LT_CURRENT_MINUS_AGE@.dll
 bin/libgmodule-2.0-@LT_CURRENT_MINUS_AGE@.dll
@@ -25,22 +31,12 @@ bin/libgobject-2.0-@LT_CURRENT_MINUS_AGE@.dll
 bin/libgthread-2.0-@LT_CURRENT_MINUS_AGE@.dll
 EOF
 
-if [ -f lib/locale/de/LC_MESSAGES/glib20.mo -a -f share/locale/de/LC_MESSAGES/glib20.mo ]; then
-  if [ lib/locale/de/LC_MESSAGES/glib20.mo -nt share/locale/de/LC_MESSAGES/glib20.mo ]; then
-    zip -r $ZIP lib/locale/*/LC_MESSAGES/glib20.mo
-  else
-    zip -r $ZIP share/locale/*/LC_MESSAGES/glib20.mo
-  fi
-elif [ -f lib/locale/de/LC_MESSAGES/glib20.mo ]; then
-  zip -r $ZIP lib/locale/*/LC_MESSAGES/glib20.mo
-else
-  zip -r $ZIP share/locale/*/LC_MESSAGES/glib20.mo
-fi
+zip $ZIP share/locale/*/LC_MESSAGES/glib20.mo
 
-zip -r $ZIP share/doc/glib-@GLIB_VERSION@
+zip -r -D $ZIP share/doc/glib-@GLIB_VERSION@
 
 rm $DEVZIP
-zip -r $DEVZIP -@ <<EOF
+zip -r -D $DEVZIP -@ <<EOF
 bin/glib-genmarshal.exe
 bin/glib-gettextize
 bin/glib-mkenums
@@ -68,13 +64,14 @@ lib/pkgconfig/gmodule-no-export-2.0.pc
 lib/pkgconfig/gobject-2.0.pc
 lib/pkgconfig/gthread-2.0.pc
 lib/pkgconfig/gio-2.0.pc
+lib/pkgconfig/gio-windows-2.0.pc
 share/aclocal/glib-2.0.m4
 share/aclocal/glib-gettext.m4
 share/glib-2.0
-share/gtk-doc/html/glib
-share/gtk-doc/html/gobject
-man/man1/glib-mkenums.1
-man/man1/glib-genmarshal.1
+share/gtk-doc/html
+share/man/man1/glib-mkenums.1
+share/man/man1/glib-genmarshal.1
+share/man/man1/gobject-query.1
 EOF
 
 zip -r $DEVZIP share/doc/glib-dev-@GLIB_VERSION@

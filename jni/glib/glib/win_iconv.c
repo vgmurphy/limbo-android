@@ -706,10 +706,20 @@ static RFC1766TOLCIDA Rfc1766ToLcidA;
 static int
 load_mlang()
 {
-    HMODULE h;
+    HMODULE h = NULL;
+    char mlang_dll[MAX_PATH + 100];
+    int n;
     if (ConvertINetString != NULL)
         return TRUE;
-    h = LoadLibrary("mlang.dll");
+    n = GetSystemDirectory(mlang_dll, MAX_PATH);
+    if (n > 0 && n < MAX_PATH)
+    {
+        if (mlang_dll[n-1] != '\\' &&
+            mlang_dll[n-1] != '/')
+            strcat(mlang_dll, "\\");
+        strcat(mlang_dll, "mlang.dll");
+        h = LoadLibrary(mlang_dll);
+    }
     if (!h)
         return FALSE;
     ConvertINetString = (CONVERTINETSTRING)GetProcAddress(h, "ConvertINetString");
@@ -1362,6 +1372,12 @@ kernel_mbtowc(csconv_t *cv, const uchar *buf, int bufsize, ushort *wbuf, int *wb
     len = cv->mblen(cv, buf, bufsize);
     if (len == -1)
         return -1;
+    /* If converting from ASCII, reject 8bit
+     * chars. MultiByteToWideChar() doesn't. Note that for ASCII we
+     * know that the mblen function is sbcs_mblen() so len is 1.
+     */
+    if (cv->codepage == 20127 && buf[0] >= 0x80)
+        return_error(EILSEQ);
     *wbufsize = MultiByteToWideChar(cv->codepage, mbtowc_flags (cv->codepage),
             (const char *)buf, len, (wchar_t *)wbuf, *wbufsize);
     if (*wbufsize == 0)
@@ -1947,4 +1963,3 @@ main(int argc, char **argv)
     return 0;
 }
 #endif
-

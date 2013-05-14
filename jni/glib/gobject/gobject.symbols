@@ -1,7 +1,5 @@
 /* This file lists all exported symbols. It is used to generate
- * the gobject.def file used to control exports on Windows and the
- * gobjectalias.h/gobjectaliasdef.c files used to avoid PLT entries for 
- * internal uses of exported functions (see makegobjectalias.pl).
+ * the gobject.def file used to control exports on Windows.
  * 
  * Every symbol must be included in the right
  * #ifdef IN_HEADER(sym) #endif and
@@ -11,16 +9,38 @@
 #define IN_FILE(x) 1
 #define IN_HEADER(x) 1
 #endif
+
+#if IN_HEADER(__G_BINDING_H__)
+#if IN_FILE(__G_BINDING_C__)
+g_binding_flags_get_type G_GNUC_CONST
+g_binding_get_type G_GNUC_CONST
+g_binding_get_flags
+g_binding_get_source
+g_binding_get_target
+g_binding_get_source_property
+g_binding_get_target_property
+g_object_bind_property
+g_object_bind_property_full
+g_object_bind_property_with_closures
+#endif
+#endif
+
 #if IN_HEADER(__G_BOXED_H__)
 #if IN_FILE(__G_BOXED_C__)
 g_boxed_copy
 g_boxed_free
 g_boxed_type_register_static
 g_date_get_type G_GNUC_CONST
+g_date_time_get_type G_GNUC_CONST
 g_gstring_get_type G_GNUC_CONST
 g_strv_get_type G_GNUC_CONST
 g_hash_table_get_type G_GNUC_CONST
+g_array_get_type G_GNUC_CONST
+g_byte_array_get_type G_GNUC_CONST
+g_error_get_type G_GNUC_CONST
+g_ptr_array_get_type G_GNUC_CONST
 g_regex_get_type G_GNUC_CONST
+g_variant_type_get_gtype G_GNUC_CONST
 g_closure_get_type G_GNUC_CONST
 g_value_get_type G_GNUC_CONST
 g_value_array_get_type G_GNUC_CONST
@@ -31,6 +51,7 @@ g_value_get_boxed
 g_value_set_static_boxed
 #ifndef G_DISABLE_DEPRECATED
 g_value_set_boxed_take_ownership
+g_variant_get_gtype G_GNUC_CONST
 #endif
 #endif
 #endif
@@ -38,6 +59,7 @@ g_value_set_boxed_take_ownership
 #if IN_HEADER(__G_MARSHAL_H__)
 #if IN_FILE(__G_SIGNAL_C__)
 g_cclosure_marshal_BOOLEAN__FLAGS
+g_cclosure_marshal_BOOLEAN__BOXED_BOXED
 g_cclosure_marshal_STRING__OBJECT_POINTER
 g_cclosure_marshal_VOID__BOOLEAN
 g_cclosure_marshal_VOID__BOXED
@@ -56,6 +78,7 @@ g_cclosure_marshal_VOID__UCHAR
 g_cclosure_marshal_VOID__UINT
 g_cclosure_marshal_VOID__UINT_POINTER
 g_cclosure_marshal_VOID__ULONG
+g_cclosure_marshal_VOID__VARIANT
 g_cclosure_marshal_VOID__VOID
 #endif
 #endif
@@ -117,6 +140,7 @@ g_initially_unowned_get_type
 g_object_add_weak_pointer
 g_object_class_find_property
 g_object_class_install_property
+g_object_class_install_properties
 g_object_class_list_properties
 g_object_class_override_property
 g_object_connect G_GNUC_NULL_TERMINATED
@@ -126,6 +150,7 @@ g_object_get G_GNUC_NULL_TERMINATED
 g_object_get_data
 g_object_get_property
 g_object_get_qdata
+g_object_get_type
 g_object_get_valist
 g_object_interface_find_property
 g_object_interface_install_property
@@ -134,6 +159,7 @@ g_object_new
 g_object_newv
 g_object_new_valist
 g_object_notify
+g_object_notify_by_pspec
 g_object_is_floating
 g_object_ref_sink
 g_object_force_floating
@@ -192,6 +218,7 @@ g_param_spec_uint64
 g_param_spec_ulong
 g_param_spec_unichar
 g_param_spec_value_array
+g_param_spec_variant
 #endif
 #endif
 
@@ -271,6 +298,10 @@ g_value_take_string
 g_gtype_get_type
 g_value_set_gtype
 g_value_get_gtype
+g_value_get_variant
+g_value_dup_variant
+g_value_set_variant
+g_value_take_variant
 #endif
 #endif
 
@@ -279,6 +310,7 @@ g_value_get_gtype
 g_signal_accumulator_true_handled
 g_signal_add_emission_hook
 g_signal_chain_from_overridden
+g_signal_chain_from_overridden_handler
 g_signal_connect_closure
 g_signal_connect_closure_by_id
 g_signal_connect_data
@@ -303,7 +335,9 @@ g_signal_name
 g_signal_new
 g_signal_newv
 g_signal_new_valist
+g_signal_new_class_handler
 g_signal_override_class_closure
+g_signal_override_class_handler
 g_signal_parse_name
 g_signal_query
 g_signal_remove_emission_hook
@@ -371,6 +405,8 @@ g_type_remove_interface_check
 g_type_set_qdata
 g_type_test_flags
 g_type_value_table_peek
+g_type_class_get_private
+g_type_add_class_private
 #endif
 #endif
 

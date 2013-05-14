@@ -164,6 +164,13 @@ tools-obj-$(CONFIG_POSIX) += compatfd.o
 qemu-img$(EXESUF): qemu-img.o $(tools-obj-y) $(block-obj-y)
 	$(AR) rcs qemu-img.a qemu-img.o $(tools-obj-y) $(block-obj-y)
 
+glibs=../../obj/local/$(TARGET_ARCH_ABI)/libglib-2.0.so \
+	../../obj/local/$(TARGET_ARCH_ABI)/libgthread-2.0.so \
+	../../obj/local/$(TARGET_ARCH_ABI)/libgmodule-2.0.so \
+	../../obj/local/$(TARGET_ARCH_ABI)/libgobject-2.0.so
+
+iconvlib=../../obj/local/$(TARGET_ARCH_ABI)/libiconv.so
+
 #TODO: create executable instead so it won't fail while loading the libs.
 qemu-img.so: qemu-img.o $(tools-obj-y) $(block-obj-y)
 	$(LNK)     \
@@ -171,8 +178,8 @@ qemu-img.so: qemu-img.o $(tools-obj-y) $(block-obj-y)
 	$(GCC_STATIC) \
 	qemu-img.o \
 	$(sort $(tools-obj-y) $(block-obj-y)) \
-	../../obj/local/$(TARGET_ARCH_ABI)/libglib.a \
-	../../obj/local/$(TARGET_ARCH_ABI)/libiconv.a \
+	$(glibs) \
+	$(iconvlib) \
 	$(USR_LIB) \
 	-llog -lm -lz \
 	$(P_THREAD) \

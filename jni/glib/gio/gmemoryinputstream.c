@@ -20,15 +20,15 @@
  * Author: Christian Kellner <gicmo@gnome.org> 
  */
 
-#include <config.h>
+#include "config.h"
 #include "gmemoryinputstream.h"
 #include "ginputstream.h"
 #include "gseekable.h"
 #include "string.h"
 #include "gsimpleasyncresult.h"
+#include "gioerror.h"
 #include "glibintl.h"
 
-#include "gioalias.h"
 
 /**
  * SECTION:gmemoryinputstream
@@ -163,8 +163,7 @@ g_memory_input_stream_finalize (GObject *object)
   g_slist_foreach (priv->chunks, free_chunk, NULL);
   g_slist_free (priv->chunks);
 
-  if (G_OBJECT_CLASS (g_memory_input_stream_parent_class)->finalize)
-    (*G_OBJECT_CLASS (g_memory_input_stream_parent_class)->finalize) (object);
+  G_OBJECT_CLASS (g_memory_input_stream_parent_class)->finalize (object);
 }
 
 static void
@@ -481,20 +480,20 @@ g_memory_input_stream_seek (GSeekable     *seekable,
       break;
   
     default:
-      g_set_error (error,
-                   G_IO_ERROR,
-                   G_IO_ERROR_INVALID_ARGUMENT,
-                   _("Invalid GSeekType supplied"));
+      g_set_error_literal (error,
+                           G_IO_ERROR,
+                           G_IO_ERROR_INVALID_ARGUMENT,
+                           _("Invalid GSeekType supplied"));
 
       return FALSE;
     }
 
   if (absolute < 0 || absolute > priv->len)
     {
-      g_set_error (error,
-                   G_IO_ERROR,
-                   G_IO_ERROR_INVALID_ARGUMENT,
-                   _("Invalid seek request"));
+      g_set_error_literal (error,
+                           G_IO_ERROR,
+                           G_IO_ERROR_INVALID_ARGUMENT,
+                           _("Invalid seek request"));
       return FALSE;
     }
 
@@ -515,12 +514,9 @@ g_memory_input_stream_truncate (GSeekable     *seekable,
                                 GCancellable  *cancellable,
                                 GError       **error)
 {
-  g_set_error (error,
-               G_IO_ERROR,
-               G_IO_ERROR_NOT_SUPPORTED,
-               _("Cannot truncate GMemoryInputStream"));
+  g_set_error_literal (error,
+                       G_IO_ERROR,
+                       G_IO_ERROR_NOT_SUPPORTED,
+                       _("Cannot truncate GMemoryInputStream"));
   return FALSE;
 }
-
-#define __G_MEMORY_INPUT_STREAM_C__
-#include "gioaliasdef.c"

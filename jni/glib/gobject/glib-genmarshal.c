@@ -16,22 +16,23 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-#include	"config.h"
+
+#include "config.h"
+
+#include <stdlib.h>
+#include <fcntl.h>
+#include <string.h>
+#include <errno.h>
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #undef G_LOG_DOMAIN
 #define G_LOG_DOMAIN "GLib-Genmarshal"
-#include	<glib.h>
-
-#include	<glib/gprintf.h>
-#include	<stdlib.h>
-#include	<fcntl.h>
-#include	<string.h>
-#include	<errno.h>
-#ifdef HAVE_UNISTD_H
-#include	<unistd.h>
-#endif
-#include	<sys/types.h>
-#include	<sys/stat.h>
+#include <glib.h>
+#include <glib/gprintf.h>
 
 #ifdef G_OS_WIN32
 #include <io.h>
@@ -150,6 +151,7 @@ put_marshal_value_getters (void)
   fputs ("#define g_marshal_value_peek_boxed(v)    g_value_get_boxed (v)\n", fout);
   fputs ("#define g_marshal_value_peek_pointer(v)  g_value_get_pointer (v)\n", fout);
   fputs ("#define g_marshal_value_peek_object(v)   g_value_get_object (v)\n", fout);
+  fputs ("#define g_marshal_value_peek_variant(v)  g_value_get_variant (v)\n", fout);
   fputs ("#else /* !G_ENABLE_DEBUG */\n", fout);
   fputs ("/* WARNING: This code accesses GValues directly, which is UNSUPPORTED API.\n", fout);
   fputs (" *          Do not access GValues directly in your code. Instead, use the\n", fout);
@@ -173,6 +175,7 @@ put_marshal_value_getters (void)
   fputs ("#define g_marshal_value_peek_boxed(v)    (v)->data[0].v_pointer\n", fout);
   fputs ("#define g_marshal_value_peek_pointer(v)  (v)->data[0].v_pointer\n", fout);
   fputs ("#define g_marshal_value_peek_object(v)   (v)->data[0].v_pointer\n", fout);
+  fputs ("#define g_marshal_value_peek_variant(v)  (v)->data[0].v_pointer\n", fout);
   fputs ("#endif /* !G_ENABLE_DEBUG */\n", fout);
   fputs ("\n", fout);
 }
@@ -201,6 +204,7 @@ complete_in_arg (InArgument *iarg)
     { "BOXED",		"BOXED",	"gpointer",	"g_marshal_value_peek_boxed",	},
     { "POINTER",	"POINTER",	"gpointer",	"g_marshal_value_peek_pointer",	},
     { "OBJECT",		"OBJECT",	"gpointer",	"g_marshal_value_peek_object",	},
+    { "VARIANT",	"VARIANT",	"gpointer",	"g_marshal_value_peek_variant",	},
     /* deprecated: */
     { "NONE",		"VOID",		"void",		NULL,			},
     { "BOOL",		"BOOLEAN",	"gboolean",	"g_marshal_value_peek_boolean",	},
@@ -245,6 +249,7 @@ complete_out_arg (OutArgument *oarg)
     { "BOXED",		"BOXED",	"gpointer",	"g_value_take_boxed",			     },
     { "POINTER",	"POINTER",	"gpointer",	"g_value_set_pointer",			     },
     { "OBJECT",		"OBJECT",	"GObject*",	"g_value_take_object",			     },
+    { "VARIANT",	"VARIANT",	"GVariant*",	"g_value_take_variant",			     },
     /* deprecated: */
     { "NONE",		"VOID",		"void",		NULL,					     },
     { "BOOL",		"BOOLEAN",	"gboolean",	"g_value_set_boolean",			     },
@@ -678,7 +683,7 @@ main (int   argc,
       /* parse & process file */
       g_scanner_input_file (scanner, fd);
 
-      /* scanning loop, we parse the input untill it's end is reached,
+      /* scanning loop, we parse the input until its end is reached,
        * or our sub routine came across invalid syntax
        */
       do
@@ -813,6 +818,7 @@ parse_args (gint    *argc_p,
 	  argv[i] = NULL;
 	}
       else if (strcmp ("-h", argv[i]) == 0 ||
+          strcmp ("-?", argv[i]) == 0 ||
 	  strcmp ("--help", argv[i]) == 0)
 	{
 	  print_blurb (stderr, TRUE);
@@ -873,15 +879,18 @@ print_blurb (FILE    *bout,
     }
   else
     {
-      g_fprintf (bout, "Usage: %s [options] [files...]\n", PRG_NAME);
-      g_fprintf (bout, "  --header                   generate C headers\n");
-      g_fprintf (bout, "  --body                     generate C code\n");
-      g_fprintf (bout, "  --prefix=string            specify marshaller prefix\n");
-      g_fprintf (bout, "  --skip-source              skip source location comments\n");
-      g_fprintf (bout, "  --stdinc, --nostdinc       include/use standard marshallers\n");
-      g_fprintf (bout, "  --internal                 mark generated functions as internal\n");
-      g_fprintf (bout, "  -h, --help                 show this help message\n");
-      g_fprintf (bout, "  -v, --version              print version informations\n");
-      g_fprintf (bout, "  --g-fatal-warnings         make warnings fatal (abort)\n");
+      g_fprintf (bout, "Usage:\n");
+      g_fprintf (bout, "  %s [OPTION...] [FILES...]\n\n", PRG_NAME);
+      g_fprintf (bout, "Help Options:\n");
+      g_fprintf (bout, "  -h, --help                 Show this help message\n\n");
+      g_fprintf (bout, "Utility Options:\n");
+      g_fprintf (bout, "  --header                   Generate C headers\n");
+      g_fprintf (bout, "  --body                     Generate C code\n");
+      g_fprintf (bout, "  --prefix=string            Specify marshaller prefix\n");
+      g_fprintf (bout, "  --skip-source              Skip source location comments\n");
+      g_fprintf (bout, "  --stdinc, --nostdinc       Include/use standard marshallers\n");
+      g_fprintf (bout, "  --internal                 Mark generated functions as internal\n");
+      g_fprintf (bout, "  -v, --version              Print version informations\n");
+      g_fprintf (bout, "  --g-fatal-warnings         Make warnings fatal (abort)\n");
     }
 }

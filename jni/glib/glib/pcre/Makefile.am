@@ -13,10 +13,7 @@ INCLUDES = \
 	-DLINK_SIZE=2 \
 	-DPOSIX_MALLOC_THRESHOLD=10 \
 	-DPCRE_STATIC \
-	-I$(top_srcdir) \
-	-I$(srcdir) \
-	-I$(top_srcdir)/glib \
-	-I$(top_builddir)/glib \
+	$(glib_INCLUDES) \
 	@GLIB_DEBUG_FLAGS@ \
 	-DG_DISABLE_DEPRECATED \
 	-DGLIB_COMPILATION \
@@ -38,29 +35,23 @@ libpcre_la_SOURCES = \
 	pcre_fullinfo.c \
 	pcre_get.c \
 	pcre_globals.c \
-	pcre_info.c \
-	pcre_maketables.c \
 	pcre_newline.c \
 	pcre_ord2utf8.c \
-	pcre_refcount.c \
 	pcre_study.c \
 	pcre_tables.c \
 	pcre_try_flipped.c \
 	pcre_ucp_searchfuncs.c \
-	pcre_valid_utf8.c \
-	pcre_version.c \
 	pcre_xclass.c \
 	pcre.h \
 	pcre_internal.h \
 	ucp.h \
-	ucpinternal.h \
 	$(libpcre_headers)
 
 libpcre_la_LIBADD = $(DEP_LIBS)
 
 libpcre_la_LDFLAGS = -no-undefined
 
-EXTRA_DIST =				\
+EXTRA_DIST +=				\
 		COPYING			\
 		makefile.msc
 

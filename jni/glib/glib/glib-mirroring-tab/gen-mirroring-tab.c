@@ -1,10 +1,10 @@
 /* gen-mirroring-tab.c - generate gmirroringtable.h for glib
  * copied from FriBidi.
  *
- * $Id: gen-mirroring-tab.c 4708 2006-04-05 14:43:33Z behdad $
- * $Author: behdad $
- * $Date: 2006-04-05 10:43:33 -0400 (Wed, 05 Apr 2006) $
- * $Revision: 4708 $
+ * $Id$
+ * $Author$
+ * $Date$
+ * $Revision$
  * $Source$
  *
  * Author:

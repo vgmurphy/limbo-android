@@ -24,15 +24,36 @@
 
 #include <string.h>
 
-#include "glib.h"
+#include "gshell.h"
 
-#ifdef _
-#warning "FIXME remove gettext hack"
-#endif
-
+#include "gslist.h"
+#include "gstrfuncs.h"
+#include "gstring.h"
+#include "gtestutils.h"
 #include "glibintl.h"
-#include "galias.h"
 
+/**
+ * SECTION: shell
+ * @title: Shell-related Utilities
+ * @short_description: shell-like commandline handling
+ **/
+
+/**
+ * G_SHELL_ERROR:
+ *
+ * Error domain for shell functions. Errors in this domain will be from
+ * the #GShellError enumeration. See #GError for information on error
+ * domains.
+ **/
+
+/**
+ * GShellError:
+ * @G_SHELL_ERROR_BAD_QUOTING: Mismatched or otherwise mangled quoting.
+ * @G_SHELL_ERROR_EMPTY_STRING: String to be parsed was empty.
+ * @G_SHELL_ERROR_FAILED: Some other error.
+ *
+ * Error codes returned by shell functions.
+ **/
 GQuark
 g_shell_error_quark (void)
 {
@@ -64,8 +85,8 @@ unquote_string_inplace (gchar* str, gchar** end, GError** err)
   
   if (!(*s == '"' || *s == '\''))
     {
-      if (err)
-        *err = g_error_new(G_SHELL_ERROR,
+      g_set_error_literal (err,
+                           G_SHELL_ERROR,
                            G_SHELL_ERROR_BAD_QUOTING,
                            _("Quoted text doesn't begin with a quotation mark"));
       *end = str;
@@ -154,8 +175,8 @@ unquote_string_inplace (gchar* str, gchar** end, GError** err)
 
   *dest = '\0';
   
-  if (err)
-    *err = g_error_new(G_SHELL_ERROR,
+  g_set_error_literal (err,
+                       G_SHELL_ERROR,
                        G_SHELL_ERROR_BAD_QUOTING,
                        _("Unmatched quotation mark in command line or other shell-quoted text"));
   *end = s;
@@ -411,7 +432,7 @@ tokenize_command_line (const gchar *command_line,
   const gchar *p;
   GString *current_token = NULL;
   GSList *retval = NULL;
-  gboolean quoted;;
+  gboolean quoted;
 
   current_quote = '\0';
   quoted = FALSE;
@@ -551,10 +572,10 @@ tokenize_command_line (const gchar *command_line,
 
   if (retval == NULL)
     {
-      g_set_error (error,
-                   G_SHELL_ERROR,
-                   G_SHELL_ERROR_EMPTY_STRING,
-                   _("Text was empty (or contained only whitespace)"));
+      g_set_error_literal (error,
+                           G_SHELL_ERROR,
+                           G_SHELL_ERROR_EMPTY_STRING,
+                           _("Text was empty (or contained only whitespace)"));
 
       goto error;
     }
@@ -668,6 +689,3 @@ g_shell_parse_argv (const gchar *command_line,
   
   return FALSE;
 }
-
-#define __G_SHELL_C__
-#include "galiasdef.c"

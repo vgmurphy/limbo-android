@@ -20,11 +20,11 @@
  * Author: Alexander Larsson <alexl@redhat.com>
  */
 
-#include <config.h>
+#include "config.h"
 
 #include "gioscheduler.h"
+#include "gcancellable.h"
 
-#include "gioalias.h"
 
 /**
  * SECTION:gioscheduler
@@ -54,6 +54,7 @@ struct _GIOSchedulerJob {
 
   gint io_priority;
   GCancellable *cancellable;
+  GMainContext *context;
 
   guint idle_tag;
 };
@@ -71,6 +72,8 @@ g_io_job_free (GIOSchedulerJob *job)
 {
   if (job->cancellable)
     g_object_unref (job->cancellable);
+  if (job->context)
+    g_main_context_unref (job->context);
   g_free (job);
 }
 
@@ -109,7 +112,7 @@ init_scheduler (gpointer arg)
 	  g_thread_pool_set_sort_function (job_thread_pool,
 					   g_io_job_compare,
 					   NULL);
-	  /* Its kinda weird that this is a global setting
+	  /* It's kinda weird that this is a global setting
 	   * instead of per threadpool. However, we really
 	   * want to cache some threads, but not keep around
 	   * those threads forever. */
@@ -241,6 +244,10 @@ g_io_scheduler_push_job (GIOSchedulerJobFunc  job_func,
   if (cancellable)
     job->cancellable = g_object_ref (cancellable);
 
+  job->context = g_main_context_get_thread_default ();
+  if (job->context)
+    g_main_context_ref (job->context);
+
   G_LOCK (active_jobs);
   active_jobs = g_slist_prepend (active_jobs, job);
   job->active_link = active_jobs;
@@ -256,7 +263,7 @@ g_io_scheduler_push_job (GIOSchedulerJobFunc  job_func,
       /* Threads not available, instead do the i/o sync inside a
        * low prio idle handler
        */
-      job->idle_tag = g_idle_add_full (G_PRIORITY_DEFAULT_IDLE + 1 + io_priority / 10,
+      job->idle_tag = g_idle_add_full (io_priority,
 				       run_job_at_idle,
 				       job, job_destroy);
     }
@@ -340,12 +347,12 @@ mainloop_proxy_free (MainLoopProxy *proxy)
 /**
  * g_io_scheduler_job_send_to_mainloop:
  * @job: a #GIOSchedulerJob
- * @func: a #GSourceFunc callback that will be called in the main thread
+ * @func: a #GSourceFunc callback that will be called in the original thread
  * @user_data: data to pass to @func
  * @notify: a #GDestroyNotify for @user_data, or %NULL
  * 
- * Used from an I/O job to send a callback to be run in the 
- * main loop (main thread), waiting for the result (and thus 
+ * Used from an I/O job to send a callback to be run in the thread
+ * that the job was started from, waiting for the result (and thus
  * blocking the I/O job).
  *
  * Returns: The return value of @func
@@ -358,7 +365,6 @@ g_io_scheduler_job_send_to_mainloop (GIOSchedulerJob *job,
 {
   GSource *source;
   MainLoopProxy *proxy;
-  guint id;
   gboolean ret_val;
 
   g_return_val_if_fail (job != NULL, FALSE);
@@ -388,7 +394,7 @@ g_io_scheduler_job_send_to_mainloop (GIOSchedulerJob *job,
   g_source_set_callback (source, mainloop_proxy_func, proxy,
 			 NULL);
 
-  id = g_source_attach (source, NULL);
+  g_source_attach (source, job->context);
   g_source_unref (source);
 
   g_cond_wait (proxy->ack_condition, proxy->ack_lock);
@@ -403,14 +409,14 @@ g_io_scheduler_job_send_to_mainloop (GIOSchedulerJob *job,
 /**
  * g_io_scheduler_job_send_to_mainloop_async:
  * @job: a #GIOSchedulerJob
- * @func: a #GSourceFunc callback that will be called in the main thread
+ * @func: a #GSourceFunc callback that will be called in the original thread
  * @user_data: data to pass to @func
  * @notify: a #GDestroyNotify for @user_data, or %NULL
  * 
- * Used from an I/O job to send a callback to be run asynchronously 
- * in the main loop (main thread). The callback will be run when the 
- * main loop is available, but at that time the I/O job might have 
- * finished. The return value from the callback is ignored.
+ * Used from an I/O job to send a callback to be run asynchronously in
+ * the thread that the job was started from. The callback will be run
+ * when the main loop is available, but at that time the I/O job might
+ * have finished. The return value from the callback is ignored.
  *
  * Note that if you are passing the @user_data from g_io_scheduler_push_job()
  * on to this function you have to ensure that it is not freed before
@@ -425,7 +431,6 @@ g_io_scheduler_job_send_to_mainloop_async (GIOSchedulerJob *job,
 {
   GSource *source;
   MainLoopProxy *proxy;
-  guint id;
 
   g_return_if_fail (job != NULL);
   g_return_if_fail (func != NULL);
@@ -451,10 +456,6 @@ g_io_scheduler_job_send_to_mainloop_async (GIOSchedulerJob *job,
   g_source_set_callback (source, mainloop_proxy_func, proxy,
 			 (GDestroyNotify)mainloop_proxy_free);
 
-  id = g_source_attach (source, NULL);
+  g_source_attach (source, job->context);
   g_source_unref (source);
 }
-
-
-#define __G_IO_SCHEDULER_C__
-#include "gioaliasdef.c"

@@ -21,10 +21,10 @@
  * Modified by the GLib Team and others 1997-2000.  See the AUTHORS
  * file for a list of people on the GLib Team.  See the ChangeLog
  * files for a list of changes.  These files are distributed with
- * GLib at ftp://ftp.gtk.org/pub/gtk/. 
+ * GLib at ftp://ftp.gtk.org/pub/gtk/.
  */
 
-/* 
+/*
  * MT safe
  */
 
@@ -41,12 +41,6 @@
 #include <locale.h>
 #include <errno.h>
 
-#include "glib.h"
-#include "gdebug.h"
-#include "gprintfint.h"
-#include "gthreadprivate.h"
-#include "galias.h"
-
 #ifdef G_OS_WIN32
 #include <process.h>		/* For getpid() */
 #include <io.h>
@@ -55,6 +49,20 @@
 #  include <windows.h>
 #  undef STRICT
 #endif
+
+#include "gmessages.h"
+
+#include "gbacktrace.h"
+#include "gconvert.h"
+#include "gdebug.h"
+#include "gmem.h"
+#include "gprintfint.h"
+#include "gtestutils.h"
+#include "gthread.h"
+#include "gthreadprivate.h"
+#include "gstrfuncs.h"
+#include "gstring.h"
+
 
 /* --- structures --- */
 typedef struct _GLogDomain	GLogDomain;
@@ -86,6 +94,8 @@ static GPrivate	     *g_log_depth = NULL;
 static GLogLevelFlags g_log_msg_prefix = G_LOG_LEVEL_ERROR | G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_DEBUG;
 static GLogFunc       default_log_func = g_log_default_handler;
 static gpointer       default_log_data = NULL;
+static GTestLogFatalFunc fatal_log_func = NULL;
+static gpointer          fatal_log_data;
 
 /* --- functions --- */
 #ifdef G_OS_WIN32
@@ -346,6 +356,39 @@ g_log_set_default_handler (GLogFunc log_func,
   return old_log_func;
 }
 
+/**
+ * g_test_log_set_fatal_handler:
+ * @log_func: the log handler function.
+ * @user_data: data passed to the log handler.
+ *
+ * Installs a non-error fatal log handler which can be
+ * used to decide whether log messages which are counted
+ * as fatal abort the program.
+ *
+ * The use case here is that you are running a test case
+ * that depends on particular libraries or circumstances
+ * and cannot prevent certain known critical or warning
+ * messages. So you install a handler that compares the
+ * domain and message to precisely not abort in such a case.
+ *
+ * Note that the handler is reset at the beginning of
+ * any test case, so you have to set it inside each test
+ * function which needs the special behavior.
+ *
+ * This handler has no effect on g_error messages.
+ *
+ * Since: 2.22
+ **/
+void
+g_test_log_set_fatal_handler (GTestLogFatalFunc log_func,
+                              gpointer          user_data)
+{
+  g_mutex_lock (g_messages_lock);
+  fatal_log_func = log_func;
+  fatal_log_data = user_data;
+  g_mutex_unlock (g_messages_lock);
+}
+
 void
 g_log_remove_handler (const gchar *log_domain,
 		      guint	   handler_id)
@@ -400,11 +443,11 @@ g_logv (const gchar   *log_domain,
   log_level &= G_LOG_LEVEL_MASK;
   if (!log_level)
     return;
-  
+
   for (i = g_bit_nth_msf (log_level, -1); i >= 0; i = g_bit_nth_msf (log_level, i))
     {
       register GLogLevelFlags test_level;
-      
+
       test_level = 1 << i;
       if (log_level & test_level)
 	{
@@ -413,6 +456,7 @@ g_logv (const gchar   *log_domain,
 	  GLogFunc log_func;
 	  GLogLevelFlags domain_fatal_mask;
 	  gpointer data = NULL;
+          gboolean masquerade_fatal = FALSE;
 
 	  if (was_fatal)
 	    test_level |= G_LOG_FLAG_FATAL;
@@ -462,22 +506,38 @@ g_logv (const gchar   *log_domain,
 	       * in an out-of-memory situation
 	       */
 	      gchar buffer[1025];
-	      gint size;
-	      size = _g_vsnprintf (buffer, 1024, format, args1);
+              gsize size;
+              va_list args2;
+
+              G_VA_COPY (args2, args1);
+	      size = _g_vsnprintf (buffer, 1024, format, args2);
+              va_end (args2);
 
 	      log_func (log_domain, test_level, buffer, data);
 	    }
 	  else
 	    {
-	      gchar *msg = g_strdup_vprintf (format, args1);
+	      gchar *msg;
+              va_list args2;
+
+              G_VA_COPY (args2, args1);
+              msg = g_strdup_vprintf (format, args2);
+              va_end (args2);
 
 	      log_func (log_domain, test_level, msg, data);
+
+              if ((test_level & G_LOG_FLAG_FATAL)
+                && !(test_level & G_LOG_LEVEL_ERROR))
+                {
+                  masquerade_fatal = fatal_log_func
+                    && !fatal_log_func (log_domain, test_level, msg, data);
+                }
 
 	      g_free (msg);
 	    }
 
-	  if (test_level & G_LOG_FLAG_FATAL)
-	    {
+	  if ((test_level & G_LOG_FLAG_FATAL) && !masquerade_fatal)
+            {
 #ifdef G_OS_WIN32
 	      gchar *locale_msg = g_locale_from_utf8 (fatal_msg_buf, -1, NULL, NULL, NULL);
 	      
@@ -523,12 +583,6 @@ g_return_if_fail_warning (const char *log_domain,
 			  const char *pretty_function,
 			  const char *expression)
 {
-  /*
-   * Omit the prefix used by the PLT-reduction
-   * technique used in GTK+. 
-   */
-  if (g_str_has_prefix (pretty_function, "IA__"))
-    pretty_function += 4;
   g_log (log_domain,
 	 G_LOG_LEVEL_CRITICAL,
 	 "%s: assertion `%s' failed",
@@ -564,12 +618,6 @@ g_assert_warning (const char *log_domain,
 		  const char *pretty_function,
 		  const char *expression)
 {
-  /*
-   * Omit the prefix used by the PLT-reduction
-   * technique used in GTK+. 
-   */
-  if (g_str_has_prefix (pretty_function, "IA__"))
-    pretty_function += 4;
   g_log (log_domain,
 	 G_LOG_LEVEL_ERROR,
 	 expression 
@@ -873,6 +921,29 @@ escape_string (GString *string)
     }
 }
 
+#ifdef BUILD_WITH_ANDROID
+#include <android/log.h>
+void g_log_default_handler (const gchar   *log_domain,
+		       GLogLevelFlags log_level,
+		       const gchar   *message,
+		       gpointer	      unused_data)
+{
+  gint pri = ANDROID_LOG_UNKNOWN;
+
+  if (log_level & G_LOG_FLAG_FATAL)
+    pri = ANDROID_LOG_FATAL;
+  else if (log_level & (G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL))
+    pri = ANDROID_LOG_ERROR;
+  else if (log_level & G_LOG_LEVEL_WARNING)
+    pri = ANDROID_LOG_WARN;
+  else if (log_level & (G_LOG_LEVEL_MESSAGE | G_LOG_LEVEL_INFO))
+    pri = ANDROID_LOG_INFO;
+  else if (log_level & G_LOG_LEVEL_DEBUG)
+    pri = ANDROID_LOG_DEBUG;
+
+  __android_log_print (pri, log_domain == NULL ? "GLib-NULL" : log_domain, message);
+}
+#else
 void
 g_log_default_handler (const gchar   *log_domain,
 		       GLogLevelFlags log_level,
@@ -950,6 +1021,7 @@ g_log_default_handler (const gchar   *log_domain,
   write_string (fd, string);
   g_free (string);
 }
+#endif
 
 GPrintFunc
 g_set_print_handler (GPrintFunc func)
@@ -1109,6 +1181,3 @@ _g_debug_init (void)
       g_log_set_always_fatal (fatal_mask);
     }
 }
-
-#define __G_MESSAGES_C__
-#include "galiasdef.c"

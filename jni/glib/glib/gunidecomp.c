@@ -23,11 +23,11 @@
 
 #include <stdlib.h>
 
-#include "glib.h"
+#include "gunicode.h"
 #include "gunidecomp.h"
+#include "gmem.h"
 #include "gunicomp.h"
 #include "gunicodeprivate.h"
-#include "galias.h"
 
 
 #define CC_PART1(Page, Char) \
@@ -504,8 +504,6 @@ _g_utf8_normalize_wc (const gchar    *str,
  * (in this case DIGIT THREE). Formatting information
  * may be lost but for most text operations such
  * characters should be considered the same.
- * For example, g_utf8_collate() normalizes
- * with %G_NORMALIZE_ALL as its first step.
  *
  * %G_NORMALIZE_DEFAULT_COMPOSE and %G_NORMALIZE_ALL_COMPOSE
  * are like %G_NORMALIZE_DEFAULT and %G_NORMALIZE_ALL,
@@ -532,6 +530,3 @@ g_utf8_normalize (const gchar    *str,
 
   return result;
 }
-
-#define __G_UNIDECOMP_C__
-#include "galiasdef.c"

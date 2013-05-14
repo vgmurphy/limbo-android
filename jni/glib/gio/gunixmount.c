@@ -23,7 +23,7 @@
  *         David Zeuthen <davidz@redhat.com>
  */
 
-#include <config.h>
+#include "config.h"
 
 #include <string.h>
 #include <sys/wait.h>
@@ -32,16 +32,19 @@
 #include <glib.h>
 #include "gunixvolumemonitor.h"
 #include "gunixmount.h"
+#include "gunixmounts.h"
 #include "gunixvolume.h"
 #include "gmountprivate.h"
+#include "gmount.h"
+#include "gfile.h"
 #include "gvolumemonitor.h"
 #include "gthemedicon.h"
 #include "gsimpleasyncresult.h"
+#include "gioerror.h"
 #include "glibintl.h"
 /* for BUFSIZ */
 #include <stdio.h>
 
-#include "gioalias.h"
 
 struct _GUnixMount {
   GObject parent;
@@ -84,9 +87,8 @@ g_unix_mount_finalize (GObject *object)
   g_free (mount->name);
   g_free (mount->device_path);
   g_free (mount->mount_path);
-  
-  if (G_OBJECT_CLASS (g_unix_mount_parent_class)->finalize)
-    (*G_OBJECT_CLASS (g_unix_mount_parent_class)->finalize) (object);
+
+  G_OBJECT_CLASS (g_unix_mount_parent_class)->finalize (object);
 }
 
 static void
@@ -153,7 +155,7 @@ _g_unix_mount_unset_volume (GUnixMount *mount,
       /* TODO: Emit changed in idle to avoid locking issues */
       g_signal_emit_by_name (mount, "changed");
       if (mount->volume_monitor != NULL)
-        g_signal_emit_by_name (mount->volume_monitor, "mount_changed", mount);
+        g_signal_emit_by_name (mount->volume_monitor, "mount-changed", mount);
     }
 }
 
@@ -237,8 +239,9 @@ typedef struct {
   GCancellable *cancellable;
   int error_fd;
   GIOChannel *error_channel;
-  guint error_channel_source_id;
+  GSource *error_channel_source;
   GString *error_string;
+  gchar **argv;
 } UnmountEjectOp;
 
 static void 
@@ -270,9 +273,14 @@ eject_unmount_cb (GPid pid, gint status, gpointer user_data)
   g_simple_async_result_complete (simple);
   g_object_unref (simple);
 
-  g_source_remove (data->error_channel_source_id);
+  if (data->error_channel_source)
+    {
+      g_source_destroy (data->error_channel_source);
+      g_source_unref (data->error_channel_source);
+    }
   g_io_channel_unref (data->error_channel);
   g_string_free (data->error_string, TRUE);
+  g_strfreev (data->argv);
   close (data->error_fd);
   g_spawn_close_pid (pid);
   g_free (data);
@@ -307,33 +315,28 @@ read:
 
       g_string_append (data->error_string, error->message);
       g_error_free (error);
+
+      if (data->error_channel_source)
+        {
+          g_source_unref (data->error_channel_source);
+          data->error_channel_source = NULL;
+        }
       return FALSE;
     }
 
   return TRUE;
 }
 
-static void
-eject_unmount_do (GMount              *mount,
-                  GCancellable        *cancellable,
-                  GAsyncReadyCallback  callback,
-                  gpointer             user_data,
-                  char               **argv)
+static gboolean
+eject_unmount_do_cb (gpointer user_data)
 {
-  GUnixMount *unix_mount = G_UNIX_MOUNT (mount);
-  UnmountEjectOp *data;
+  UnmountEjectOp *data = (UnmountEjectOp *) user_data;
   GPid child_pid;
-  GError *error;
-  
-  data = g_new0 (UnmountEjectOp, 1);
-  data->unix_mount = unix_mount;
-  data->callback = callback;
-  data->user_data = user_data;
-  data->cancellable = cancellable;
-  
-  error = NULL;
+  GSource *child_watch;
+  GError *error = NULL;
+
   if (!g_spawn_async_with_pipes (NULL,         /* working dir */
-                                 argv,
+                                 data->argv,
                                  NULL,         /* envp */
                                  G_SPAWN_DO_NOT_REAP_CHILD|G_SPAWN_SEARCH_PATH,
                                  NULL,         /* child_setup */
@@ -354,8 +357,15 @@ eject_unmount_do (GMount              *mount,
   if (error != NULL)
     goto handle_error;
 
-  data->error_channel_source_id = g_io_add_watch (data->error_channel, G_IO_IN, eject_unmount_read_error, data);
-  g_child_watch_add (child_pid, eject_unmount_cb, data);
+  data->error_channel_source = g_io_create_watch (data->error_channel, G_IO_IN);
+  g_source_set_callback (data->error_channel_source,
+                         (GSourceFunc) eject_unmount_read_error, data, NULL);
+  g_source_attach (data->error_channel_source, g_main_context_get_thread_default ());
+
+  child_watch = g_child_watch_source_new (child_pid);
+  g_source_set_callback (child_watch, (GSourceFunc) eject_unmount_cb, data, NULL);
+  g_source_attach (child_watch, g_main_context_get_thread_default ());
+  g_source_unref (child_watch);
 
 handle_error:
   if (error != NULL) {
@@ -373,9 +383,37 @@ handle_error:
     if (data->error_channel != NULL)
       g_io_channel_unref (data->error_channel);
 
+    g_strfreev (data->argv);
     g_error_free (error);
     g_free (data);
   }
+
+  return FALSE;
+}
+
+static void
+eject_unmount_do (GMount              *mount,
+                  GCancellable        *cancellable,
+                  GAsyncReadyCallback  callback,
+                  gpointer             user_data,
+                  char               **argv)
+{
+  GUnixMount *unix_mount = G_UNIX_MOUNT (mount);
+  UnmountEjectOp *data;
+
+  data = g_new0 (UnmountEjectOp, 1);
+  data->unix_mount = unix_mount;
+  data->callback = callback;
+  data->user_data = user_data;
+  data->cancellable = cancellable;
+  data->argv = g_strdupv (argv);
+
+  if (unix_mount->volume_monitor != NULL)
+    g_signal_emit_by_name (unix_mount->volume_monitor, "mount-pre-unmount", mount);
+
+  g_signal_emit_by_name (mount, "pre-unmount", 0);
+
+  g_timeout_add (500, (GSourceFunc) eject_unmount_do_cb, data);
 }
 
 static void

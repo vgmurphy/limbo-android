@@ -41,9 +41,15 @@
 #include <sys/resource.h>
 #endif /* HAVE_SYS_RESOURCE_H */
 
-#include "glib.h"
+#include "gspawn.h"
+
+#include "gmem.h"
+#include "gshell.h"
+#include "gstring.h"
+#include "gstrfuncs.h"
+#include "gtestutils.h"
+#include "gutils.h"
 #include "glibintl.h"
-#include "galias.h"
 
 static gint g_execute (const gchar  *file,
                        gchar **argv,
@@ -84,17 +90,25 @@ g_spawn_error_quark (void)
  * @flags: flags from #GSpawnFlags
  * @child_setup: function to run in the child just before exec()
  * @user_data: user data for @child_setup
- * @child_pid: return location for child process ID, or %NULL
+ * @child_pid: return location for child process reference, or %NULL
  * @error: return location for error
  * 
  * See g_spawn_async_with_pipes() for a full description; this function
  * simply calls the g_spawn_async_with_pipes() without any pipes.
+ *
+ * You should call g_spawn_close_pid() on the returned child process
+ * reference when you don't need it any more.
  * 
  * <note><para>
  * If you are writing a GTK+ application, and the program you 
  * are spawning is a graphical application, too, then you may
  * want to use gdk_spawn_on_screen() instead to ensure that 
  * the spawned program opens its windows on the right screen.
+ * </para></note>
+ *
+ * <note><para> Note that the returned @child_pid on Windows is a
+ * handle to the child process and not its identifier. Process handles
+ * and process identifiers are different concepts on Windows.
  * </para></note>
  *
  * Return value: %TRUE on success, %FALSE if error is set
@@ -174,11 +188,13 @@ read_data (GString *str,
     goto again;
   else if (bytes < 0)
     {
+      int errsv = errno;
+
       g_set_error (error,
                    G_SPAWN_ERROR,
                    G_SPAWN_ERROR_READ,
                    _("Failed to read data from child process (%s)"),
-                   g_strerror (errno));
+                   g_strerror (errsv));
       
       return READ_FAILED;
     }
@@ -309,13 +325,15 @@ g_spawn_sync (const gchar          *working_directory,
 
       if (ret < 0 && errno != EINTR)
         {
+          int errsv = errno;
+
           failed = TRUE;
 
           g_set_error (error,
                        G_SPAWN_ERROR,
                        G_SPAWN_ERROR_READ,
                        _("Unexpected error in select() reading data from a child process (%s)"),
-                       g_strerror (errno));
+                       g_strerror (errsv));
               
           break;
         }
@@ -392,13 +410,15 @@ g_spawn_sync (const gchar          *working_directory,
         {
           if (!failed) /* avoid error pileups */
             {
+              int errsv = errno;
+
               failed = TRUE;
                   
               g_set_error (error,
                            G_SPAWN_ERROR,
                            G_SPAWN_ERROR_READ,
                            _("Unexpected error in waitpid() (%s)"),
-                           g_strerror (errno));
+                           g_strerror (errsv));
             }
         }
     }
@@ -485,6 +505,10 @@ g_spawn_sync (const gchar          *working_directory,
  * vector elements that need it before calling the C runtime
  * spawn() function.
  *
+ * The returned @child_pid on Windows is a handle to the child
+ * process, not its identifier. Process handles and process
+ * identifiers are different concepts on Windows.
+ *
  * @envp is a %NULL-terminated array of strings, where each string
  * has the form <literal>KEY=VALUE</literal>. This will become
  * the child's environment. If @envp is %NULL, the child inherits its
@@ -530,12 +554,12 @@ g_spawn_sync (const gchar          *working_directory,
  * exec(). That is, @child_setup is called just
  * before calling exec() in the child. Obviously
  * actions taken in this function will only affect the child, not the
- * parent. On Windows, there is no separate fork() and exec()
- * functionality. Child processes are created and run with
- * a single API call, CreateProcess(). @child_setup is
- * called in the parent process just before creating the child
- * process. You should carefully consider what you do in @child_setup
- * if you intend your software to be portable to Windows.
+ * parent.
+ *
+ * On Windows, there is no separate fork() and exec()
+ * functionality. Child processes are created and run with a single
+ * API call, CreateProcess(). There is no sensible thing @child_setup
+ * could be used for on Windows so it is ignored and not called.
  *
  * If non-%NULL, @child_pid will on Unix be filled with the child's
  * process ID. You can use the process ID to send signals to the
@@ -577,13 +601,13 @@ g_spawn_sync (const gchar          *working_directory,
  * and @standard_error will not be filled with valid values.
  *
  * If @child_pid is not %NULL and an error does not occur then the returned
- * pid must be closed using g_spawn_close_pid().
+ * process reference must be closed using g_spawn_close_pid().
  *
  * <note><para>
  * If you are writing a GTK+ application, and the program you 
  * are spawning is a graphical application, too, then you may
  * want to use gdk_spawn_on_screen_with_pipes() instead to ensure that 
- * the spawned program opens its windows no the right screen.
+ * the spawned program opens its windows on the right screen.
  * </para></note>
  * 
  * Return value: %TRUE on success, %FALSE if an error was set
@@ -868,6 +892,7 @@ write_all (gint fd, gconstpointer vbuf, gsize to_write)
   return TRUE;
 }
 
+G_GNUC_NORETURN
 static void
 write_err_and_exit (gint fd, gint msg)
 {
@@ -1111,13 +1136,14 @@ read_ints (int      fd,
           
       if (chunk < 0)
         {
+          int errsv = errno;
+
           /* Some weird shit happened, bail out */
-              
           g_set_error (error,
                        G_SPAWN_ERROR,
                        G_SPAWN_ERROR_FAILED,
                        _("Failed to read from child pipe (%s)"),
-                       g_strerror (errno));
+                       g_strerror (errsv));
 
           return FALSE;
         }
@@ -1177,12 +1203,14 @@ fork_exec_with_pipes (gboolean              intermediate_child,
   pid = fork ();
 
   if (pid < 0)
-    {      
+    {
+      int errsv = errno;
+
       g_set_error (error,
                    G_SPAWN_ERROR,
                    G_SPAWN_ERROR_FORK,
                    _("Failed to fork (%s)"),
-                   g_strerror (errno));
+                   g_strerror (errsv));
 
       goto cleanup_and_fail;
     }
@@ -1377,11 +1405,13 @@ fork_exec_with_pipes (gboolean              intermediate_child,
 
           if (n_ints < 1)
             {
+              int errsv = errno;
+
               g_set_error (error,
                            G_SPAWN_ERROR,
                            G_SPAWN_ERROR_FAILED,
                            _("Failed to read enough data from child pid pipe (%s)"),
-                           g_strerror (errno));
+                           g_strerror (errsv));
               goto cleanup_and_fail;
             }
           else
@@ -1449,11 +1479,12 @@ make_pipe (gint     p[2],
 {
   if (pipe (p) < 0)
     {
+      gint errsv = errno;
       g_set_error (error,
                    G_SPAWN_ERROR,
                    G_SPAWN_ERROR_FAILED,
                    _("Failed to create pipe for communicating with child process (%s)"),
-                   g_strerror (errno));
+                   g_strerror (errsv));
       return FALSE;
     }
   else
@@ -1641,9 +1672,9 @@ g_execute (const gchar *file,
 
 /**
  * g_spawn_close_pid:
- * @pid: The process identifier to close
+ * @pid: The process reference to close
  *
- * On some platforms, notably WIN32, the #GPid type represents a resource
+ * On some platforms, notably Windows, the #GPid type represents a resource
  * which must be closed to prevent resource leaking. g_spawn_close_pid()
  * is provided for this purpose. It should be used on all platforms, even
  * though it doesn't do anything under UNIX.
@@ -1652,6 +1683,3 @@ void
 g_spawn_close_pid (GPid pid)
 {
 }
-
-#define __G_SPAWN_C__
-#include "galiasdef.c"

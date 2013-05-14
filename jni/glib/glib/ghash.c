@@ -30,13 +30,129 @@
 
 #include "config.h"
 
-#include "glib.h"
-#include "galias.h"
+#include <string.h>  /* memset */
+
+#include "ghash.h"
+
+#include "gatomic.h"
+#include "gtestutils.h"
 
 
-#define HASH_TABLE_MIN_SIZE 11
-#define HASH_TABLE_MAX_SIZE 13845163
+/**
+ * SECTION: hash_tables
+ * @title: Hash Tables
+ * @short_description: associations between keys and values so that
+ *                     given a key the value can be found quickly
+ *
+ * A #GHashTable provides associations between keys and values which is
+ * optimized so that given a key, the associated value can be found
+ * very quickly.
+ *
+ * Note that neither keys nor values are copied when inserted into the
+ * #GHashTable, so they must exist for the lifetime of the #GHashTable.
+ * This means that the use of static strings is OK, but temporary
+ * strings (i.e. those created in buffers and those returned by GTK+
+ * widgets) should be copied with g_strdup() before being inserted.
+ *
+ * If keys or values are dynamically allocated, you must be careful to
+ * ensure that they are freed when they are removed from the
+ * #GHashTable, and also when they are overwritten by new insertions
+ * into the #GHashTable. It is also not advisable to mix static strings
+ * and dynamically-allocated strings in a #GHashTable, because it then
+ * becomes difficult to determine whether the string should be freed.
+ *
+ * To create a #GHashTable, use g_hash_table_new().
+ *
+ * To insert a key and value into a #GHashTable, use
+ * g_hash_table_insert().
+ *
+ * To lookup a value corresponding to a given key, use
+ * g_hash_table_lookup() and g_hash_table_lookup_extended().
+ *
+ * To remove a key and value, use g_hash_table_remove().
+ *
+ * To call a function for each key and value pair use
+ * g_hash_table_foreach() or use a iterator to iterate over the
+ * key/value pairs in the hash table, see #GHashTableIter.
+ *
+ * To destroy a #GHashTable use g_hash_table_destroy().
+ **/
 
+/**
+ * GHashTable:
+ *
+ * The #GHashTable struct is an opaque data structure to represent a
+ * <link linkend="glib-Hash-Tables">Hash Table</link>. It should only be
+ * accessed via the following functions.
+ **/
+
+/**
+ * GHashFunc:
+ * @key: a key.
+ * @Returns: the hash value corresponding to the key.
+ *
+ * Specifies the type of the hash function which is passed to
+ * g_hash_table_new() when a #GHashTable is created.
+ *
+ * The function is passed a key and should return a #guint hash value.
+ * The functions g_direct_hash(), g_int_hash() and g_str_hash() provide
+ * hash functions which can be used when the key is a #gpointer, #gint,
+ * and #gchar* respectively.
+ *
+ * <!-- FIXME: Need more here. --> The hash values should be evenly
+ * distributed over a fairly large range? The modulus is taken with the
+ * hash table size (a prime number) to find the 'bucket' to place each
+ * key into. The function should also be very fast, since it is called
+ * for each key lookup.
+ **/
+
+/**
+ * GHFunc:
+ * @key: a key.
+ * @value: the value corresponding to the key.
+ * @user_data: user data passed to g_hash_table_foreach().
+ *
+ * Specifies the type of the function passed to g_hash_table_foreach().
+ * It is called with each key/value pair, together with the @user_data
+ * parameter which is passed to g_hash_table_foreach().
+ **/
+
+/**
+ * GHRFunc:
+ * @key: a key.
+ * @value: the value associated with the key.
+ * @user_data: user data passed to g_hash_table_remove().
+ * @Returns: %TRUE if the key/value pair should be removed from the
+ *           #GHashTable.
+ *
+ * Specifies the type of the function passed to
+ * g_hash_table_foreach_remove(). It is called with each key/value
+ * pair, together with the @user_data parameter passed to
+ * g_hash_table_foreach_remove(). It should return %TRUE if the
+ * key/value pair should be removed from the #GHashTable.
+ **/
+
+/**
+ * GEqualFunc:
+ * @a: a value.
+ * @b: a value to compare with.
+ * @Returns: %TRUE if @a = @b; %FALSE otherwise.
+ *
+ * Specifies the type of a function used to test two values for
+ * equality. The function should return %TRUE if both values are equal
+ * and %FALSE otherwise.
+ **/
+
+/**
+ * GHashTableIter:
+ *
+ * A GHashTableIter structure represents an iterator that can be used
+ * to iterate over the elements of a #GHashTable. GHashTableIter
+ * structures are typically allocated on the stack and then initialized
+ * with g_hash_table_iter_init().
+ **/
+
+#define HASH_TABLE_MIN_SHIFT 3  /* 1 << 3 == 8 buckets */
 
 typedef struct _GHashNode      GHashNode;
 
@@ -44,15 +160,21 @@ struct _GHashNode
 {
   gpointer   key;
   gpointer   value;
-  GHashNode *next;
+
+  /* If key_hash == 0, node is not in use
+   * If key_hash == 1, node is a tombstone
+   * If key_hash >= 2, node contains data */
   guint      key_hash;
 };
 
 struct _GHashTable
 {
   gint             size;
+  gint             mod;
+  guint            mask;
   gint             nnodes;
-  GHashNode      **nodes;
+  gint             noccupied;  /* nnodes + tombstones */
+  GHashNode       *nodes;
   GHashFunc        hash_func;
   GEqualFunc       key_equal_func;
   volatile gint    ref_count;
@@ -70,20 +192,100 @@ struct _GHashTable
 
 typedef struct
 {
-  GHashTable	*hash_table;
-  GHashNode	*prev_node;
-  GHashNode	*node;
-  int		position;
-  gboolean	pre_advanced;
-  int		version;
+  GHashTable  *hash_table;
+  gpointer     dummy1;
+  gpointer     dummy2;
+  int          position;
+  gboolean     dummy3;
+  int          version;
 } RealIter;
+
+/* Each table size has an associated prime modulo (the first prime
+ * lower than the table size) used to find the initial bucket. Probing
+ * then works modulo 2^n. The prime modulo is necessary to get a
+ * good distribution with poor hash functions. */
+static const gint prime_mod [] =
+{
+  1,          /* For 1 << 0 */
+  2,
+  3,
+  7,
+  13,
+  31,
+  61,
+  127,
+  251,
+  509,
+  1021,
+  2039,
+  4093,
+  8191,
+  16381,
+  32749,
+  65521,      /* For 1 << 16 */
+  131071,
+  262139,
+  524287,
+  1048573,
+  2097143,
+  4194301,
+  8388593,
+  16777213,
+  33554393,
+  67108859,
+  134217689,
+  268435399,
+  536870909,
+  1073741789,
+  2147483647  /* For 1 << 31 */
+};
+
+static void
+g_hash_table_set_shift (GHashTable *hash_table, gint shift)
+{
+  gint i;
+  guint mask = 0;
+
+  hash_table->size = 1 << shift;
+  hash_table->mod  = prime_mod [shift];
+
+  for (i = 0; i < shift; i++)
+    {
+      mask <<= 1;
+      mask |= 1;
+    }
+
+  hash_table->mask = mask;
+}
+
+static gint
+g_hash_table_find_closest_shift (gint n)
+{
+  gint i;
+
+  for (i = 0; n; i++)
+    n >>= 1;
+
+  return i;
+}
+
+static void
+g_hash_table_set_shift_from_size (GHashTable *hash_table, gint size)
+{
+  gint shift;
+
+  shift = g_hash_table_find_closest_shift (size);
+  shift = MAX (shift, HASH_TABLE_MIN_SHIFT);
+
+  g_hash_table_set_shift (hash_table, shift);
+}
 
 /*
  * g_hash_table_lookup_node:
  * @hash_table: our #GHashTable
  * @key: the key to lookup against
  * @hash_return: optional key hash return location
- * Return value: a pointer to the described #GHashNode pointer
+ * Return value: index of the described #GHashNode
  *
  * Performs a lookup in the hash table.  Virtually all hash operations
  * will use this function internally.
@@ -92,118 +294,169 @@ typedef struct
  * user's hash function.
  *
  * If an entry in the table matching @key is found then this function
- * returns a pointer to the pointer to that entry in the table.  In
- * the case that the entry is at the head of a chain, this pointer
- * will be an item in the nodes[] array.  In the case that the entry
- * is not at the head of a chain, this pointer will be the ->next
- * pointer on the node that preceeds it.
- *
- * In the case that no matching entry exists in the table, a pointer
- * to a %NULL pointer will be returned.  To insert a item, this %NULL
- * pointer should be updated to point to the new #GHashNode.
- *
- * If @hash_return is a pass-by-reference parameter.  If it is
- * non-%NULL then the computed hash value is returned.  This is to
- * save insertions from having to compute the hash record again for
- * the new record.
+ * returns the index of that entry in the table, and if not, the
+ * index of an empty node (never a tombstone).
  */
-static inline GHashNode **
+static inline guint
 g_hash_table_lookup_node (GHashTable    *hash_table,
-                          gconstpointer  key,
-                          guint         *hash_return)
+                          gconstpointer  key)
 {
-  GHashNode **node_ptr, *node;
+  GHashNode *node;
+  guint node_index;
   guint hash_value;
+  guint step = 0;
+
+  /* Empty buckets have hash_value set to 0, and for tombstones, it's 1.
+   * We need to make sure our hash value is not one of these. */
 
   hash_value = (* hash_table->hash_func) (key);
-  node_ptr = &hash_table->nodes[hash_value % hash_table->size];
+  if (G_UNLIKELY (hash_value <= 1))
+    hash_value = 2;
 
-  if (hash_return)
-    *hash_return = hash_value;
+  node_index = hash_value % hash_table->mod;
+  node = &hash_table->nodes [node_index];
 
-  /* Hash table lookup needs to be fast.
-   *  We therefore remove the extra conditional of testing
-   *  whether to call the key_equal_func or not from
-   *  the inner loop.
-   *
-   *  Additional optimisation: first check if our full hash
-   *  values are equal so we can avoid calling the full-blown
-   *  key equality function in most cases.
-   */
-  if (hash_table->key_equal_func)
+  while (node->key_hash)
     {
-      while ((node = *node_ptr))
-        {
-          if (node->key_hash == hash_value &&
-              hash_table->key_equal_func (node->key, key))
-            break;
+      /*  We first check if our full hash values
+       *  are equal so we can avoid calling the full-blown
+       *  key equality function in most cases.
+       */
 
-          node_ptr = &(*node_ptr)->next;
-        }
-    }
-  else
-    {
-      while ((node = *node_ptr))
+      if (node->key_hash == hash_value)
         {
-          if (node->key == key)
-            break;
-
-          node_ptr = &(*node_ptr)->next;
+          if (hash_table->key_equal_func)
+            {
+              if (hash_table->key_equal_func (node->key, key))
+                break;
+            }
+          else if (node->key == key)
+            {
+              break;
+            }
         }
+
+      step++;
+      node_index += step;
+      node_index &= hash_table->mask;
+      node = &hash_table->nodes [node_index];
     }
 
-  return node_ptr;
+  return node_index;
+}
+
+/*
+ * g_hash_table_lookup_node_for_insertion:
+ * @hash_table: our #GHashTable
+ * @key: the key to lookup against
+ * @hash_return: key hash return location
+ * Return value: index of the described #GHashNode
+ *
+ * Performs a lookup in the hash table, preserving extra information
+ * usually needed for insertion.
+ *
+ * This function first computes the hash value of the key using the
+ * user's hash function.
+ *
+ * If an entry in the table matching @key is found then this function
+ * returns the index of that entry in the table, and if not, the
+ * index of an unused node (empty or tombstone) where the key can be
+ * inserted.
+ *
+ * The computed hash value is returned in the variable pointed to
+ * by @hash_return. This is to save insertions from having to compute
+ * the hash record again for the new record.
+ */
+static inline guint
+g_hash_table_lookup_node_for_insertion (GHashTable    *hash_table,
+                                        gconstpointer  key,
+                                        guint         *hash_return)
+{
+  GHashNode *node;
+  guint node_index;
+  guint hash_value;
+  guint first_tombstone;
+  gboolean have_tombstone = FALSE;
+  guint step = 0;
+
+  /* Empty buckets have hash_value set to 0, and for tombstones, it's 1.
+   * We need to make sure our hash value is not one of these. */
+
+  hash_value = (* hash_table->hash_func) (key);
+  if (G_UNLIKELY (hash_value <= 1))
+    hash_value = 2;
+
+  *hash_return = hash_value;
+
+  node_index = hash_value % hash_table->mod;
+  node = &hash_table->nodes [node_index];
+
+  while (node->key_hash)
+    {
+      /*  We first check if our full hash values
+       *  are equal so we can avoid calling the full-blown
+       *  key equality function in most cases.
+       */
+
+      if (node->key_hash == hash_value)
+        {
+          if (hash_table->key_equal_func)
+            {
+              if (hash_table->key_equal_func (node->key, key))
+                return node_index;
+            }
+          else if (node->key == key)
+            {
+              return node_index;
+            }
+        }
+      else if (node->key_hash == 1 && !have_tombstone)
+        {
+          first_tombstone = node_index;
+          have_tombstone = TRUE;
+        }
+
+      step++;
+      node_index += step;
+      node_index &= hash_table->mask;
+      node = &hash_table->nodes [node_index];
+    }
+
+  if (have_tombstone)
+    return first_tombstone;
+
+  return node_index;
 }
 
 /*
  * g_hash_table_remove_node:
  * @hash_table: our #GHashTable
- * @node_ptr_ptr: a pointer to the return value from
- *   g_hash_table_lookup_node()
+ * @node: pointer to node to remove
  * @notify: %TRUE if the destroy notify handlers are to be called
  *
- * Removes a node from the hash table and updates the node count.  The
- * node is freed.  No table resize is performed.
+ * Removes a node from the hash table and updates the node count.
+ * The node is replaced by a tombstone. No table resize is performed.
  *
  * If @notify is %TRUE then the destroy notify functions are called
  * for the key and value of the hash node.
- *
- * @node_ptr_ptr is a pass-by-reference in/out parameter.  When the
- * function is called, it should point to the pointer to the node to
- * remove.  This level of indirection is required so that the pointer
- * may be updated appropriately once the node has been removed.
- *
- * Before the function returns, the pointer at @node_ptr_ptr will be
- * updated to point to the position in the table that contains the
- * pointer to the "next" node in the chain.  This makes this function
- * convenient to use from functions that iterate over the entire
- * table.  If there is no further item in the chain then the
- * #GHashNode pointer will be %NULL (ie: **node_ptr_ptr == %NULL).
- *
- * Since the pointer in the table to the removed node is replaced with
- * either a pointer to the next node or a %NULL pointer as
- * appropriate, the pointer at the end of @node_ptr_ptr will never be
- * modified at all.  Stay tuned. :)
  */
 static void
 g_hash_table_remove_node (GHashTable   *hash_table,
-                          GHashNode  ***node_ptr_ptr,
+                          GHashNode    *node,
                           gboolean      notify)
 {
-  GHashNode **node_ptr, *node;
-
-  node_ptr = *node_ptr_ptr;
-  node = *node_ptr;
-
-  *node_ptr = node->next;
-
   if (notify && hash_table->key_destroy_func)
     hash_table->key_destroy_func (node->key);
 
   if (notify && hash_table->value_destroy_func)
     hash_table->value_destroy_func (node->value);
 
-  g_slice_free (GHashNode, node);
+  /* Erect tombstone */
+  node->key_hash = 1;
+
+  /* Be GC friendly */
+  node->key = NULL;
+  node->value = NULL;
 
   hash_table->nnodes--;
 }
@@ -223,14 +476,28 @@ static void
 g_hash_table_remove_all_nodes (GHashTable *hash_table,
                                gboolean    notify)
 {
-  GHashNode **node_ptr;
   int i;
 
   for (i = 0; i < hash_table->size; i++)
-    for (node_ptr = &hash_table->nodes[i]; *node_ptr != NULL;)
-      g_hash_table_remove_node (hash_table, &node_ptr, notify);
+    {
+      GHashNode *node = &hash_table->nodes [i];
+
+      if (node->key_hash > 1)
+        {
+          if (notify && hash_table->key_destroy_func)
+            hash_table->key_destroy_func (node->key);
+
+          if (notify && hash_table->value_destroy_func)
+            hash_table->value_destroy_func (node->value);
+        }
+    }
+
+  /* We need to set node->key_hash = 0 for all nodes - might as well be GC
+   * friendly and clear everything */
+  memset (hash_table->nodes, 0, hash_table->size * sizeof (GHashNode));
 
   hash_table->nnodes = 0;
+  hash_table->noccupied = 0;
 }
 
 /*
@@ -241,36 +508,50 @@ g_hash_table_remove_all_nodes (GHashTable *hash_table,
  * nodes currently held.  If you call this function then a resize will
  * occur, even if one does not need to occur.  Use
  * g_hash_table_maybe_resize() instead.
+ *
+ * This function may "resize" the hash table to its current size, with
+ * the side effect of cleaning up tombstones and otherwise optimizing
+ * the probe sequences.
  */
 static void
 g_hash_table_resize (GHashTable *hash_table)
 {
-  GHashNode **new_nodes;
-  GHashNode *node;
-  GHashNode *next;
-  guint hash_val;
-  gint new_size;
+  GHashNode *new_nodes;
+  gint old_size;
   gint i;
 
-  new_size = g_spaced_primes_closest (hash_table->nnodes);
-  new_size = CLAMP (new_size, HASH_TABLE_MIN_SIZE, HASH_TABLE_MAX_SIZE);
+  old_size = hash_table->size;
+  g_hash_table_set_shift_from_size (hash_table, hash_table->nnodes * 2);
 
-  new_nodes = g_new0 (GHashNode*, new_size);
+  new_nodes = g_new0 (GHashNode, hash_table->size);
 
-  for (i = 0; i < hash_table->size; i++)
-    for (node = hash_table->nodes[i]; node; node = next)
-      {
-	next = node->next;
+  for (i = 0; i < old_size; i++)
+    {
+      GHashNode *node = &hash_table->nodes [i];
+      GHashNode *new_node;
+      guint hash_val;
+      guint step = 0;
 
-	hash_val = node->key_hash % new_size;
+      if (node->key_hash <= 1)
+        continue;
 
-	node->next = new_nodes[hash_val];
-	new_nodes[hash_val] = node;
-      }
+      hash_val = node->key_hash % hash_table->mod;
+      new_node = &new_nodes [hash_val];
+
+      while (new_node->key_hash)
+        {
+          step++;
+          hash_val += step;
+          hash_val &= hash_table->mask;
+          new_node = &new_nodes [hash_val];
+        }
+
+      *new_node = *node;
+    }
 
   g_free (hash_table->nodes);
   hash_table->nodes = new_nodes;
-  hash_table->size = new_size;
+  hash_table->noccupied = hash_table->nnodes;
 }
 
 /*
@@ -285,11 +566,11 @@ g_hash_table_resize (GHashTable *hash_table)
 static inline void
 g_hash_table_maybe_resize (GHashTable *hash_table)
 {
-  gint nnodes = hash_table->nnodes;
+  gint noccupied = hash_table->noccupied;
   gint size = hash_table->size;
 
-  if ((size >= 3 * nnodes && size > HASH_TABLE_MIN_SIZE) ||
-      (3 * size <= nnodes && size < HASH_TABLE_MAX_SIZE))
+  if ((size > hash_table->nnodes * 4 && size > 1 << HASH_TABLE_MIN_SHIFT) ||
+      (size <= noccupied + (noccupied / 16)))
     g_hash_table_resize (hash_table);
 }
 
@@ -297,15 +578,16 @@ g_hash_table_maybe_resize (GHashTable *hash_table)
  * g_hash_table_new:
  * @hash_func: a function to create a hash value from a key.
  *   Hash values are used to determine where keys are stored within the
- *   #GHashTable data structure. The g_direct_hash(), g_int_hash() and
- *   g_str_hash() functions are provided for some common types of keys.
+ *   #GHashTable data structure. The g_direct_hash(), g_int_hash(),
+ *   g_int64_hash(), g_double_hash() and g_str_hash() functions are provided
+ *   for some common types of keys.
  *   If hash_func is %NULL, g_direct_hash() is used.
  * @key_equal_func: a function to check two keys for equality.  This is
  *   used when looking up keys in the #GHashTable.  The g_direct_equal(),
- *   g_int_equal() and g_str_equal() functions are provided for the most
- *   common types of keys. If @key_equal_func is %NULL, keys are compared
- *   directly in a similar fashion to g_direct_equal(), but without the
- *   overhead of a function call.
+ *   g_int_equal(), g_int64_equal(), g_double_equal() and g_str_equal()
+ *   functions are provided for the most common types of keys.
+ *   If @key_equal_func is %NULL, keys are compared directly in a similar
+ *   fashion to g_direct_equal(), but without the overhead of a function call.
  *
  * Creates a new #GHashTable with a reference count of 1.
  *
@@ -345,8 +627,9 @@ g_hash_table_new_full (GHashFunc       hash_func,
   GHashTable *hash_table;
 
   hash_table = g_slice_new (GHashTable);
-  hash_table->size               = HASH_TABLE_MIN_SIZE;
+  g_hash_table_set_shift (hash_table, HASH_TABLE_MIN_SHIFT);
   hash_table->nnodes             = 0;
+  hash_table->noccupied          = 0;
   hash_table->hash_func          = hash_func ? hash_func : g_direct_hash;
   hash_table->key_equal_func     = key_equal_func;
   hash_table->ref_count          = 1;
@@ -355,7 +638,7 @@ g_hash_table_new_full (GHashFunc       hash_func,
 #endif
   hash_table->key_destroy_func   = key_destroy_func;
   hash_table->value_destroy_func = value_destroy_func;
-  hash_table->nodes              = g_new0 (GHashNode*, hash_table->size);
+  hash_table->nodes              = g_new0 (GHashNode, hash_table->size);
 
   return hash_table;
 }
@@ -391,10 +674,7 @@ g_hash_table_iter_init (GHashTableIter *iter,
   g_return_if_fail (hash_table != NULL);
 
   ri->hash_table = hash_table;
-  ri->prev_node = NULL;
-  ri->node = NULL;
   ri->position = -1;
-  ri->pre_advanced = FALSE;
 #ifndef G_DISABLE_ASSERT
   ri->version = hash_table->version;
 #endif
@@ -420,43 +700,36 @@ g_hash_table_iter_next (GHashTableIter *iter,
 			gpointer       *value)
 {
   RealIter *ri = (RealIter *) iter;
+  GHashNode *node;
+  gint position;
 
   g_return_val_if_fail (iter != NULL, FALSE);
 #ifndef G_DISABLE_ASSERT
   g_return_val_if_fail (ri->version == ri->hash_table->version, FALSE);
 #endif
+  g_return_val_if_fail (ri->position < ri->hash_table->size, FALSE);
 
-  if (ri->pre_advanced)
+  position = ri->position;
+
+  do
     {
-      ri->pre_advanced = FALSE;
+      position++;
+      if (position >= ri->hash_table->size)
+        {
+          ri->position = position;
+          return FALSE;
+        }
 
-      if (ri->node == NULL)
-	return FALSE;
+      node = &ri->hash_table->nodes [position];
     }
-  else
-    {
-      if (ri->node != NULL)
-	{
-	  ri->prev_node = ri->node;
-	  ri->node = ri->node->next;
-	}
-
-      while (ri->node == NULL)
-	{
-	  ri->position++;
-	  if (ri->position >= ri->hash_table->size)
-	    return FALSE;
-
-	  ri->prev_node = NULL;
-	  ri->node = ri->hash_table->nodes[ri->position];
-	}
-    }
+  while (node->key_hash <= 1);
 
   if (key != NULL)
-    *key = ri->node->key;
+    *key = node->key;
   if (value != NULL)
-    *value = ri->node->value;
+    *value = node->value;
 
+  ri->position = position;
   return TRUE;
 }
 
@@ -481,55 +754,14 @@ g_hash_table_iter_get_hash_table (GHashTableIter *iter)
 static void
 iter_remove_or_steal (RealIter *ri, gboolean notify)
 {
-  GHashNode *prev;
-  GHashNode *node;
-  int position;
-
   g_return_if_fail (ri != NULL);
 #ifndef G_DISABLE_ASSERT
   g_return_if_fail (ri->version == ri->hash_table->version);
 #endif
-  g_return_if_fail (ri->node != NULL);
+  g_return_if_fail (ri->position >= 0);
+  g_return_if_fail (ri->position < ri->hash_table->size);
 
-  prev = ri->prev_node;
-  node = ri->node;
-  position = ri->position;
-
-  /* pre-advance the iterator since we will remove the node */
-
-  ri->node = ri->node->next;
-  /* ri->prev_node is still the correct previous node */
-
-  while (ri->node == NULL)
-    {
-      ri->position++;
-      if (ri->position >= ri->hash_table->size)
-	break;
-
-      ri->prev_node = NULL;
-      ri->node = ri->hash_table->nodes[ri->position];
-    }
-
-  ri->pre_advanced = TRUE;
-
-  /* remove the node */
-
-  if (prev != NULL)
-    prev->next = node->next;
-  else
-    ri->hash_table->nodes[position] = node->next;
-
-  if (notify)
-    {
-      if (ri->hash_table->key_destroy_func)
-	ri->hash_table->key_destroy_func(node->key);
-      if (ri->hash_table->value_destroy_func)
-	ri->hash_table->value_destroy_func(node->value);
-    }
-
-  g_slice_free (GHashNode, node);
-
-  ri->hash_table->nnodes--;
+  g_hash_table_remove_node (ri->hash_table, &ri->hash_table->nodes [ri->position], notify);
 
 #ifndef G_DISABLE_ASSERT
   ri->version++;
@@ -538,7 +770,7 @@ iter_remove_or_steal (RealIter *ri, gboolean notify)
 }
 
 /**
- * g_hash_table_iter_remove():
+ * g_hash_table_iter_remove:
  * @iter: an initialized #GHashTableIter.
  *
  * Removes the key/value pair currently pointed to by the iterator
@@ -560,7 +792,7 @@ g_hash_table_iter_remove (GHashTableIter *iter)
 }
 
 /**
- * g_hash_table_iter_steal():
+ * g_hash_table_iter_steal:
  * @iter: an initialized #GHashTableIter.
  *
  * Removes the key/value pair currently pointed to by the iterator
@@ -662,25 +894,30 @@ g_hash_table_lookup (GHashTable   *hash_table,
                      gconstpointer key)
 {
   GHashNode *node;
+  guint      node_index;
 
   g_return_val_if_fail (hash_table != NULL, NULL);
 
-  node = *g_hash_table_lookup_node (hash_table, key, NULL);
+  node_index = g_hash_table_lookup_node (hash_table, key);
+  node = &hash_table->nodes [node_index];
 
-  return node ? node->value : NULL;
+  return node->key_hash ? node->value : NULL;
 }
 
 /**
  * g_hash_table_lookup_extended:
- * @hash_table: a #GHashTable.
- * @lookup_key: the key to look up.
- * @orig_key: returns the original key.
- * @value: returns the value associated with the key.
+ * @hash_table: a #GHashTable
+ * @lookup_key: the key to look up
+ * @orig_key: return location for the original key, or %NULL
+ * @value: return location for the value associated with the key, or %NULL
  *
  * Looks up a key in the #GHashTable, returning the original key and the
  * associated value and a #gboolean which is %TRUE if the key was found. This
  * is useful if you need to free the memory allocated for the original key,
  * for example before calling g_hash_table_remove().
+ *
+ * You can actually pass %NULL for @lookup_key to test
+ * whether the %NULL key exists.
  *
  * Return value: %TRUE if the key was found in the #GHashTable.
  **/
@@ -691,12 +928,14 @@ g_hash_table_lookup_extended (GHashTable    *hash_table,
                               gpointer      *value)
 {
   GHashNode *node;
+  guint      node_index;
 
   g_return_val_if_fail (hash_table != NULL, FALSE);
 
-  node = *g_hash_table_lookup_node (hash_table, lookup_key, NULL);
+  node_index = g_hash_table_lookup_node (hash_table, lookup_key);
+  node = &hash_table->nodes [node_index];
 
-  if (node == NULL)
+  if (!node->key_hash)
     return FALSE;
 
   if (orig_key)
@@ -730,15 +969,20 @@ g_hash_table_insert_internal (GHashTable *hash_table,
                               gpointer    value,
                               gboolean    keep_new_key)
 {
-  GHashNode **node_ptr, *node;
+  GHashNode *node;
+  guint node_index;
   guint key_hash;
+  guint old_hash;
 
   g_return_if_fail (hash_table != NULL);
   g_return_if_fail (hash_table->ref_count > 0);
 
-  node_ptr = g_hash_table_lookup_node (hash_table, key, &key_hash);
+  node_index = g_hash_table_lookup_node_for_insertion (hash_table, key, &key_hash);
+  node = &hash_table->nodes [node_index];
 
-  if ((node = *node_ptr))
+  old_hash = node->key_hash;
+
+  if (old_hash > 1)
     {
       if (keep_new_key)
         {
@@ -759,16 +1003,18 @@ g_hash_table_insert_internal (GHashTable *hash_table,
     }
   else
     {
-      node = g_slice_new (GHashNode);
-
       node->key = key;
       node->value = value;
       node->key_hash = key_hash;
-      node->next = NULL;
 
-      *node_ptr = node;
       hash_table->nnodes++;
-      g_hash_table_maybe_resize (hash_table);
+
+      if (old_hash == 0)
+        {
+          /* We replaced an empty node, and not a tombstone */
+          hash_table->noccupied++;
+          g_hash_table_maybe_resize (hash_table);
+        }
 
 #ifndef G_DISABLE_ASSERT
       hash_table->version++;
@@ -837,15 +1083,19 @@ g_hash_table_remove_internal (GHashTable    *hash_table,
                               gconstpointer  key,
                               gboolean       notify)
 {
-  GHashNode **node_ptr;
+  GHashNode *node;
+  guint node_index;
 
   g_return_val_if_fail (hash_table != NULL, FALSE);
 
-  node_ptr = g_hash_table_lookup_node (hash_table, key, NULL);
-  if (*node_ptr == NULL)
+  node_index = g_hash_table_lookup_node (hash_table, key);
+  node = &hash_table->nodes [node_index];
+
+  /* g_hash_table_lookup_node() never returns a tombstone, so this is safe */
+  if (!node->key_hash)
     return FALSE;
 
-  g_hash_table_remove_node (hash_table, &node_ptr, notify);
+  g_hash_table_remove_node (hash_table, node, notify);
   g_hash_table_maybe_resize (hash_table);
 
 #ifndef G_DISABLE_ASSERT
@@ -966,19 +1216,19 @@ g_hash_table_foreach_remove_or_steal (GHashTable *hash_table,
                                       gpointer    user_data,
                                       gboolean    notify)
 {
-  GHashNode *node, **node_ptr;
   guint deleted = 0;
   gint i;
 
   for (i = 0; i < hash_table->size; i++)
-    for (node_ptr = &hash_table->nodes[i]; (node = *node_ptr) != NULL;)
-      if ((* func) (node->key, node->value, user_data))
+    {
+      GHashNode *node = &hash_table->nodes [i];
+
+      if (node->key_hash > 1 && (* func) (node->key, node->value, user_data))
         {
-          g_hash_table_remove_node (hash_table, &node_ptr, notify);
+          g_hash_table_remove_node (hash_table, node, notify);
           deleted++;
         }
-      else
-        node_ptr = &node->next;
+    }
 
   g_hash_table_maybe_resize (hash_table);
 
@@ -1002,7 +1252,7 @@ g_hash_table_foreach_remove_or_steal (GHashTable *hash_table,
  * the #GHashTable, they are used to free the memory allocated for the removed
  * keys and values.
  *
- * See #GHashTableIterator for an alternative way to loop over the 
+ * See #GHashTableIter for an alternative way to loop over the 
  * key/value pairs in the hash table.
  *
  * Return value: the number of key/value pairs removed.
@@ -1028,7 +1278,7 @@ g_hash_table_foreach_remove (GHashTable *hash_table,
  * If the function returns %TRUE, then the key/value pair is removed from the
  * #GHashTable, but no key or value destroy functions are called.
  *
- * See #GHashTableIterator for an alternative way to loop over the 
+ * See #GHashTableIter for an alternative way to loop over the 
  * key/value pairs in the hash table.
  *
  * Return value: the number of key/value pairs removed.
@@ -1065,15 +1315,18 @@ g_hash_table_foreach (GHashTable *hash_table,
                       GHFunc      func,
                       gpointer    user_data)
 {
-  GHashNode *node;
   gint i;
 
   g_return_if_fail (hash_table != NULL);
   g_return_if_fail (func != NULL);
 
   for (i = 0; i < hash_table->size; i++)
-    for (node = hash_table->nodes[i]; node; node = node->next)
-      (* func) (node->key, node->value, user_data);
+    {
+      GHashNode *node = &hash_table->nodes [i];
+
+      if (node->key_hash > 1)
+        (* func) (node->key, node->value, user_data);
+    }
 }
 
 /**
@@ -1107,16 +1360,19 @@ g_hash_table_find (GHashTable      *hash_table,
                    GHRFunc          predicate,
                    gpointer         user_data)
 {
-  GHashNode *node;
   gint i;
 
   g_return_val_if_fail (hash_table != NULL, NULL);
   g_return_val_if_fail (predicate != NULL, NULL);
 
   for (i = 0; i < hash_table->size; i++)
-    for (node = hash_table->nodes[i]; node; node = node->next)
-      if (predicate (node->key, node->value, user_data))
+    {
+      GHashNode *node = &hash_table->nodes [i];
+
+      if (node->key_hash > 1 && predicate (node->key, node->value, user_data))
         return node->value;
+    }
+
   return NULL;
 }
 
@@ -1153,7 +1409,6 @@ g_hash_table_size (GHashTable *hash_table)
 GList *
 g_hash_table_get_keys (GHashTable *hash_table)
 {
-  GHashNode *node;
   gint i;
   GList *retval;
 
@@ -1161,8 +1416,12 @@ g_hash_table_get_keys (GHashTable *hash_table)
 
   retval = NULL;
   for (i = 0; i < hash_table->size; i++)
-    for (node = hash_table->nodes[i]; node; node = node->next)
-      retval = g_list_prepend (retval, node->key);
+    {
+      GHashNode *node = &hash_table->nodes [i];
+
+      if (node->key_hash > 1)
+        retval = g_list_prepend (retval, node->key);
+    }
 
   return retval;
 }
@@ -1184,7 +1443,6 @@ g_hash_table_get_keys (GHashTable *hash_table)
 GList *
 g_hash_table_get_values (GHashTable *hash_table)
 {
-  GHashNode *node;
   gint i;
   GList *retval;
 
@@ -1192,11 +1450,12 @@ g_hash_table_get_values (GHashTable *hash_table)
 
   retval = NULL;
   for (i = 0; i < hash_table->size; i++)
-    for (node = hash_table->nodes[i]; node; node = node->next)
-      retval = g_list_prepend (retval, node->value);
+    {
+      GHashNode *node = &hash_table->nodes [i];
+
+      if (node->key_hash > 1)
+        retval = g_list_prepend (retval, node->value);
+    }
 
   return retval;
 }
-
-#define __G_HASH_C__
-#include "galiasdef.c"

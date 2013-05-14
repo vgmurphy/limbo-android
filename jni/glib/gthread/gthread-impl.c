@@ -105,7 +105,7 @@ g_mutex_lock_errorcheck_impl (GMutex *mutex,
   g_thread_functions_for_glib_use.thread_self (&self);
 
   if (g_system_thread_equal (info->owner, self))
-    g_error ("Trying to recursivly lock a mutex at '%s', "
+    g_error ("Trying to recursively lock a mutex at '%s', "
 	     "previously locked at '%s'",
 	     loc, info->location);
 
@@ -294,7 +294,12 @@ g_thread_init (GThreadFunctions* init)
   gboolean supported;
 
   if (thread_system_already_initialized)
-    g_error ("GThread system may only be initialized once.");
+    {
+      if (init != NULL)
+	g_warning ("GThread system already initialized, ignoring custom thread implementation.");
+
+      return;
+    }
 
   thread_system_already_initialized = TRUE;
 
@@ -359,6 +364,12 @@ g_thread_init (GThreadFunctions* init)
 
 void
 g_thread_init (GThreadFunctions* init)
+{
+  g_error ("GLib thread support is disabled.");
+}
+
+void
+g_thread_init_with_errorcheck_mutexes (GThreadFunctions* init)
 {
   g_error ("GLib thread support is disabled.");
 }

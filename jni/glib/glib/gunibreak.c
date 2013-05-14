@@ -22,9 +22,7 @@
 
 #include <stdlib.h>
 
-#include "glib.h"
 #include "gunibreak.h"
-#include "galias.h"
 
 #define TPROP_PART1(Page, Char) \
   ((break_property_table_part1[Page] >= G_UNICODE_MAX_TABLE_INDEX) \
@@ -61,6 +59,3 @@ g_unichar_break_type (gunichar c)
 {
   return PROP (c);
 }
-
-#define __G_UNIBREAK_C__
-#include "galiasdef.c"

@@ -19,8 +19,7 @@
  */
 
 #include "config.h"
-
-#include "glib.h"
+#include "glibconfig.h"
 
 #include <sys/stat.h>
 #ifdef HAVE_UNISTD_H
@@ -49,13 +48,11 @@
 #define O_BINARY 0
 #endif
 
+#include "gfileutils.h"
+
 #include "gstdio.h"
 #include "glibintl.h"
 
-#include "galias.h"
-
-static gint create_temp_file (gchar *tmpl, 
-			      int    permissions);
 
 /**
  * g_mkdir_with_parents:
@@ -207,19 +204,26 @@ g_file_test (const gchar *filename,
     return TRUE;
       
   if (test & G_FILE_TEST_IS_REGULAR)
-    return (attributes & (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_DEVICE)) == 0;
+    {
+      if ((attributes & (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_DEVICE)) == 0)
+	return TRUE;
+    }
 
   if (test & G_FILE_TEST_IS_DIR)
-    return (attributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+    {
+      if ((attributes & FILE_ATTRIBUTE_DIRECTORY) != 0)
+	return TRUE;
+    }
 
-  if (test & G_FILE_TEST_IS_EXECUTABLE)
+  /* "while" so that we can exit this "loop" with a simple "break" */
+  while (test & G_FILE_TEST_IS_EXECUTABLE)
     {
       const gchar *lastdot = strrchr (filename, '.');
       const gchar *pathext = NULL, *p;
       int extlen;
 
       if (lastdot == NULL)
-	return FALSE;
+        break;
 
       if (_stricmp (lastdot, ".exe") == 0 ||
 	  _stricmp (lastdot, ".cmd") == 0 ||
@@ -231,7 +235,7 @@ g_file_test (const gchar *filename,
 
       pathext = g_getenv ("PATHEXT");
       if (pathext == NULL)
-	return FALSE;
+        break;
 
       pathext = g_utf8_casefold (pathext, -1);
 
@@ -259,7 +263,7 @@ g_file_test (const gchar *filename,
 
       g_free ((gchar *) pathext);
       g_free ((gchar *) lastdot);
-      return FALSE;
+      break;
     }
 
   return FALSE;
@@ -315,31 +319,6 @@ g_file_test (const gchar *filename,
   return FALSE;
 #endif
 }
-
-#ifdef G_OS_WIN32
-
-#undef g_file_test
-
-/* Binary compatibility version. Not for newly compiled code. */
-
-gboolean
-g_file_test (const gchar *filename,
-             GFileTest    test)
-{
-  gchar *utf8_filename = g_locale_to_utf8 (filename, -1, NULL, NULL, NULL);
-  gboolean retval;
-
-  if (utf8_filename == NULL)
-    return FALSE;
-
-  retval = g_file_test_utf8 (utf8_filename, test);
-
-  g_free (utf8_filename);
-
-  return retval;
-}
-
-#endif
 
 GQuark
 g_file_error_quark (void)
@@ -518,11 +497,11 @@ g_file_error_from_errno (gint err_no)
 }
 
 static gboolean
-get_contents_stdio (const gchar *display_filename,
-                    FILE        *f,
-                    gchar      **contents,
-                    gsize       *length,
-                    GError     **error)
+get_contents_stdio (const gchar  *display_filename,
+                    FILE         *f,
+                    gchar       **contents,
+                    gsize        *length,
+                    GError      **error)
 {
   gchar buf[4096];
   gsize bytes;
@@ -577,13 +556,28 @@ get_contents_stdio (const gchar *display_filename,
         }
 
       memcpy (str + total_bytes, buf, bytes);
+
+      if (total_bytes + bytes < total_bytes) 
+        {
+          g_set_error (error,
+                       G_FILE_ERROR,
+                       G_FILE_ERROR_FAILED,
+                       _("File \"%s\" is too large"),
+                       display_filename);
+
+          goto error;
+        }
+
       total_bytes += bytes;
     }
 
   fclose (f);
 
   if (total_allocated == 0)
-    str = g_new (gchar, 1);
+    {
+      str = g_new (gchar, 1);
+      total_bytes = 0;
+    }
 
   str[total_bytes] = '\0';
 
@@ -605,12 +599,12 @@ get_contents_stdio (const gchar *display_filename,
 #ifndef G_OS_WIN32
 
 static gboolean
-get_contents_regfile (const gchar *display_filename,
-                      struct stat *stat_buf,
-                      gint         fd,
-                      gchar      **contents,
-                      gsize       *length,
-                      GError     **error)
+get_contents_regfile (const gchar  *display_filename,
+                      struct stat  *stat_buf,
+                      gint          fd,
+                      gchar       **contents,
+                      gsize        *length,
+                      GError      **error)
 {
   gchar *buf;
   gsize bytes_read;
@@ -683,10 +677,10 @@ get_contents_regfile (const gchar *display_filename,
 }
 
 static gboolean
-get_contents_posix (const gchar *filename,
-                    gchar      **contents,
-                    gsize       *length,
-                    GError     **error)
+get_contents_posix (const gchar  *filename,
+                    gchar       **contents,
+                    gsize        *length,
+                    GError      **error)
 {
   struct stat stat_buf;
   gint fd;
@@ -771,10 +765,10 @@ get_contents_posix (const gchar *filename,
 #else  /* G_OS_WIN32 */
 
 static gboolean
-get_contents_win32 (const gchar *filename,
-		    gchar      **contents,
-		    gsize       *length,
-		    GError     **error)
+get_contents_win32 (const gchar  *filename,
+		    gchar       **contents,
+		    gsize        *length,
+		    GError      **error)
 {
   FILE *f;
   gboolean retval;
@@ -808,28 +802,29 @@ get_contents_win32 (const gchar *filename,
 /**
  * g_file_get_contents:
  * @filename: name of a file to read contents from, in the GLib file name encoding
- * @contents: location to store an allocated string
+ * @contents: location to store an allocated string, use g_free() to free
+ *     the returned string
  * @length: location to store length in bytes of the contents, or %NULL
  * @error: return location for a #GError, or %NULL
- * 
- * Reads an entire file into allocated memory, with good error
- * checking. 
  *
- * If the call was successful, it returns %TRUE and sets @contents to the file 
- * contents and @length to the length of the file contents in bytes. The string 
- * stored in @contents will be nul-terminated, so for text files you can pass 
- * %NULL for the @length argument. If the call was not successful, it returns 
- * %FALSE and sets @error. The error domain is #G_FILE_ERROR. Possible error  
- * codes are those in the #GFileError enumeration. In the error case, 
+ * Reads an entire file into allocated memory, with good error
+ * checking.
+ *
+ * If the call was successful, it returns %TRUE and sets @contents to the file
+ * contents and @length to the length of the file contents in bytes. The string
+ * stored in @contents will be nul-terminated, so for text files you can pass
+ * %NULL for the @length argument. If the call was not successful, it returns
+ * %FALSE and sets @error. The error domain is #G_FILE_ERROR. Possible error
+ * codes are those in the #GFileError enumeration. In the error case,
  * @contents is set to %NULL and @length is set to zero.
  *
  * Return value: %TRUE on success, %FALSE if an error occurred
  **/
 gboolean
-g_file_get_contents (const gchar *filename,
-                     gchar      **contents,
-                     gsize       *length,
-                     GError     **error)
+g_file_get_contents (const gchar  *filename,
+                     gchar       **contents,
+                     gsize        *length,
+                     GError      **error)
 {  
   g_return_val_if_fail (filename != NULL, FALSE);
   g_return_val_if_fail (contents != NULL, FALSE);
@@ -845,37 +840,10 @@ g_file_get_contents (const gchar *filename,
 #endif
 }
 
-#ifdef G_OS_WIN32
-
-#undef g_file_get_contents
-
-/* Binary compatibility version. Not for newly compiled code. */
-
-gboolean
-g_file_get_contents (const gchar *filename,
-                     gchar      **contents,
-                     gsize       *length,
-                     GError     **error)
-{
-  gchar *utf8_filename = g_locale_to_utf8 (filename, -1, NULL, NULL, error);
-  gboolean retval;
-
-  if (utf8_filename == NULL)
-    return FALSE;
-
-  retval = g_file_get_contents_utf8 (utf8_filename, contents, length, error);
-
-  g_free (utf8_filename);
-
-  return retval;
-}
-
-#endif
-
 static gboolean
-rename_file (const char *old_name,
-	     const char *new_name,
-	     GError **err)
+rename_file (const char  *old_name,
+	     const char  *new_name,
+	     GError     **err)
 {
   errno = 0;
   if (g_rename (old_name, new_name) == -1)
@@ -902,10 +870,10 @@ rename_file (const char *old_name,
 }
 
 static gchar *
-write_to_temp_file (const gchar *contents,
-		    gssize length,
-		    const gchar *template,
-		    GError **err)
+write_to_temp_file (const gchar  *contents,
+		    gssize        length,
+		    const gchar  *dest_file,
+		    GError      **err)
 {
   gchar *tmp_name;
   gchar *display_name;
@@ -916,10 +884,10 @@ write_to_temp_file (const gchar *contents,
 
   retval = NULL;
   
-  tmp_name = g_strdup_printf ("%s.XXXXXX", template);
+  tmp_name = g_strdup_printf ("%s.XXXXXX", dest_file);
 
   errno = 0;
-  fd = create_temp_file (tmp_name, 0666);
+  fd = g_mkstemp_full (tmp_name, O_RDWR | O_BINARY, 0666);
   save_errno = errno;
 
   display_name = g_filename_display_name (tmp_name);
@@ -978,11 +946,59 @@ write_to_temp_file (const gchar *contents,
 	  goto out;
 	}
     }
-   
+
+  errno = 0;
+  if (fflush (file) != 0)
+    { 
+      save_errno = errno;
+      
+      g_set_error (err,
+		   G_FILE_ERROR,
+		   g_file_error_from_errno (save_errno),
+		   _("Failed to write file '%s': fflush() failed: %s"),
+		   display_name, 
+		   g_strerror (save_errno));
+
+      g_unlink (tmp_name);
+      
+      goto out;
+    }
+  
+#ifdef HAVE_FSYNC
+  {
+    struct stat statbuf;
+
+    errno = 0;
+    /* If the final destination exists and is > 0 bytes, we want to sync the
+     * newly written file to ensure the data is on disk when we rename over
+     * the destination. Otherwise if we get a system crash we can lose both
+     * the new and the old file on some filesystems. (I.E. those that don't
+     * guarantee the data is written to the disk before the metadata.)
+     */
+    if (g_lstat (dest_file, &statbuf) == 0 &&
+	statbuf.st_size > 0 &&
+	fsync (fileno (file)) != 0)
+      {
+	save_errno = errno;
+
+	g_set_error (err,
+		     G_FILE_ERROR,
+		     g_file_error_from_errno (save_errno),
+		     _("Failed to write file '%s': fsync() failed: %s"),
+		     display_name,
+		     g_strerror (save_errno));
+
+	g_unlink (tmp_name);
+
+	goto out;
+      }
+  }
+#endif
+  
   errno = 0;
   if (fclose (file) == EOF)
     { 
-      save_errno = 0;
+      save_errno = errno;
       
       g_set_error (err,
 		   G_FILE_ERROR,
@@ -1041,15 +1057,18 @@ write_to_temp_file (const gchar *contents,
  * it returns %FALSE and sets @error. The error domain is #G_FILE_ERROR.
  * Possible error codes are those in the #GFileError enumeration.
  *
+ * Note that the name for the temporary file is constructed by appending up
+ * to 7 characters to @filename.
+ *
  * Return value: %TRUE on success, %FALSE if an error occurred
  *
  * Since: 2.8
  **/
 gboolean
-g_file_set_contents (const gchar *filename,
-		     const gchar *contents,
-		     gssize	     length,
-		     GError	   **error)
+g_file_set_contents (const gchar  *filename,
+		     const gchar  *contents,
+		     gssize	   length,
+		     GError	 **error)
 {
   gchar *tmp_filename;
   gboolean retval;
@@ -1132,13 +1151,39 @@ g_file_set_contents (const gchar *filename,
   return retval;
 }
 
+/**
+ * g_mkstemp_full:
+ * @tmpl: template filename
+ * @flags: flags to pass to an open() call in addition to O_EXCL and
+ *         O_CREAT, which are passed automatically
+ * @mode: permissios to create the temporary file with
+ *
+ * Opens a temporary file. See the mkstemp() documentation
+ * on most UNIX-like systems.
+ *
+ * The parameter is a string that should follow the rules for
+ * mkstemp() templates, i.e. contain the string "XXXXXX".
+ * g_mkstemp_full() is slightly more flexible than mkstemp()
+ * in that the sequence does not have to occur at the very end of the
+ * template and you can pass a @mode and additional @flags. The X
+ * string will be modified to form the name of a file that didn't exist.
+ * The string should be in the GLib file name encoding. Most importantly,
+ * on Windows it should be in UTF-8.
+ *
+ * Return value: A file handle (as from open()) to the file
+ *     opened for reading and writing. The file handle should be
+ *     closed with close(). In case of errors, -1 is returned.
+ *
+ * Since: 2.22
+ */
 /*
- * create_temp_file based on the mkstemp implementation from the GNU C library.
+ * g_mkstemp_full based on the mkstemp implementation from the GNU C library.
  * Copyright (C) 1991,92,93,94,95,96,97,98,99 Free Software Foundation, Inc.
  */
-static gint
-create_temp_file (gchar *tmpl, 
-		  int    permissions)
+gint
+g_mkstemp_full (gchar *tmpl, 
+                int    flags,
+		int    mode)
 {
   char *XXXXXX;
   int count, fd;
@@ -1148,6 +1193,9 @@ create_temp_file (gchar *tmpl,
   glong value;
   GTimeVal tv;
   static int counter = 0;
+
+  g_return_val_if_fail (tmpl != NULL, -1);
+
 
   /* find the last occurrence of "XXXXXX" */
   XXXXXX = g_strrstr (tmpl, "XXXXXX");
@@ -1180,7 +1228,7 @@ create_temp_file (gchar *tmpl,
       XXXXXX[5] = letters[v % NLETTERS];
 
       /* tmpl is in UTF-8 on Windows, thus use g_open() */
-      fd = g_open (tmpl, O_RDWR | O_CREAT | O_EXCL | O_BINARY, permissions);
+      fd = g_open (tmpl, flags | O_CREAT | O_EXCL, mode);
 
       if (fd >= 0)
 	return fd;
@@ -1220,83 +1268,14 @@ create_temp_file (gchar *tmpl,
 gint
 g_mkstemp (gchar *tmpl)
 {
-  return create_temp_file (tmpl, 0600);
+  return g_mkstemp_full (tmpl, O_RDWR | O_BINARY, 0600);
 }
-
-#ifdef G_OS_WIN32
-
-#undef g_mkstemp
-
-/* Binary compatibility version. Not for newly compiled code. */
-
-gint
-g_mkstemp (gchar *tmpl)
-{
-  char *XXXXXX;
-  int count, fd;
-  static const char letters[] =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  static const int NLETTERS = sizeof (letters) - 1;
-  glong value;
-  GTimeVal tv;
-  static int counter = 0;
-
-  /* find the last occurrence of 'XXXXXX' */
-  XXXXXX = g_strrstr (tmpl, "XXXXXX");
-
-  if (!XXXXXX || strcmp (XXXXXX, "XXXXXX"))
-    {
-      errno = EINVAL;
-      return -1;
-    }
-
-  /* Get some more or less random data.  */
-  g_get_current_time (&tv);
-  value = (tv.tv_usec ^ tv.tv_sec) + counter++;
-
-  for (count = 0; count < 100; value += 7777, ++count)
-    {
-      glong v = value;
-
-      /* Fill in the random bits.  */
-      XXXXXX[0] = letters[v % NLETTERS];
-      v /= NLETTERS;
-      XXXXXX[1] = letters[v % NLETTERS];
-      v /= NLETTERS;
-      XXXXXX[2] = letters[v % NLETTERS];
-      v /= NLETTERS;
-      XXXXXX[3] = letters[v % NLETTERS];
-      v /= NLETTERS;
-      XXXXXX[4] = letters[v % NLETTERS];
-      v /= NLETTERS;
-      XXXXXX[5] = letters[v % NLETTERS];
-
-      /* This is the backward compatibility system codepage version,
-       * thus use normal open().
-       */
-      fd = open (tmpl, O_RDWR | O_CREAT | O_EXCL | O_BINARY, 0600);
-
-      if (fd >= 0)
-	return fd;
-      else if (errno != EEXIST)
-	/* Any other error will apply also to other names we might
-	 *  try, and there are 2^32 or so of them, so give up now.
-	 */
-	return -1;
-    }
-
-  /* We got out of the loop because we ran out of combinations to try.  */
-  errno = EEXIST;
-  return -1;
-}
-
-#endif
 
 /**
  * g_file_open_tmp:
  * @tmpl: Template for file name, as in g_mkstemp(), basename only,
  *        or %NULL, to a default template
- * @name_used: location to store actual name used
+ * @name_used: location to store actual name used, or %NULL
  * @error: return location for a #GError
  *
  * Opens a file for writing in the preferred directory for temporary
@@ -1322,13 +1301,13 @@ g_mkstemp (gchar *tmpl)
  * and @error will be set.
  **/
 gint
-g_file_open_tmp (const gchar *tmpl,
-		 gchar      **name_used,
-		 GError     **error)
+g_file_open_tmp (const gchar  *tmpl,
+		 gchar       **name_used,
+		 GError      **error)
 {
   int retval;
   const char *tmpdir;
-  char *sep;
+  const char *sep;
   char *fulltemplate;
   const char *slash;
 
@@ -1402,39 +1381,6 @@ g_file_open_tmp (const gchar *tmpl,
   return retval;
 }
 
-#ifdef G_OS_WIN32
-
-#undef g_file_open_tmp
-
-/* Binary compatibility version. Not for newly compiled code. */
-
-gint
-g_file_open_tmp (const gchar *tmpl,
-		 gchar      **name_used,
-		 GError     **error)
-{
-  gchar *utf8_tmpl = g_locale_to_utf8 (tmpl, -1, NULL, NULL, error);
-  gchar *utf8_name_used;
-  gint retval;
-
-  if (utf8_tmpl == NULL)
-    return -1;
-
-  retval = g_file_open_tmp_utf8 (utf8_tmpl, &utf8_name_used, error);
-  
-  if (retval == -1)
-    return -1;
-
-  if (name_used)
-    *name_used = g_locale_from_utf8 (utf8_name_used, -1, NULL, NULL, NULL);
-
-  g_free (utf8_name_used);
-
-  return retval;
-}
-
-#endif
-
 static gchar *
 g_build_path_va (const gchar  *separator,
 		 const gchar  *first_element,
@@ -1482,8 +1428,7 @@ g_build_path_va (const gchar  *separator,
 
       if (separator_len)
 	{
-	  while (start &&
-		 strncmp (start, separator, separator_len) == 0)
+	  while (strncmp (start, separator, separator_len) == 0)
 	    start += separator_len;
       	}
 
@@ -1800,22 +1745,28 @@ g_build_filename (const gchar *first_element,
   return str;
 }
 
-#define KILOBYTE_FACTOR 1024.0
-#define MEGABYTE_FACTOR (1024.0 * 1024.0)
-#define GIGABYTE_FACTOR (1024.0 * 1024.0 * 1024.0)
+#define KILOBYTE_FACTOR (G_GOFFSET_CONSTANT (1024))
+#define MEGABYTE_FACTOR (KILOBYTE_FACTOR * KILOBYTE_FACTOR)
+#define GIGABYTE_FACTOR (MEGABYTE_FACTOR * KILOBYTE_FACTOR)
+#define TERABYTE_FACTOR (GIGABYTE_FACTOR * KILOBYTE_FACTOR)
+#define PETABYTE_FACTOR (TERABYTE_FACTOR * KILOBYTE_FACTOR)
+#define EXABYTE_FACTOR  (PETABYTE_FACTOR * KILOBYTE_FACTOR)
 
 /**
  * g_format_size_for_display:
  * @size: a size in bytes.
  * 
  * Formats a size (for example the size of a file) into a human readable string.
- * Sizes are rounded to the nearest size prefix (KB, MB, GB) and are displayed rounded to
- * the nearest  tenth. E.g. the file size 3292528 bytes will be converted into
- * the string "3.1 MB".
+ * Sizes are rounded to the nearest size prefix (KB, MB, GB) and are displayed 
+ * rounded to the nearest  tenth. E.g. the file size 3292528 bytes will be
+ * converted into the string "3.1 MB".
  *
  * The prefix units base is 1024 (i.e. 1 KB is 1024 bytes).
- * 
- * Returns: a formatted string containing a human readable file size.
+ *
+ * This string should be freed with g_free() when not needed any longer.
+ *
+ * Returns: a newly-allocated formatted string containing a human readable
+ *          file size.
  *
  * Since: 2.16
  **/
@@ -1823,26 +1774,41 @@ char *
 g_format_size_for_display (goffset size)
 {
   if (size < (goffset) KILOBYTE_FACTOR)
-    return g_strdup_printf (dngettext(GETTEXT_PACKAGE, "%u byte", "%u bytes",(guint) size), (guint) size);
+    return g_strdup_printf (g_dngettext(GETTEXT_PACKAGE, "%u byte", "%u bytes",(guint) size), (guint) size);
   else
     {
       gdouble displayed_size;
       
       if (size < (goffset) MEGABYTE_FACTOR)
 	{
-	  displayed_size = (gdouble) size / KILOBYTE_FACTOR;
+	  displayed_size = (gdouble) size / (gdouble) KILOBYTE_FACTOR;
 	  return g_strdup_printf (_("%.1f KB"), displayed_size);
 	}
       else if (size < (goffset) GIGABYTE_FACTOR)
 	{
-	  displayed_size = (gdouble) size / MEGABYTE_FACTOR;
+	  displayed_size = (gdouble) size / (gdouble) MEGABYTE_FACTOR;
 	  return g_strdup_printf (_("%.1f MB"), displayed_size);
 	}
-      else
+      else if (size < (goffset) TERABYTE_FACTOR)
 	{
-	  displayed_size = (gdouble) size / GIGABYTE_FACTOR;
+	  displayed_size = (gdouble) size / (gdouble) GIGABYTE_FACTOR;
 	  return g_strdup_printf (_("%.1f GB"), displayed_size);
 	}
+      else if (size < (goffset) PETABYTE_FACTOR)
+	{
+	  displayed_size = (gdouble) size / (gdouble) TERABYTE_FACTOR;
+	  return g_strdup_printf (_("%.1f TB"), displayed_size);
+	}
+      else if (size < (goffset) EXABYTE_FACTOR)
+	{
+	  displayed_size = (gdouble) size / (gdouble) PETABYTE_FACTOR;
+	  return g_strdup_printf (_("%.1f PB"), displayed_size);
+	}
+      else
+        {
+	  displayed_size = (gdouble) size / (gdouble) EXABYTE_FACTOR;
+	  return g_strdup_printf (_("%.1f EB"), displayed_size);
+        }
     }
 }
 
@@ -1856,14 +1822,14 @@ g_format_size_for_display (goffset size)
  * readlink() function.  The returned string is in the encoding used
  * for filenames. Use g_filename_to_utf8() to convert it to UTF-8.
  *
- * Returns: A newly allocated string with the contents of the symbolic link, 
+ * Returns: A newly-allocated string with the contents of the symbolic link, 
  *          or %NULL if an error occurred.
  *
  * Since: 2.4
  */
 gchar *
-g_file_read_link (const gchar *filename,
-	          GError     **error)
+g_file_read_link (const gchar  *filename,
+	          GError      **error)
 {
 #ifdef HAVE_READLINK
   gchar *buffer;
@@ -1902,14 +1868,153 @@ g_file_read_link (const gchar *filename,
       buffer = g_realloc (buffer, size);
     }
 #else
-  g_set_error (error,
-	       G_FILE_ERROR,
-	       G_FILE_ERROR_INVAL,
-	       _("Symbolic links not supported"));
+  g_set_error_literal (error,
+                       G_FILE_ERROR,
+                       G_FILE_ERROR_INVAL,
+                       _("Symbolic links not supported"));
 	
   return NULL;
 #endif
 }
 
-#define __G_FILEUTILS_C__
-#include "galiasdef.c"
+/* NOTE : Keep this part last to ensure nothing in this file uses the
+ * below binary compatibility versions.
+ */
+#if defined (G_OS_WIN32) && !defined (_WIN64)
+
+/* Binary compatibility versions. Will be called by code compiled
+ * against quite old (pre-2.8, I think) headers only, not from more
+ * recently compiled code.
+ */
+
+#undef g_file_test
+
+gboolean
+g_file_test (const gchar *filename,
+             GFileTest    test)
+{
+  gchar *utf8_filename = g_locale_to_utf8 (filename, -1, NULL, NULL, NULL);
+  gboolean retval;
+
+  if (utf8_filename == NULL)
+    return FALSE;
+
+  retval = g_file_test_utf8 (utf8_filename, test);
+
+  g_free (utf8_filename);
+
+  return retval;
+}
+
+#undef g_file_get_contents
+
+gboolean
+g_file_get_contents (const gchar  *filename,
+                     gchar       **contents,
+                     gsize        *length,
+                     GError      **error)
+{
+  gchar *utf8_filename = g_locale_to_utf8 (filename, -1, NULL, NULL, error);
+  gboolean retval;
+
+  if (utf8_filename == NULL)
+    return FALSE;
+
+  retval = g_file_get_contents_utf8 (utf8_filename, contents, length, error);
+
+  g_free (utf8_filename);
+
+  return retval;
+}
+
+#undef g_mkstemp
+
+gint
+g_mkstemp (gchar *tmpl)
+{
+  char *XXXXXX;
+  int count, fd;
+  static const char letters[] =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  static const int NLETTERS = sizeof (letters) - 1;
+  glong value;
+  GTimeVal tv;
+  static int counter = 0;
+
+  /* find the last occurrence of 'XXXXXX' */
+  XXXXXX = g_strrstr (tmpl, "XXXXXX");
+
+  if (!XXXXXX)
+    {
+      errno = EINVAL;
+      return -1;
+    }
+
+  /* Get some more or less random data.  */
+  g_get_current_time (&tv);
+  value = (tv.tv_usec ^ tv.tv_sec) + counter++;
+
+  for (count = 0; count < 100; value += 7777, ++count)
+    {
+      glong v = value;
+
+      /* Fill in the random bits.  */
+      XXXXXX[0] = letters[v % NLETTERS];
+      v /= NLETTERS;
+      XXXXXX[1] = letters[v % NLETTERS];
+      v /= NLETTERS;
+      XXXXXX[2] = letters[v % NLETTERS];
+      v /= NLETTERS;
+      XXXXXX[3] = letters[v % NLETTERS];
+      v /= NLETTERS;
+      XXXXXX[4] = letters[v % NLETTERS];
+      v /= NLETTERS;
+      XXXXXX[5] = letters[v % NLETTERS];
+
+      /* This is the backward compatibility system codepage version,
+       * thus use normal open().
+       */
+      fd = open (tmpl, O_RDWR | O_CREAT | O_EXCL | O_BINARY, 0600);
+
+      if (fd >= 0)
+	return fd;
+      else if (errno != EEXIST)
+	/* Any other error will apply also to other names we might
+	 *  try, and there are 2^32 or so of them, so give up now.
+	 */
+	return -1;
+    }
+
+  /* We got out of the loop because we ran out of combinations to try.  */
+  errno = EEXIST;
+  return -1;
+}
+
+#undef g_file_open_tmp
+
+gint
+g_file_open_tmp (const gchar  *tmpl,
+		 gchar       **name_used,
+		 GError      **error)
+{
+  gchar *utf8_tmpl = g_locale_to_utf8 (tmpl, -1, NULL, NULL, error);
+  gchar *utf8_name_used;
+  gint retval;
+
+  if (utf8_tmpl == NULL)
+    return -1;
+
+  retval = g_file_open_tmp_utf8 (utf8_tmpl, &utf8_name_used, error);
+  
+  if (retval == -1)
+    return -1;
+
+  if (name_used)
+    *name_used = g_locale_from_utf8 (utf8_name_used, -1, NULL, NULL, NULL);
+
+  g_free (utf8_name_used);
+
+  return retval;
+}
+
+#endif

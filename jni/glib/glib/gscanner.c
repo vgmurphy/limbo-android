@@ -24,31 +24,34 @@
  * Modified by the GLib Team and others 1997-2000.  See the AUTHORS
  * file for a list of people on the GLib Team.  See the ChangeLog
  * files for a list of changes.  These files are distributed with
- * GLib at ftp://ftp.gtk.org/pub/gtk/. 
+ * GLib at ftp://ftp.gtk.org/pub/gtk/.
  */
 
-/* 
+/*
  * MT safe
  */
 
 #include "config.h"
 
-#include	<errno.h>
-#include	<stdlib.h>
-#include	<stdarg.h>
-#include	<string.h>
-#include	<stdio.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <string.h>
+#include <stdio.h>
 #ifdef HAVE_UNISTD_H
-#include	<unistd.h>
+#include <unistd.h>
 #endif
-
-#include	"glib.h"
-#include	"gprintfint.h"
-#include        "galias.h"
 
 #ifdef G_OS_WIN32
-#include	<io.h>		/* For _read() */
+#include <io.h> /* For _read() */
 #endif
+
+#include "gscanner.h"
+
+#include "gprintfint.h"
+#include "gstrfuncs.h"
+#include "gstring.h"
+#include "gtestutils.h"
 
 /* --- defines --- */
 #define	to_lower(c)				( \
@@ -1762,6 +1765,3 @@ g_scanner_get_token_ll	(GScanner	*scanner,
   *token_p = token;
   *value_p = value;
 }
-
-#define __G_SCANNER_C__
-#include "galiasdef.c"

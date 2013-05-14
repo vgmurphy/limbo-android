@@ -19,6 +19,10 @@
  *   Boston, MA 02111-1307, USA.
  */
 
+#if defined(G_DISABLE_SINGLE_INCLUDES) && !defined (__GLIB_H_INSIDE__) && !defined (GLIB_COMPILATION)
+#error "Only <glib.h> can be included directly."
+#endif
+
 #ifndef __G_UNICODE_H__
 #define __G_UNICODE_H__
 
@@ -190,17 +194,34 @@ typedef enum
   G_UNICODE_SCRIPT_NKO,                /* Nkoo */
 
   /* Unicode-5.1 additions */
-  G_UNICODE_SCRIPT_KAYAH_LI,
-  G_UNICODE_SCRIPT_LEPCHA,
-  G_UNICODE_SCRIPT_REJANG,
-  G_UNICODE_SCRIPT_SUNDANESE,
-  G_UNICODE_SCRIPT_SAURASHTRA,
-  G_UNICODE_SCRIPT_CHAM,
-  G_UNICODE_SCRIPT_OL_CHIKI,
-  G_UNICODE_SCRIPT_VAI,
-  G_UNICODE_SCRIPT_CARIAN,
-  G_UNICODE_SCRIPT_LYCIAN,
-  G_UNICODE_SCRIPT_LYDIAN
+  G_UNICODE_SCRIPT_KAYAH_LI,           /* Kali */
+  G_UNICODE_SCRIPT_LEPCHA,             /* Lepc */
+  G_UNICODE_SCRIPT_REJANG,             /* Rjng */
+  G_UNICODE_SCRIPT_SUNDANESE,          /* Sund */
+  G_UNICODE_SCRIPT_SAURASHTRA,         /* Saur */
+  G_UNICODE_SCRIPT_CHAM,               /* Cham */
+  G_UNICODE_SCRIPT_OL_CHIKI,           /* Olck */
+  G_UNICODE_SCRIPT_VAI,                /* Vaii */
+  G_UNICODE_SCRIPT_CARIAN,             /* Cari */
+  G_UNICODE_SCRIPT_LYCIAN,             /* Lyci */
+  G_UNICODE_SCRIPT_LYDIAN,             /* Lydi */
+
+  /* Unicode-5.2 additions */
+  G_UNICODE_SCRIPT_AVESTAN,                /* Avestan */
+  G_UNICODE_SCRIPT_BAMUM,                  /* Bamum */
+  G_UNICODE_SCRIPT_EGYPTIAN_HIEROGLYPHS,   /* Egyptian Hieroglyphs */
+  G_UNICODE_SCRIPT_IMPERIAL_ARAMAIC,       /* Imperial Aramaic */
+  G_UNICODE_SCRIPT_INSCRIPTIONAL_PAHLAVI,  /* Inscriptional Pahlavi */
+  G_UNICODE_SCRIPT_INSCRIPTIONAL_PARTHIAN, /* Inscriptional Parthian */
+  G_UNICODE_SCRIPT_JAVANESE,               /* Javanese */
+  G_UNICODE_SCRIPT_KAITHI,                 /* Kaithi */
+  G_UNICODE_SCRIPT_LISU,                   /* Lisu */
+  G_UNICODE_SCRIPT_MEETEI_MAYEK,           /* Meetei Mayek */
+  G_UNICODE_SCRIPT_OLD_SOUTH_ARABIAN,      /* Old South Arabian */
+  G_UNICODE_SCRIPT_OLD_TURKISH,            /* Old Turkish */
+  G_UNICODE_SCRIPT_SAMARITAN,              /* Samaritan */
+  G_UNICODE_SCRIPT_TAI_THAM,               /* Tai Tham */
+  G_UNICODE_SCRIPT_TAI_VIET                /* Tai Viet */
 } GUnicodeScript;
 
 /* Returns TRUE if current locale uses UTF-8 charset.  If CHARSET is
@@ -394,7 +415,6 @@ GUnicodeScript g_unichar_get_script (gunichar ch) G_GNUC_CONST;
 /* private */
 
 gchar *_g_utf8_make_valid (const gchar *name);
-
 
 G_END_DECLS
 

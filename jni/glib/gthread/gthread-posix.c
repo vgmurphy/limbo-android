@@ -147,8 +147,6 @@ g_thread_impl_init(void)
 # endif
 #endif /* HAVE_PRIORITIES */
 
-#undef USE_CLOCK_GETTIME //TK
-
 #ifdef USE_CLOCK_GETTIME
  if (sysconf (_SC_MONOTONIC_CLOCK) >= 0)
    posix_clock = CLOCK_MONOTONIC;

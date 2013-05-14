@@ -26,15 +26,73 @@
 
 #include "config.h"
 
-#include "glib.h"
-#include "galias.h"
+#include "gasyncqueue.h"
+
+#include "gmem.h"
+#include "gqueue.h"
+#include "gtestutils.h"
+#include "gthread.h"
 
 
+/**
+ * SECTION: async_queues
+ * @title: Asynchronous Queues
+ * @short_description: asynchronous communication between threads
+ *
+ * Often you need to communicate between different threads. In general
+ * it's safer not to do this by shared memory, but by explicit message
+ * passing. These messages only make sense asynchronously for
+ * multi-threaded applications though, as a synchronous operation could
+ * as well be done in the same thread.
+ *
+ * Asynchronous queues are an exception from most other GLib data
+ * structures, as they can be used simultaneously from multiple threads
+ * without explicit locking and they bring their own builtin reference
+ * counting. This is because the nature of an asynchronous queue is that
+ * it will always be used by at least 2 concurrent threads.
+ *
+ * For using an asynchronous queue you first have to create one with
+ * g_async_queue_new(). A newly-created queue will get the reference
+ * count 1. Whenever another thread is creating a new reference of (that
+ * is, pointer to) the queue, it has to increase the reference count
+ * (using g_async_queue_ref()). Also, before removing this reference,
+ * the reference count has to be decreased (using g_async_queue_unref()).
+ * After that the queue might no longer exist so you must not access
+ * it after that point.
+ *
+ * A thread, which wants to send a message to that queue simply calls
+ * g_async_queue_push() to push the message to the queue.
+ *
+ * A thread, which is expecting messages from an asynchronous queue
+ * simply calls g_async_queue_pop() for that queue. If no message is
+ * available in the queue at that point, the thread is now put to sleep
+ * until a message arrives. The message will be removed from the queue
+ * and returned. The functions g_async_queue_try_pop() and
+ * g_async_queue_timed_pop() can be used to only check for the presence
+ * of messages or to only wait a certain time for messages respectively.
+ *
+ * For almost every function there exist two variants, one that locks
+ * the queue and one that doesn't. That way you can hold the queue lock
+ * (acquire it with g_async_queue_lock() and release it with
+ * g_async_queue_unlock()) over multiple queue accessing instructions.
+ * This can be necessary to ensure the integrity of the queue, but should
+ * only be used when really necessary, as it can make your life harder
+ * if used unwisely. Normally you should only use the locking function
+ * variants (those without the suffix _unlocked)
+ */
+
+/**
+ * GAsyncQueue:
+ *
+ * The GAsyncQueue struct is an opaque data structure, which represents
+ * an asynchronous queue. It should only be accessed through the
+ * <function>g_async_queue_*</function> functions.
+ */
 struct _GAsyncQueue
 {
   GMutex *mutex;
   GCond *cond;
-  GQueue *queue;
+  GQueue queue;
   GDestroyNotify item_free_func;
   guint waiting_threads;
   gint32 ref_count;
@@ -58,7 +116,7 @@ g_async_queue_new (void)
   GAsyncQueue* retval = g_new (GAsyncQueue, 1);
   retval->mutex = g_mutex_new ();
   retval->cond = NULL;
-  retval->queue = g_queue_new ();
+  g_queue_init (&retval->queue);
   retval->waiting_threads = 0;
   retval->ref_count = 1;
   retval->item_free_func = NULL;
@@ -170,8 +228,8 @@ g_async_queue_unref (GAsyncQueue *queue)
       if (queue->cond)
 	g_cond_free (queue->cond);
       if (queue->item_free_func)
-        g_queue_foreach (queue->queue, (GFunc) queue->item_free_func, NULL);
-      g_queue_free (queue->queue);
+        g_queue_foreach (&queue->queue, (GFunc) queue->item_free_func, NULL);
+      g_queue_clear (&queue->queue);
       g_free (queue);
     }
 }
@@ -242,7 +300,7 @@ g_async_queue_push_unlocked (GAsyncQueue* queue, gpointer data)
   g_return_if_fail (g_atomic_int_get (&queue->ref_count) > 0);
   g_return_if_fail (data);
 
-  g_queue_push_head (queue->queue, data);
+  g_queue_push_head (&queue->queue, data);
   if (queue->waiting_threads > 0)
     g_cond_signal (queue->cond);
 }
@@ -328,7 +386,7 @@ g_async_queue_push_sorted_unlocked (GAsyncQueue      *queue,
   sd.func = func;
   sd.user_data = user_data;
 
-  g_queue_insert_sorted (queue->queue, 
+  g_queue_insert_sorted (&queue->queue,
 			 data, 
 			 (GCompareDataFunc)g_async_queue_invert_compare, 
 			 &sd);
@@ -343,7 +401,7 @@ g_async_queue_pop_intern_unlocked (GAsyncQueue *queue,
 {
   gpointer retval;
 
-  if (!g_queue_peek_tail_link (queue->queue))
+  if (!g_queue_peek_tail_link (&queue->queue))
     {
       if (try)
 	return NULL;
@@ -354,23 +412,23 @@ g_async_queue_pop_intern_unlocked (GAsyncQueue *queue,
       if (!end_time)
         {
           queue->waiting_threads++;
-	  while (!g_queue_peek_tail_link (queue->queue))
+	  while (!g_queue_peek_tail_link (&queue->queue))
             g_cond_wait (queue->cond, queue->mutex);
           queue->waiting_threads--;
         }
       else
         {
           queue->waiting_threads++;
-          while (!g_queue_peek_tail_link (queue->queue))
+          while (!g_queue_peek_tail_link (&queue->queue))
             if (!g_cond_timed_wait (queue->cond, queue->mutex, end_time))
               break;
           queue->waiting_threads--;
-          if (!g_queue_peek_tail_link (queue->queue))
+          if (!g_queue_peek_tail_link (&queue->queue))
 	    return NULL;
         }
     }
 
-  retval = g_queue_pop_tail (queue->queue);
+  retval = g_queue_pop_tail (&queue->queue);
 
   g_assert (retval);
 
@@ -541,7 +599,7 @@ g_async_queue_length (GAsyncQueue* queue)
   g_return_val_if_fail (g_atomic_int_get (&queue->ref_count) > 0, 0);
 
   g_mutex_lock (queue->mutex);
-  retval = queue->queue->length - queue->waiting_threads;
+  retval = queue->queue.length - queue->waiting_threads;
   g_mutex_unlock (queue->mutex);
 
   return retval;
@@ -568,7 +626,7 @@ g_async_queue_length_unlocked (GAsyncQueue* queue)
   g_return_val_if_fail (queue, 0);
   g_return_val_if_fail (g_atomic_int_get (&queue->ref_count) > 0, 0);
 
-  return queue->queue->length - queue->waiting_threads;
+  return queue->queue.length - queue->waiting_threads;
 }
 
 /**
@@ -644,7 +702,7 @@ g_async_queue_sort_unlocked (GAsyncQueue      *queue,
   sd.func = func;
   sd.user_data = user_data;
 
-  g_queue_sort (queue->queue, 
+  g_queue_sort (&queue->queue,
 		(GCompareDataFunc)g_async_queue_invert_compare, 
 		&sd);
 }
@@ -661,6 +719,3 @@ _g_async_queue_get_mutex (GAsyncQueue* queue)
 
   return queue->mutex;
 }
-
-#define __G_ASYNCQUEUE_C__
-#include "galiasdef.c"

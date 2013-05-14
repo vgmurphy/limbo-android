@@ -1,5 +1,5 @@
 /* GIO - GLib Input, Output and Streaming Library
- * 
+ *
  * Copyright (C) 2006-2007 Red Hat, Inc.
  *
  * This library is free software; you can redistribute it and/or
@@ -23,7 +23,7 @@
 #ifndef __G_LOCAL_FILE_H__
 #define __G_LOCAL_FILE_H__
 
-#include <gio/gfile.h>
+#include <gio/giotypes.h>
 
 G_BEGIN_DECLS
 
@@ -42,9 +42,9 @@ struct _GLocalFileClass
   GObjectClass parent_class;
 };
 
-GType _g_local_file_get_type (void) G_GNUC_CONST;
-  
-GFile * _g_local_file_new (const char *filename);
+GType   _g_local_file_get_type (void) G_GNUC_CONST;
+
+GFile * _g_local_file_new      (const char *filename);
 
 G_END_DECLS
 

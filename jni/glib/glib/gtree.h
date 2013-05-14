@@ -21,8 +21,12 @@
  * Modified by the GLib Team and others 1997-2000.  See the AUTHORS
  * file for a list of people on the GLib Team.  See the ChangeLog
  * files for a list of changes.  These files are distributed with
- * GLib at ftp://ftp.gtk.org/pub/gtk/. 
+ * GLib at ftp://ftp.gtk.org/pub/gtk/.
  */
+
+#if defined(G_DISABLE_SINGLE_INCLUDES) && !defined (__GLIB_H_INSIDE__) && !defined (GLIB_COMPILATION)
+#error "Only <glib.h> can be included directly."
+#endif
 
 #ifndef __G_TREE_H__
 #define __G_TREE_H__
@@ -46,6 +50,8 @@ GTree*   g_tree_new_full        (GCompareDataFunc  key_compare_func,
                                  gpointer          key_compare_data,
                                  GDestroyNotify    key_destroy_func,
                                  GDestroyNotify    value_destroy_func);
+GTree*   g_tree_ref             (GTree            *tree);
+void     g_tree_unref           (GTree            *tree);
 void     g_tree_destroy         (GTree            *tree);
 void     g_tree_insert          (GTree            *tree,
                                  gpointer          key,
@@ -80,9 +86,6 @@ gpointer g_tree_search          (GTree            *tree,
 gint     g_tree_height          (GTree            *tree);
 gint     g_tree_nnodes          (GTree            *tree);
 
-
-
 G_END_DECLS
 
 #endif /* __G_TREE_H__ */
-

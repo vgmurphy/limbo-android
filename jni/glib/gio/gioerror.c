@@ -20,11 +20,10 @@
  * Author: Alexander Larsson <alexl@redhat.com>
  */
 
-#include <config.h>
+#include "config.h"
 #include <errno.h>
 #include "gioerror.h"
 
-#include "gioalias.h"
 
 /**
  * SECTION:gioerror
@@ -138,7 +137,7 @@ g_io_error_from_errno (gint err_no)
       break;
 #endif
 
-#ifdef ENOTEMPTY
+#if defined(ENOTEMPTY) && (!defined (EEXIST) || (ENOTEMPTY != EEXIST))
     case ENOTEMPTY:
       return G_IO_ERROR_NOT_EMPTY;
       break;
@@ -162,17 +161,91 @@ g_io_error_from_errno (gint err_no)
       break;
 #endif
 
-#ifdef EWOULDBLOCK
+/* some magic to deal with EWOULDBLOCK and EAGAIN.
+ * apparently on HP-UX these are actually defined to different values,
+ * but on Linux, for example, they are the same.
+ */
+#if defined(EWOULDBLOCK) && defined(EAGAIN) && EWOULDBLOCK == EAGAIN
+    /* we have both and they are the same: only emit one case. */
+    case EAGAIN:
+      return G_IO_ERROR_WOULD_BLOCK;
+      break;
+#else
+    /* else: consider each of them separately.  this handles both the
+     * case of having only one and the case where they are different values.
+     */
+# ifdef EAGAIN
+    case EAGAIN:
+      return G_IO_ERROR_WOULD_BLOCK;
+      break;
+# endif
+
+# ifdef EWOULDBLOCK
     case EWOULDBLOCK:
       return G_IO_ERROR_WOULD_BLOCK;
       break;
+# endif
 #endif
-      
+
+#ifdef EMFILE
+    case EMFILE:
+      return G_IO_ERROR_TOO_MANY_OPEN_FILES;
+      break;
+#endif
+
+#ifdef EADDRINUSE
+    case EADDRINUSE:
+      return G_IO_ERROR_ADDRESS_IN_USE;
+      break;
+#endif
+
+#ifdef EHOSTUNREACH
+    case EHOSTUNREACH:
+      return G_IO_ERROR_HOST_UNREACHABLE;
+      break;
+#endif
+
+#ifdef ENETUNREACH
+    case ENETUNREACH:
+      return G_IO_ERROR_NETWORK_UNREACHABLE;
+      break;
+#endif
+
+#ifdef ECONNREFUSED
+    case ECONNREFUSED:
+      return G_IO_ERROR_CONNECTION_REFUSED;
+      break;
+#endif
+
     default:
       return G_IO_ERROR_FAILED;
       break;
     }
 }
 
-#define __G_IO_ERROR_C__
-#include "gioaliasdef.c"
+#ifdef G_OS_WIN32
+
+/**
+ * g_io_error_from_win32_error:
+ * @error_code: Windows error number.
+ *
+ * Converts some common error codes into GIO error codes. The
+ * fallback value G_IO_ERROR_FAILED is returned for error codes not
+ * handled.
+ *
+ * Returns: #GIOErrorEnum value for the given error number.
+ *
+ * Since: 2.26
+ **/
+GIOErrorEnum
+g_io_error_from_win32_error (gint error_code)
+{
+  switch (error_code)
+    {
+    default:
+      return G_IO_ERROR_FAILED;
+      break;
+    }
+}
+
+#endif

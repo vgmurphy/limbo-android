@@ -18,6 +18,10 @@
  *   Boston, MA 02111-1307, USA.
  */
 
+#if defined(G_DISABLE_SINGLE_INCLUDES) && !defined (__GLIB_H_INSIDE__) && !defined (GLIB_COMPILATION)
+#error "Only <glib.h> can be included directly."
+#endif
+
 #ifndef __G_FILEUTILS_H__
 #define __G_FILEUTILS_H__
 
@@ -95,12 +99,15 @@ gchar   *g_file_read_link    (const gchar  *filename,
 
 /* Wrapper / workalike for mkstemp() */
 gint    g_mkstemp            (gchar        *tmpl);
+gint    g_mkstemp_full       (gchar        *tmpl,
+                              int           flags,
+                              int           mode);
 
 /* Wrapper for g_mkstemp */
 gint    g_file_open_tmp      (const gchar  *tmpl,
 			      gchar       **name_used,
 			      GError      **error);
-
+typedef gint64 goffset;
 char *g_format_size_for_display (goffset size);
 
 gchar *g_build_path     (const gchar *separator,

@@ -26,6 +26,7 @@
 
 #include <errno.h>
 #include <string.h>
+#include <stdio.h>
 #include <sys/stat.h>
 
 #ifdef HAVE_DIRENT_H
@@ -33,12 +34,19 @@
 #include <dirent.h>
 #endif
 
-#include "glib.h"
 #include "gdir.h"
 
+#include "gconvert.h"
+#include "gfileutils.h"
+#include "gstrfuncs.h"
+#include "gtestutils.h"
 #include "glibintl.h"
 
-#include "galias.h"
+
+#if defined (_MSC_VER) && !defined (HAVE_DIRENT_H)
+#include "../build/win32/dirent/dirent.h"
+#include "../build/win32/dirent/wdirent.c"
+#endif
 
 struct _GDir
 {
@@ -62,7 +70,8 @@ struct _GDir
  *         g_dir_open() fails.
  *
  * Opens a directory for reading. The names of the files in the
- * directory can then be retrieved using g_dir_read_name().
+ * directory can then be retrieved using g_dir_read_name().  Note
+ * that the ordering is not defined.
  *
  * Return value: a newly allocated #GDir on success, %NULL on failure.
  *   If non-%NULL, you must free the result with g_dir_close()
@@ -74,6 +83,7 @@ g_dir_open (const gchar  *path,
             GError      **error)
 {
   GDir *dir;
+  int errsv;
 #ifdef G_OS_WIN32
   wchar_t *wpath;
 #else
@@ -97,12 +107,13 @@ g_dir_open (const gchar  *path,
     return dir;
 
   /* error case */
+  errsv = errno;
 
   g_set_error (error,
 	       G_FILE_ERROR,
-	       g_file_error_from_errno (errno),
+	       g_file_error_from_errno (errsv),
 	       _("Error opening directory '%s': %s"),
-	       path, g_strerror (errno));
+	       path, g_strerror (errsv));
   
   g_free (dir);
       
@@ -116,13 +127,16 @@ g_dir_open (const gchar  *path,
     return dir;
 
   /* error case */
+  errsv = errno;
+
   utf8_path = g_filename_to_utf8 (path, -1,
 				  NULL, NULL, NULL);
+
   g_set_error (error,
                G_FILE_ERROR,
-               g_file_error_from_errno (errno),
+               g_file_error_from_errno (errsv),
                _("Error opening directory '%s': %s"),
-	       utf8_path, g_strerror (errno));
+	       utf8_path, g_strerror (errsv));
 
   g_free (utf8_path);
   g_free (dir);
@@ -131,7 +145,7 @@ g_dir_open (const gchar  *path,
 #endif
 }
 
-#ifdef G_OS_WIN32
+#if defined (G_OS_WIN32) && !defined (_WIN64)
 
 /* The above function actually is called g_dir_open_utf8, and it's
  * that what applications compiled with this GLib version will
@@ -165,9 +179,16 @@ g_dir_open (const gchar  *path,
  * g_dir_read_name:
  * @dir: a #GDir* created by g_dir_open()
  *
- * Retrieves the name of the next entry in the directory.  The '.' and
- * '..' entries are omitted. On Windows, the returned name is in
- * UTF-8. On Unix, it is in the on-disk encoding.
+ * Retrieves the name of another entry in the directory, or %NULL.
+ * The order of entries returned from this function is not defined,
+ * and may vary by file system or other operating-system dependent
+ * factors. 
+ *
+ * On Unix, the '.' and '..' entries are omitted, and the returned
+ * name is in the on-disk encoding.
+ *
+ * On Windows, as is true of all GLib functions which operate on
+ * filenames, the returned name is in UTF-8.
  *
  * Return value: The entry's name or %NULL if there are no 
  *   more entries. The return value is owned by GLib and
@@ -221,7 +242,7 @@ g_dir_read_name (GDir *dir)
 #endif
 }
 
-#ifdef G_OS_WIN32
+#if defined (G_OS_WIN32) && !defined (_WIN64)
 
 /* Ditto for g_dir_read_name */
 
@@ -291,6 +312,3 @@ g_dir_close (GDir *dir)
 #endif
   g_free (dir);
 }
-
-#define __G_DIR_C__
-#include "galiasdef.c"

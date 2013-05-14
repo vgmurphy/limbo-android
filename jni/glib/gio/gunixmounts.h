@@ -1,5 +1,5 @@
 /* GIO - GLib Input, Output and Streaming Library
- * 
+ *
  * Copyright (C) 2006-2007 Red Hat, Inc.
  *
  * This library is free software; you can redistribute it and/or
@@ -29,15 +29,15 @@ G_BEGIN_DECLS
 
 /**
  * GUnixMountEntry:
- * 
- * Defines a Unix mount entry (e.g. <filename>/media/cdrom</filename>). 
+ *
+ * Defines a Unix mount entry (e.g. <filename>/media/cdrom</filename>).
  * This corresponds roughly to a mtab entry.
  **/
 typedef struct _GUnixMountEntry GUnixMountEntry;
 
 /**
  * GUnixMountPoint:
- * 
+ *
  * Defines a Unix mount point (e.g. <filename>/dev</filename>).
  * This corresponds roughly to a fstab entry.
  **/
@@ -45,10 +45,10 @@ typedef struct _GUnixMountPoint GUnixMountPoint;
 
 /**
  * GUnixMountMonitor:
- * 
+ *
  * Watches #GUnixMount<!-- -->s for changes.
  **/
-typedef struct _GUnixMountMonitor GUnixMountMonitor;
+typedef struct _GUnixMountMonitor      GUnixMountMonitor;
 typedef struct _GUnixMountMonitorClass GUnixMountMonitorClass;
 
 #define G_TYPE_UNIX_MOUNT_MONITOR        (g_unix_mount_monitor_get_type ())
@@ -90,8 +90,10 @@ GUnixMountEntry *g_unix_mount_at                    (const char         *mount_p
 gboolean       g_unix_mounts_changed_since          (guint64             time);
 gboolean       g_unix_mount_points_changed_since    (guint64             time);
 
-GType              g_unix_mount_monitor_get_type (void) G_GNUC_CONST;
-GUnixMountMonitor *g_unix_mount_monitor_new      (void);
+GType              g_unix_mount_monitor_get_type       (void) G_GNUC_CONST;
+GUnixMountMonitor *g_unix_mount_monitor_new            (void);
+void               g_unix_mount_monitor_set_rate_limit (GUnixMountMonitor *mount_monitor,
+                                                        int                limit_msec);
 
 gboolean g_unix_is_mount_path_system_internal (const char *mount_path);
 

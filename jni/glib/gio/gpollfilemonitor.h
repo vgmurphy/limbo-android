@@ -1,5 +1,5 @@
 /* GIO - GLib Input, Output and Streaming Library
- * 
+ *
  * Copyright (C) 2006-2007 Red Hat, Inc.
  *
  * This library is free software; you can redistribute it and/or
@@ -23,7 +23,6 @@
 #ifndef __G_POLL_FILE_MONITOR_H__
 #define __G_POLL_FILE_MONITOR_H__
 
-#include <glib-object.h>
 #include <gio/gfilemonitor.h>
 
 G_BEGIN_DECLS
@@ -37,13 +36,14 @@ G_BEGIN_DECLS
 typedef struct _GPollFileMonitor      GPollFileMonitor;
 typedef struct _GPollFileMonitorClass GPollFileMonitorClass;
 
-struct _GPollFileMonitorClass {
+struct _GPollFileMonitorClass
+{
   GFileMonitorClass parent_class;
 };
 
-GType _g_poll_file_monitor_get_type (void) G_GNUC_CONST;
+GType          _g_poll_file_monitor_get_type (void) G_GNUC_CONST;
 
-GFileMonitor* _g_poll_file_monitor_new (GFile *file);
+GFileMonitor * _g_poll_file_monitor_new      (GFile *file);
 
 G_END_DECLS
 

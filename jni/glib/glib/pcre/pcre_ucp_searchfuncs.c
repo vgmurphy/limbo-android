@@ -43,13 +43,17 @@ POSSIBILITY OF SUCH DAMAGE.
 /* This module contains code for searching the table of Unicode character
 properties. */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "pcre_internal.h"
 
 #include "ucp.h"               /* Category definitions */
-#include "ucpinternal.h"       /* Internal table details */
-
 
 /* Table to translate from particular type value to the general value. */
+
+#ifdef NOT_USED_IN_GLIB
 
 static int ucp_gentype[] = {
   ucp_C, ucp_C, ucp_C, ucp_C, ucp_C,  /* Cc, Cf, Cn, Co, Cs */
@@ -90,6 +94,7 @@ _pcre_ucp_findprop(const unsigned int c, int *type_ptr, int *script_ptr)
 return ucp_gentype[*type_ptr];
 }
 
+#endif
 
 
 

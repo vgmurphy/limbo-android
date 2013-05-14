@@ -17,7 +17,19 @@
 # License along with this library; if not, write to the
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
+import datetime
+import optparse
 import sys, re, xml.dom.minidom
+
+try:
+    import subunit
+    from subunit import iso8601
+    from testtools.content import Content, ContentType
+    mime_utf8 = ContentType('text', 'plain', {'charset': 'utf8'})
+except ImportError:
+    subunit = None
+
+
 pkginstall_configvars = {
   #@PKGINSTALL_CONFIGVARS_IN24LINES@ # configvars are substituted upon script installation
 }
@@ -110,11 +122,19 @@ class ReportReader (TreeProcess):
     self.binary_names = []
     self.binaries = {}
     self.last_binary = None
+    self.info = {}
   def binary_list (self):
     lst = []
     for name in self.binary_names:
       lst += [ self.binaries[name] ]
     return lst
+  def get_info (self):
+    return self.info
+  def handle_info (self, node):
+    dn = find_child (node, 'package')
+    self.info['package'] = node_as_text (dn)
+    dn = find_child (node, 'version')
+    self.info['version'] = node_as_text (dn)
   def handle_testcase (self, node):
     self.last_binary.testcases += [ node ]
     result = attribute_as_text (node, 'result', 'status')
@@ -144,8 +164,25 @@ class ReportReader (TreeProcess):
       self.last_binary.random_seed = node_as_text (rseed)
     self.process_children (node)
 
-# HTML report generation class
-class ReportWriter (TreeProcess):
+
+class ReportWriter(object):
+    """Base class for reporting."""
+
+    def __init__(self, binary_list):
+        self.binaries = binary_list
+
+    def _error_text(self, node):
+        """Get a string representing the error children of node."""
+        rlist = list_children(node, 'error')
+        txt = ''
+        for enode in rlist:
+            txt += node_as_text (enode)
+            if txt and txt[-1] != '\n':
+                txt += '\n'
+        return txt
+
+
+class HTMLReportWriter(ReportWriter):
   # Javascript/CSS snippet to toggle element visibility
   cssjs = r'''
   <style type="text/css" media="screen">
@@ -186,9 +223,9 @@ class ReportWriter (TreeProcess):
   }
   --></script>
   '''
-  def __init__ (self, binary_list):
-    TreeProcess.__init__ (self)
-    self.binaries = binary_list
+  def __init__ (self, info, binary_list):
+    ReportWriter.__init__(self, binary_list)
+    self.info = info
     self.bcounter = 0
     self.tcounter = 0
     self.total_tcounter = 0
@@ -200,6 +237,8 @@ class ReportWriter (TreeProcess):
     sys.stdout.write (message)
     if message:
       self.lastchar = message[-1]
+  def handle_info (self):
+    self.oprint ('<h3>Package: %(package)s, version: %(version)s</h3>\n' % self.info)
   def handle_text (self, node):
     self.oprint (node.nodeValue)
   def handle_testcase (self, node, binary):
@@ -219,12 +258,7 @@ class ReportWriter (TreeProcess):
     self.oprint ('<td>%s %s</td> <td align="right">%s</td> \n' % (html_indent_string (4), path, duration))
     perflist = list_children (node, 'performance')
     if result != 'success':
-      rlist = list_children (node, 'error')
-      txt = ''
-      for enode in rlist:
-        txt += node_as_text (enode)
-        if txt and txt[-1] != '\n':
-          txt += '\n'
+      txt = self._error_text(node)
       txt = re.sub (r'"', r'\\"', txt)
       txt = re.sub (r'\n', r'\\n', txt)
       txt = re.sub (r'&', r'&amp;', txt)
@@ -241,7 +275,7 @@ class ReportWriter (TreeProcess):
         txt = node_as_text (perf)
         txt = re.sub (r'&', r'&amp;', txt)
         txt = re.sub (r'<', r'&gt;', txt)
-        txt = '<strong>Performace(' + (pmin and '<em>minimized</em>' or '<em>maximized</em>') + '):</strong> ' + txt.strip() + '<br />\n'
+        txt = '<strong>Performance(' + (pmin and '<em>minimized</em>' or '<em>maximized</em>') + '):</strong> ' + txt.strip() + '<br />\n'
         txt = re.sub (r'"', r'\\"', txt)
         txt = re.sub (r'\n', r'\\n', txt)
         presults += [ (pval, txt) ]
@@ -268,16 +302,21 @@ class ReportWriter (TreeProcess):
       erlink = 'href="javascript:toggle_display (\'ResultTable\', \'tr\', \'b%u_\', \'failed\')"' % self.bcounter
     if binary.success_cases:
       oklink = 'href="javascript:toggle_display (\'ResultTable\', \'tr\', \'b%u_\', \'success\')"' % self.bcounter
-    self.oprint ('<a %s>ER</a>\n' % erlink)
-    self.oprint ('<a %s>OK</a>\n' % oklink)
-    self.oprint ('</td>\n')
-    perc = binary.success_cases * 100.0 / real_cases
-    pcolor = {
-      100 : 'bgcolor="lightgreen"',
-      0   : 'bgcolor="red"',
-    }.get (int (perc), 'bgcolor="yellow"')
-    self.oprint ('<td align="right" %s>%.2f%%</td>\n' % (pcolor, perc))
-    self.oprint ('</tr>\n')
+    if real_cases != 0:
+	self.oprint ('<a %s>ER</a>\n' % erlink)
+	self.oprint ('<a %s>OK</a>\n' % oklink)
+	self.oprint ('</td>\n')
+	perc = binary.success_cases * 100.0 / real_cases
+	pcolor = {
+	  100 : 'bgcolor="lightgreen"',
+	  0   : 'bgcolor="red"',
+	}.get (int (perc), 'bgcolor="yellow"')
+	self.oprint ('<td align="right" %s>%.2f%%</td>\n' % (pcolor, perc))
+	self.oprint ('</tr>\n')
+    else:
+	self.oprint ('Empty\n')
+	self.oprint ('</td>\n')
+	self.oprint ('</tr>\n')
     for tc in binary.testcases:
       self.handle_testcase (tc, binary)
   def handle_totals (self):
@@ -286,7 +325,10 @@ class ReportWriter (TreeProcess):
                  (self.bcounter, self.total_tcounter, self.total_fcounter, self.total_tcounter - self.total_fcounter))
     self.oprint ('<td align="right">%f</td>\n' % self.total_duration)
     self.oprint ('<td align="center">-</td>\n')
-    perc = (self.total_tcounter - self.total_fcounter) * 100.0 / self.total_tcounter
+    if self.total_tcounter != 0:
+        perc = (self.total_tcounter - self.total_fcounter) * 100.0 / self.total_tcounter
+    else:
+        perc = 0.0
     pcolor = {
       100 : 'bgcolor="lightgreen"',
       0   : 'bgcolor="red"',
@@ -300,6 +342,7 @@ class ReportWriter (TreeProcess):
     self.oprint ('</head>\n')
     self.oprint ('<body>\n')
     self.oprint ('<h2>GTester Unit Test Report</h2>\n')
+    self.handle_info ()
     self.oprint ('<table id="ResultTable" width="100%" border="1">\n<tr>\n')
     self.oprint ('<th>Program / Testcase </th>\n')
     self.oprint ('<th style="width:8em">Duration (sec)</th>\n')
@@ -313,46 +356,132 @@ class ReportWriter (TreeProcess):
     self.oprint ('</body>\n')
     self.oprint ('</html>\n')
 
-# main program handling
-def parse_files_and_args ():
-  from sys import argv, stdin
-  files = []
-  arg_iter = sys.argv[1:].__iter__()
-  rest = len (sys.argv) - 1
-  for arg in arg_iter:
-    rest -= 1
-    if arg == '--help' or arg == '-h':
-      print_help ()
-      sys.exit (0)
-    elif arg == '--version' or arg == '-v':
-      print_help (False)
-      sys.exit (0)
-    else:
-      files = files + [ arg ]
-  return files
 
-def print_help (with_help = True):
-  import os
-  print "gtester-report (GLib utils) version", pkginstall_configvars.get ('glib-version', '0.0-uninstalled')
-  if not with_help:
-    return
-  print "Usage: %s [OPTIONS] <gtester-log.xml>" % os.path.basename (sys.argv[0])
-  print "Generate HTML reports from the XML log files generated by gtester."
-  print "Options:"
-  print "  --help, -h                print this help message"
-  print "  --version, -v             print version info"
+class SubunitWriter(ReportWriter):
+    """Reporter to output a subunit stream."""
+
+    def printout(self):
+        reporter = subunit.TestProtocolClient(sys.stdout)
+        for binary in self.binaries:
+            for tc in binary.testcases:
+                test = GTestCase(tc, binary)
+                test.run(reporter)
+
+
+class GTestCase(object):
+    """A representation of a gtester test result as a pyunit TestCase."""
+
+    def __init__(self, case, binary):
+        """Create a GTestCase for case `case` from binary program `binary`."""
+        self._case = case
+        self._binary = binary
+        # the name of the case - e.g. /dbusmenu/glib/objects/menuitem/props_boolstr
+        self._path = attribute_as_text(self._case, 'path')
+
+    def id(self):
+        """What test is this? Returns the gtester path for the testcase."""
+        return self._path
+
+    def _get_details(self):
+        """Calculate a details dict for the test - attachments etc."""
+        details = {}
+        result = attribute_as_text(self._case, 'result', 'status')
+        details['filename'] = Content(mime_utf8, lambda:[self._binary.file])
+        details['random_seed'] = Content(mime_utf8,
+            lambda:[self._binary.random_seed])
+        if self._get_outcome() == 'addFailure':
+            # Extract the error details. Skips have no details because its not
+            # skip like unittest does, instead the runner just bypasses N test.
+            txt = self._error_text(self._case)
+            details['error'] = Content(mime_utf8, lambda:[txt])
+        if self._get_outcome() == 'addSuccess':
+            # Sucessful tests may have performance metrics.
+            perflist = list_children(self._case, 'performance')
+            if perflist:
+                presults = []
+                for perf in perflist:
+                    pmin = bool (int (attribute_as_text (perf, 'minimize')))
+                    pmax = bool (int (attribute_as_text (perf, 'maximize')))
+                    pval = float (attribute_as_text (perf, 'value'))
+                    txt = node_as_text (perf)
+                    txt = 'Performance(' + (pmin and 'minimized' or 'maximized'
+                        ) + '): ' + txt.strip() + '\n'
+                    presults += [(pval, txt)]
+                presults.sort()
+                perf_details = [e[1] for e in presults]
+                details['performance'] = Content(mime_utf8, lambda:perf_details)
+        return details
+
+    def _get_outcome(self):
+        if int(attribute_as_text(self._case, 'skipped') + '0'):
+            return 'addSkip'
+        outcome = attribute_as_text(self._case, 'result', 'status')
+        if outcome == 'success':
+            return 'addSuccess'
+        else:
+            return 'addFailure'
+
+    def run(self, result):
+        time = datetime.datetime.utcnow().replace(tzinfo=iso8601.Utc())
+        result.time(time)
+        result.startTest(self)
+        try:
+            outcome = self._get_outcome()
+            details = self._get_details()
+            # Only provide a duration IFF outcome == 'addSuccess' - the main
+            # parser claims bogus results otherwise: in that case emit time as
+            # zero perhaps.
+            if outcome == 'addSuccess':
+                duration = float(node_as_text(self._case, 'duration'))
+                duration = duration * 1000000
+                timedelta = datetime.timedelta(0, 0, duration)
+                time = time + timedelta
+                result.time(time)
+            getattr(result, outcome)(self, details=details)
+        finally:
+            result.stopTest(self)
+
+
+
+# main program handling
+def parse_opts():
+    """Parse program options.
+
+    :return: An options object and the program arguments.
+    """
+    parser = optparse.OptionParser()
+    parser.version =  pkginstall_configvars.get ('glib-version', '0.0-uninstalled')
+    parser.usage = "%prog [OPTIONS] <gtester-log.xml>"
+    parser.description = "Generate HTML reports from the XML log files generated by gtester."
+    parser.epilog = "gtester-report (GLib utils) version %s."% (parser.version,)
+    parser.add_option("-v", "--version", action="store_true", dest="version", default=False,
+        help="Show program version.")
+    parser.add_option("-s", "--subunit", action="store_true", dest="subunit", default=False,
+        help="Output subunit [See https://launchpad.net/subunit/"
+            " Needs python-subunit]")
+    options, files = parser.parse_args()
+    if options.version:
+        print parser.epilog
+        return None, None
+    if len(files) != 1:
+        parser.error("Must supply a log file to parse.")
+    if options.subunit and subunit is None:
+        parser.error("python-subunit is not installed.")
+    return options, files
+
 
 def main():
-  from sys import argv, stdin
-  files = parse_files_and_args()
-  if len (files) != 1:
-    print_help (True)
-    sys.exit (1)
+  options, files = parse_opts()
+  if options is None:
+    return 0
   xd = xml.dom.minidom.parse (files[0])
   rr = ReportReader()
   rr.trampoline (xd)
-  rw = ReportWriter (rr.binary_list())
-  rw.printout()
+  if not options.subunit:
+      HTMLReportWriter(rr.get_info(), rr.binary_list()).printout()
+  else:
+      SubunitWriter(rr.get_info(), rr.binary_list()).printout()
+
 
 if __name__ == '__main__':
   main()

@@ -1,5 +1,5 @@
 /* GIO - GLib Input, Output and Streaming Library
- * 
+ *
  * Copyright (C) 2006-2007 Red Hat, Inc.
  *
  * This library is free software; you can redistribute it and/or
@@ -43,13 +43,17 @@ struct _GDesktopAppInfoClass
 };
 
 
-GType g_desktop_app_info_get_type (void) G_GNUC_CONST;
-  
+GType            g_desktop_app_info_get_type          (void) G_GNUC_CONST;
+
 GDesktopAppInfo *g_desktop_app_info_new_from_filename (const char      *filename);
+GDesktopAppInfo *g_desktop_app_info_new_from_keyfile  (GKeyFile        *key_file);
+
+const char *     g_desktop_app_info_get_filename      (GDesktopAppInfo *info);
+
 GDesktopAppInfo *g_desktop_app_info_new               (const char      *desktop_id);
 gboolean         g_desktop_app_info_get_is_hidden     (GDesktopAppInfo *info);
 
-void             g_desktop_app_info_set_desktop_env   (const char *desktop_env);
+void             g_desktop_app_info_set_desktop_env   (const char      *desktop_env);
 
 
 #define G_TYPE_DESKTOP_APP_INFO_LOOKUP           (g_desktop_app_info_lookup_get_type ())
@@ -61,14 +65,14 @@ void             g_desktop_app_info_set_desktop_env   (const char *desktop_env);
  * G_DESKTOP_APP_INFO_LOOKUP_EXTENSION_POINT_NAME:
  *
  * Extension point for default handler to URI association. See
- * <link linkend="gio-extension-points">Extending GIO</link>.
+ * <link linkend="extending-gio">Extending GIO</link>.
  */
 #define G_DESKTOP_APP_INFO_LOOKUP_EXTENSION_POINT_NAME "gio-desktop-app-info-lookup"
 
 /**
  * GDesktopAppInfoLookup:
  *
- * Interface that is used by backends to associate default 
+ * Interface that is used by backends to associate default
  * handlers with URI schemes.
  */
 typedef struct _GDesktopAppInfoLookup GDesktopAppInfoLookup;
@@ -78,15 +82,15 @@ struct _GDesktopAppInfoLookupIface
 {
   GTypeInterface g_iface;
 
-  GAppInfo * (*get_default_for_uri_scheme) (GDesktopAppInfoLookup *lookup,
-					    const char  *uri_scheme);
+  GAppInfo * (* get_default_for_uri_scheme) (GDesktopAppInfoLookup *lookup,
+                                             const char            *uri_scheme);
 };
 
-GType     g_desktop_app_info_lookup_get_type (void) G_GNUC_CONST;
+GType     g_desktop_app_info_lookup_get_type                   (void) G_GNUC_CONST;
+
 GAppInfo *g_desktop_app_info_lookup_get_default_for_uri_scheme (GDesktopAppInfoLookup *lookup,
-								const char  *uri_scheme);
+                                                                const char            *uri_scheme);
 
 G_END_DECLS
-
 
 #endif /* __G_DESKTOP_APP_INFO_H__ */
