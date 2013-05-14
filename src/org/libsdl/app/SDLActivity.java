@@ -57,7 +57,7 @@ import com.max2idea.android.limbo.main.Const;
 import com.max2idea.android.limbo.main.LimboActivity;
 import com.max2idea.android.limbo.main.LimboVNCActivity;
 //import com.max2idea.android.limbo.mainarmv7.R;
-import com.max2idea.android.limbo.main.R;
+import com.max2idea.android.limbo.mainarmv7.R;
 import com.max2idea.android.limbo.main.SettingsManager;
 import com.max2idea.android.limbo.utils.FileUtils;
 import com.max2idea.android.limbo.utils.Machine;

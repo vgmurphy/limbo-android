@@ -5,7 +5,7 @@ package android.androidVNC;
 
 import android.widget.ImageView;
 //import com.max2idea.android.limbo.mainarmv7.R;
-import com.max2idea.android.limbo.main.R;
+import com.max2idea.android.limbo.mainarmv7.R;
 /**
  * @author Michael A. MacDonald
  * 

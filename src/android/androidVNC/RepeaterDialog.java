@@ -12,7 +12,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 //import com.max2idea.android.limbo.mainarmv7.R;
-import com.max2idea.android.limbo.main.R;
+import com.max2idea.android.limbo.mainarmv7.R;
 
 /**
  * @author Michael A. MacDonald

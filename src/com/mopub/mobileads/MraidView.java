@@ -34,7 +34,7 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 //import com.max2idea.android.limbo.mainarmv7.R;
-import com.max2idea.android.limbo.main.R;
+import com.max2idea.android.limbo.mainarmv7.R;
 
 public class MraidView extends WebView {
     private static final String LOGTAG = "MraidView";

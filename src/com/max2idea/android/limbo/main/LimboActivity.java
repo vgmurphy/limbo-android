@@ -91,7 +91,7 @@ import com.max2idea.android.limbo.jni.ImageCreator;
 
 import com.max2idea.android.limbo.jni.VMExecutor;
 //import com.max2idea.android.limbo.mainarmv7.R;
-import com.max2idea.android.limbo.main.R;
+import com.max2idea.android.limbo.mainarmv7.R;
 import com.max2idea.android.limbo.utils.FavOpenHelper;
 import com.max2idea.android.limbo.utils.FileInstaller;
 import com.max2idea.android.limbo.utils.FileUtils;

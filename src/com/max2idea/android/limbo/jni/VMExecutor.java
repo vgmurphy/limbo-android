@@ -178,6 +178,13 @@ public class VMExecutor {
 			this.sound_card = null;
 		}
 
+		//Load GLIB and ICONV
+		System.loadLibrary("iconv");
+		System.loadLibrary("glib-2.0");
+		System.loadLibrary("gthread-2.0");
+		System.loadLibrary("gobject-2.0");
+		System.loadLibrary("gmodule-2.0");
+		
 		// //Load SDL libraries
 		if (Const.enable_SDL) {
 			System.loadLibrary("SDL2");

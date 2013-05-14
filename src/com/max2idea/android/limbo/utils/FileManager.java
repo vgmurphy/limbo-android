@@ -34,7 +34,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import com.max2idea.android.limbo.main.Const;
 //import com.max2idea.android.limbo.mainarmv7.R;
-import com.max2idea.android.limbo.main.R;
+import com.max2idea.android.limbo.mainarmv7.R;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
