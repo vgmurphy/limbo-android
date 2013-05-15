@@ -1,44 +1,49 @@
 # Base definitions for Android toolchain.
 # This is the only part of the file you need to change before when compiling.
 
-TARGET_ARCH ?= arm
+#PLATFORM
 NDK_ROOT = /home/dev/tools/android-ndk-r8e
-MAKE += 
-#GCC_VERSION = 4.4.3
-#GCC_VERSION = 4.6
-GCC_VERSION = 4.7
 NDK_PLATFORM = platforms/android-14
 
-#For ARM only
-#Possible values:armeabi, armeabi-v7a
-ARMEABI=armeabi-v7a
+# ANDROID DEVICE CONFIGURATION
+
+# ARMv5 Generic
+include $(LIMBO_JNI_ROOT)/android-device-config/android-generic-armv5te-softfp.mak
+
+# ARMv7 Generic
+#include $(LIMBO_JNI_ROOT)/android-device-config/android-generic-armv7a-vfpv3d16.mak
+
+# x86 Generic
+#include $(LIMBO_JNI_ROOT)/android-device-config/android-ndkr8-x86.mak
+
+# Nexus 1
+#include $(LIMBO_JNI_ROOT)/android-device-config/android-nexus1-armv7-QSD8250-vfpv3.mak
+
+# Asus tf101
+#include $(LIMBO_JNI_ROOT)/android-device-config/android-asustf101-armv7a-cortex9-vfpv3d16.mak
+
+# Nexus 4
+#include $(LIMBO_JNI_ROOT)/android-device-config/android-nexus4-armv7a-krait-neon.mak
 
 ################ No modifications below this line are necessary #####################
+TARGET_ARCH = 
 
-ifeq ($(TARGET_ARCH),arm)
-    EABI = arm-linux-androideabi-$(GCC_VERSION)
-    TARGET_ARCH_ABI := $(ARMEABI)
+ifeq ($(APP_ABI),armeabi)
+    EABI = arm-linux-androideabi-$(NDK_TOOLCHAIN_VERSION)
     TOOLCHAIN_PREFIX = arm-linux-androideabi-
-else
-	#GCC 4.7 fails so switching to 4.4.3 for x86
-	GCC_VERSION = 4.4.3
-    EABI = x86-$(GCC_VERSION)
-    TARGET_ARCH_ABI = x86
+    TARGET_ARCH=arm
+else ifeq ($(APP_ABI),armeabi-v7a)
+    EABI = arm-linux-androideabi-$(NDK_TOOLCHAIN_VERSION)
+    TOOLCHAIN_PREFIX = arm-linux-androideabi-
+    TARGET_ARCH=arm
+else ifeq ($(APP_ABI),x86)
+    EABI = x86-$(NDK_TOOLCHAIN_VERSION)
     TOOLCHAIN_PREFIX = i686-linux-android-
+    TARGET_ARCH=x86
 endif
 
 TOOLCHAIN_DIR = $(NDK_ROOT)/toolchains/$(EABI)/prebuilt/linux-x86
 TOOLCHAIN_PREFIX := $(TOOLCHAIN_DIR)/bin/$(TOOLCHAIN_PREFIX)
-
-LIMBO_JNI_ROOT := $(lastword $(MAKEFILE_LIST))
-LIMBO_JNI_ROOT := $(strip $(LIMBO_JNI_ROOT:%android-toolchain.mak=%))
-ifeq ($(LIMBO_JNI_ROOT),)
-    LIMBO_JNI_ROOT := .
-else
-    # get rid of trailing slash
-    LIMBO_JNI_ROOT := $(LIMBO_JNI_ROOT:%/=%)
-endif
-
 
 # ANDROID NDK TOOLCHAIN, doesn't support hard float so it's slow
 
@@ -70,16 +75,5 @@ SYSTEM_INCLUDE = \
     -I$(NDK_INCLUDE) \
     -include $(LIMBO_JNI_ROOT)/logutils.h
 
-ANDROID_DEBUG_FLAGS = -g 
-ANDROID_CFLAGS =
-
-## Use of NDK_DEBUG=1 fails with png lib
-ifeq ($(NDK_DEBUG),1)
-	# no optimization
-    ANDROID_CFLAGS += -O0
-
-    # enable debugging
-    ANDROID_CFLAGS +=$(ANDROID_DEBUG_FLAGS)
-endif
 
 

@@ -10,6 +10,5 @@ LOCAL_C_INCLUDES += $(LOCAL_PATH)/include
 LOCAL_SRC_FILES:= tunctl.c
 
 LOCAL_MODULE := tunctl
-LOCAL_ARM_MODE := $(ARM_MODE)
 
 include $(BUILD_EXECUTABLE)

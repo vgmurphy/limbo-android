@@ -43,6 +43,9 @@ union magic {
 };
 #endif 
 
+//MK X86 is only LITTLE_ENDIAN
+#ifndef ANDROID_X86
+#warning BIG ENDIAN!
 #if BYTE_ORDER==BIG_ENDIAN
 union magic {
   struct {
@@ -51,6 +54,9 @@ union magic {
   } halves;
   ogg_int64_t whole;
 };
+#endif
+#else
+#warning NO BIG ENDIAN!
 #endif
 
 STIN ogg_int32_t MULT32(ogg_int32_t x, ogg_int32_t y) {

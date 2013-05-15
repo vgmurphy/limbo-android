@@ -1,7 +1,6 @@
 # -*- Mode: makefile -*-
 
-include ../../android-toolchain.mak
-include ../../android-device-config.mak
+include $(LIMBO_JNI_ROOT)/android-config.mak
 
 GENERATED_HEADERS = config-target.h
 CONFIG_NO_PCI = $(if $(subst n,,$(CONFIG_PCI)),n,y)
@@ -427,22 +426,19 @@ else
 #$(QEMU_PROG): $(obj-y) $(obj-$(TARGET_BASE_ARCH)-y)
 #	$(call LINK,$^)
 
-ifeq ($(TARGET_ARCH),x86)
-	sdllibs=
-else
-	sdllibs=../../../obj/local/$(TARGET_ARCH_ABI)/libpng.a \
-	../../../obj/local/$(TARGET_ARCH_ABI)/libjpeg.a \
-	../../../obj/local/$(TARGET_ARCH_ABI)/libSDL2.so \
-	../../../obj/local/$(TARGET_ARCH_ABI)/libSDL2_image.so \
-	../../../obj/local/$(TARGET_ARCH_ABI)/libSDL2_mixer.so
-endif
 
-glibs=../../../obj/local/$(TARGET_ARCH_ABI)/libglib-2.0.so \
-	../../../obj/local/$(TARGET_ARCH_ABI)/libgthread-2.0.so \
-	../../../obj/local/$(TARGET_ARCH_ABI)/libgmodule-2.0.so \
-	../../../obj/local/$(TARGET_ARCH_ABI)/libgobject-2.0.so
+sdllibs=../../../obj/local/$(APP_ABI)/libpng.a \
+	../../../obj/local/$(APP_ABI)/libjpeg.a \
+	../../../obj/local/$(APP_ABI)/libSDL2.so \
+	../../../obj/local/$(APP_ABI)/libSDL2_image.so \
+	../../../obj/local/$(APP_ABI)/libSDL2_mixer.so
 
-iconvlib=../../../obj/local/$(TARGET_ARCH_ABI)/libiconv.so
+glibs=../../../obj/local/$(APP_ABI)/libglib-2.0.so \
+	../../../obj/local/$(APP_ABI)/libgthread-2.0.so \
+	../../../obj/local/$(APP_ABI)/libgmodule-2.0.so \
+	../../../obj/local/$(APP_ABI)/libgobject-2.0.so
+
+iconvlib=../../../obj/local/$(APP_ABI)/libiconv.so
 
 $(QEMU_PROG): $(obj-y) $(obj-$(TARGET_BASE_ARCH)-y)
 	$(LNK)     \
@@ -458,7 +454,7 @@ $(QEMU_PROG): $(obj-y) $(obj-$(TARGET_BASE_ARCH)-y)
 	$(USR_LIB) \
 	-llog -lm -lz -lstdc++ -lc -dl \
     $(P_THREAD) \
-	-o ../../../obj/local/$(TARGET_ARCH_ABI)/lib$(QEMU_PROG).so
+	-o ../../../obj/local/$(APP_ABI)/lib$(QEMU_PROG).so
 
 endif
 

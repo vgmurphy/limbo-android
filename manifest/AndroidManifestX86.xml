@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.max2idea.android.limbo.main"
+    package="com.max2idea.android.limbo.mainx86"
     android:versionCode="14"
     android:versionName="0.9.9" >
 
@@ -20,12 +20,12 @@
         android:allowBackup="true"
         android:hardwareAccelerated="true"
         android:icon="@drawable/limbo"
-        android:label="Limbo"
+        android:label="Limbo x86"
         android:largeHeap="true" 
         >
         <activity
             android:name=".LimboActivity"
-            android:label="Limbo"
+            android:label="Limbo x86"
             android:screenOrientation="landscape" 
             android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
             >
@@ -36,8 +36,8 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".PFileManager"
-            class=".PFileManager"
+            android:name="com.max2idea.android.limbo.main.PFileManager"
+            class="com.max2idea.android.limbo.main.PFileManager"
             android:label="Choose a File" 
             android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
             >
@@ -58,13 +58,13 @@
             android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
             android:screenOrientation="landscape" >
             <intent-filter>
-                <action
-                    android:name="org.libsdl.app.SDLActivity"
-                    android:value="android.intent.action.VIEW" />
+                <action android:name="android.intent.action.VIEW" >
+                </action>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
 
-                <category
-                    android:name="org.libsdl.app.SDLActivity"
-                    android:value="android.intent.category.NORMAL" />
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
         <activity
@@ -84,7 +84,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="LimboVNCActivity"
+            android:name="com.max2idea.android.limbo.main.LimboVNCActivity"
             android:screenOrientation="landscape"
             android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
             android:windowSoftInputMode="adjustPan" >
@@ -99,7 +99,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="VncCanvasActivity"
+            android:name="com.max2idea.android.limbo.main.VncCanvasActivity"
             android:screenOrientation="landscape"
             android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
             android:windowSoftInputMode="adjustPan" >

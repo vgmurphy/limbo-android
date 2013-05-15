@@ -8,7 +8,7 @@ ARCH_CFLAGS += \
 -mtune=cortex-a9
 
 # Possible values: arm, thumb
-ARM_MODE=arm
+LOCAL_ARM_MODE=arm
 
 # Suppress some warnings
 ARCH_CFLAGS += -Wno-psabi

@@ -1,43 +1,38 @@
-## OPTIONAL OPTIMIZATION FLAGS
-OPTIM = \
--ffloat-store \
--ffast-math \
--fno-rounding-math \
--fno-signaling-nans \
--fcx-limited-range \
--fno-math-errno \
--funsafe-math-optimizations \
--fassociative-math \
--freciprocal-math \
--fassociative-math \
--freciprocal-math \
--ffinite-math-only \
--fno-signed-zeros \
--fno-trapping-math \
--frounding-math \
--fsingle-precision-constant \
--fcx-limited-range \
--fcx-fortran-rules
+#NDK VERSION
+#NDK_TOOLCHAIN_VERSION := 4.4.3
+NDK_TOOLCHAIN_VERSION=4.6
+#NDK_TOOLCHAIN_VERSION=4.7
 
+#TARGET ARCH
+APP_ABI := armeabi
 
-### CONFIGURATIONS
-
-# 9. Utilizing VFP
-# This abi should try the hard float (FPU) on board but also keep compatibility
-#   with Android libraries (soft)
-# ANDROID NDK: Still SLOWWWWWWWWWWWWWWW
-# LINARO Android toolchain supports VFP
+### CONFIGURATION
 ARCH_CFLAGS = \
 -std=gnu99 \
--D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__  \
+-D__ARM_ARCH_5__ \
+-D__ARM_ARCH_5T__ \
+-D__ARM_ARCH_5E__ \
+-D__ARM_ARCH_5TE__  \
 -march=armv5te -mtune=xscale -msoft-float
 
+# No specific tuning
+#-mtune=arm7
+
 # Possible values: arm, thumb
-ARM_MODE=arm
+LOCAL_ARM_MODE=arm
 
 # Suppress some warnings
 ARCH_CFLAGS += -Wno-psabi
-ARCH_CFLAGS += -O2
+
+# Optimization
+ANDROID_OPTIM_FLAGS = -O2
+ 
+ifeq ($(NDK_DEBUG),1)
+	ARCH_CFLAGS += -O0
+	ARCH_CFLAGS += -g 
+else
+	ARCH_CFLAGS += $(ANDROID_OPTIM_FLAGS)
+endif 
 
 # Smaller code generation for shared libraries, usually faster
 # if doesn't work use -fPIC
@@ -82,7 +77,7 @@ ARCH_CFLAGS += -funsafe-math-optimizations
 #ARCH_CFLAGS += -funwind-tables 
 
 # SLows down
-# ARCH_CFLAGS += -fstack-protector
+ARCH_CFLAGS += -fstack-protector
 
 # ORIGINAL CFLAGS FROM ANDROID NDK
 #-D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__  \

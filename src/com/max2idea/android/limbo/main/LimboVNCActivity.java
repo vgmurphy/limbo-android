@@ -40,8 +40,8 @@ import android.widget.Toast;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-//import com.max2idea.android.limbo.mainarmv7.R;
-import com.max2idea.android.limbo.mainarmv7.R;
+//import com.max2idea.android.limbo.main.R;
+import com.max2idea.android.limbo.main.R;
 
 /**
  * 

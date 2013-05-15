@@ -33,7 +33,7 @@ ARCH_CFLAGS = \
 -march=armv5te -mtune=xscale -msoft-float
 
 # Possible values: arm, thumb
-ARM_MODE=arm
+LOCAL_ARM_MODE=arm
 
 # Suppress some warnings
 ARCH_CFLAGS += -Wno-psabi

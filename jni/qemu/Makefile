@@ -98,8 +98,7 @@ ifneq ($(wildcard config-host.mak),)
 include $(SRC_PATH)/Makefile.objs
 endif
 
-include ./../android-toolchain.mak
-include ./../android-device-config.mak
+include $(LIMBO_JNI_ROOT)/android-config.mak
 QEMU_CFLAGS+= $(SYSTEM_INCLUDE) $(EXTRA_DEFS) $(ARCH_CFLAGS) $(ANDROID_CFLAGS) $(CUSTOM_ANDROID_CFLAGS)
 
 $(universal-obj-y) $(common-obj-y): $(GENERATED_HEADERS)
@@ -161,6 +160,7 @@ tools-obj-y = $(oslib-obj-y) $(trace-obj-y) qemu-tool.o qemu-timer.o \
 	qemu-timer-common.o main-loop.o notify.o iohandler.o cutils.o async.o
 tools-obj-$(CONFIG_POSIX) += compatfd.o
 
+#We don't qemu-img anymore
 qemu-img$(EXESUF): qemu-img.o $(tools-obj-y) $(block-obj-y)
 	$(AR) rcs qemu-img.a qemu-img.o $(tools-obj-y) $(block-obj-y)
 

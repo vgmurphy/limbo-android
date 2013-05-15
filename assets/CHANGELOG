@@ -1,7 +1,11 @@
 <br>
-Limbo v0.9.9 (May 13, 2013)<br>
+Limbo v0.9.9 (TBD)<br>
 - Upgraded to glib 2.24<br>
-- ARMv7 Compatibility<br>
+- Modified env for easier targeting<br>
+- Created ARMv7 build configuration<br>
+- Compiled SDL for X86<br>
+- Created x86 build configuration<br>
+- Replaced qemu-img with hd image templates<br>
 <br>
 
 <br>

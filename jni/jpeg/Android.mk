@@ -1,8 +1,6 @@
 LOCAL_PATH:= $(call my-dir)
 include $(CLEAR_VARS)
 
-LOCAL_ARM_MODE := arm
-
 LOCAL_SRC_FILES := \
 	jcapimin.c jcapistd.c jccoefct.c jccolor.c jcdctmgr.c jchuff.c \
 	jcinit.c jcmainct.c jcmarker.c jcmaster.c jcomapi.c jcparam.c \
@@ -35,7 +33,6 @@ LOCAL_CFLAGS += -DAVOID_TABLES
 LOCAL_CFLAGS += -O3 -fstrict-aliasing -fprefetch-loop-arrays
 #LOCAL_CFLAGS += -march=armv6j
 LOCAL_CFLAGS += $(ARCH_CFLAGS)
-LOCAL_ARM_MODE := $(ARM_MODE)
 
 LOCAL_MODULE:= jpeg
 

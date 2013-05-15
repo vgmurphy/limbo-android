@@ -28,7 +28,7 @@ https://code.google.com/p/limbo-android/
 3. Setup
 
     Configure variables for toolchain and NDK directories for your device
-     in jni/android-toolchain.mak.
+     in jni/android-config.mak.
     Configure your PATH variable add the NDK Directory so makefile can find ndk-build
     
 
@@ -38,15 +38,11 @@ https://code.google.com/p/limbo-android/
     a. To build the app make sure you're under the root directory:
         $> cd /home/youraccount/.../limbo-android
 
-    b. Build the static and shared libraries (libqemu-img.so & 
-       libqemu-system-i386.so):
+    b. Build the static and shared libraries :
         
         Change directory to ./jni and type:
-        make release-arm
-        
-        for x86 phones:
-        make release-x86
-        
+        make 
+        	
     c. Build the Android APK (Limbo.apk) from Eclipse or Netbeans.
     		 
     	** Make sure the *.so libraries are zipped in the final .apk
@@ -54,7 +50,25 @@ https://code.google.com/p/limbo-android/
     	
     d. If you want to build the ARM Emulator update qemu.config.mak file:
     TARGET_LIST = arm-softmmu
+    
+    e. For ARMv7 phones:
+        i. Update android-config.mak and include file android-generic-armv7a-vfpv3d16.mak 
+        ii. make
 
+    e. For x86 phones:
+        i. Update android-config.mak and include file android-ndkr8-x86.mak 
+        ii. make
+
+	f. Deploy to different package (Optional) 
+        i. Rename all R references using eclipse 
+        	Menu Bar => "Search" => "Replace"
+        	ie:
+        	Search for: "import com.max2idea.android.limbo.main"
+        	Replace with: "import com.max2idea.android.limbo.mainarmv7"
+        ii. Re-Link Androidmanifest.xml to a different manifest file
+        	ie:
+   			ln -s manifest/AndroidManifestARMv7.xml Androidmanifest.xml 
+   
 ===============================================================================
 5. Run
 	a. Recommend installing a full Qwerty keyboard for Android (ie Hacker's keyboard 

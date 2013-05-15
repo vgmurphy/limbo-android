@@ -1,11 +1,9 @@
 # COMMON VARS
-include android-toolchain.mak
-include android-device-config.mak
+include $(LIMBO_JNI_ROOT)/android-config.mak
 
 LIMBO_SRC_FILES = \
 		  ./limbo/vm-executor-jni.c \
-		  ./limbo/cpu-features.c \
-		  ./limbo/image-creator-jni.c
+		  ./limbo/cpu-features.c
 
 QEMU_NEED_CPU_DEF = \
         -DNEED_CPU_H
@@ -63,10 +61,6 @@ OPTIM = \
 -fcx-fortran-rules
 
 
-### CONFIGURATIONS
-include android-toolchain.mak
-include android-device-config.mak
-
 ANDROID_CFLAGS := $(ANDROID_CFLAGS) -I. -DANDROID
 
 CUSTOM_ANDROID_CFLAGS = -Wa,--noexecstack \
@@ -80,7 +74,7 @@ OBJS=$(CFILES:%.c=%.o)
 
 LIMBO_OBJS=$(LIMBO_CFILES:%.c=%.o)
 
-LIBLIMBO = ../obj/local/$(TARGET_ARCH_ABI)/liblimbo.so
+LIBLIMBO = ../obj/local/$(APP_ABI)/liblimbo.so
 
 all: $(OBJS) \
 	$(LIMBO_OBJS) \

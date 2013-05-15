@@ -90,8 +90,8 @@ import android.widget.Toast;
 import com.max2idea.android.limbo.jni.ImageCreator;
 
 import com.max2idea.android.limbo.jni.VMExecutor;
-//import com.max2idea.android.limbo.mainarmv7.R;
-import com.max2idea.android.limbo.mainarmv7.R;
+//import com.max2idea.android.limbo.main.R;
+import com.max2idea.android.limbo.main.R;
 import com.max2idea.android.limbo.utils.FavOpenHelper;
 import com.max2idea.android.limbo.utils.FileInstaller;
 import com.max2idea.android.limbo.utils.FileUtils;
@@ -252,8 +252,8 @@ public class LimboActivity extends Activity {
 		if (SettingsManager.getOrientationReverse(this))
 			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
 
-		if (Const.enable_fullscreen ||
-				android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+		if (Const.enable_fullscreen
+				|| android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
 			requestWindowFeature(Window.FEATURE_NO_TITLE);
 		}
 
@@ -545,14 +545,14 @@ public class LimboActivity extends Activity {
 			if (messageType != null && messageType == Const.IMG_CREATED) {
 				String hdValue = (String) b.get("hd");
 				String imageValue = (String) b.get("image_name");
-				if (progDialog.isShowing()) {
+				if (progDialog!=null && progDialog.isShowing()) {
 					progDialog.dismiss();
 				}
 				Toast.makeText(activity,
-						"Image Created: " + imageValue + ".qcow2",
+						"Image Created: " + imageValue ,
 						Toast.LENGTH_SHORT).show();
 				setDriveAttr(hdValue, Const.machinedir
-						+ currMachine.machinename + "/" + imageValue + ".qcow2");
+						+ currMachine.machinename + "/" + imageValue);
 
 			}
 			if (messageType != null && messageType == Const.SNAPSHOT_CREATED) {
@@ -2461,16 +2461,17 @@ public class LimboActivity extends Activity {
 				RelativeLayout.LayoutParams.WRAP_CONTENT);
 		size.setId(201012044);
 
-		String[] arraySpinner = new String[10];
+		String[] arraySpinner = new String[7];
 		for (int i = 0; i < arraySpinner.length; i++) {
 
-			if (i >= 5) {
-				arraySpinner[i] = ((i - 4) * 1000) + "MB";
-			} else {
-				arraySpinner[i] = ((i + 1) * 100) + "MB";
+			if (i < 5) {
+				arraySpinner[i] = (i + 1) + " GB";
 			}
 
 		}
+		arraySpinner[5] = "10 GB";
+		arraySpinner[6] = "20 GB";
+		
 		ArrayAdapter sizeAdapter = new ArrayAdapter(this,
 				android.R.layout.simple_spinner_item, arraySpinner);
 		sizeAdapter
@@ -2512,12 +2513,14 @@ public class LimboActivity extends Activity {
 		alertDialog.setButton("Create", new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int which) {
 				int sizeSel = size.getSelectedItemPosition();
-				int sizeInt = 100;
-				if (sizeSel >= 5) {
-					sizeInt = ((sizeSel - 4) * 1000);
-				} else {
-					sizeInt = ((sizeSel + 1) * 100);
-				}
+				String templateImage = "hd1g.qcow2";
+				if (sizeSel < 5) {
+					templateImage = "hd" + (sizeSel+1)+"g.qcow2";
+				} else if (sizeSel == 5){
+					templateImage = "hd10g.qcow2";
+				} else if (sizeSel == 6){
+					templateImage = "hd20g.qcow2";
+				} 
 
 				// UIUtils.log("Searching...");
 				EditText a = (EditText) alertDialog.findViewById(201012010);
@@ -2526,14 +2529,34 @@ public class LimboActivity extends Activity {
 				// CreateImage createImg = new
 				// CreateImage(a.getText().toString(),
 				// hd_string, sizeInt, prealloc.isChecked());
-				CreateImage createImg = new CreateImage(a.getText().toString(),
-						hd_string, sizeInt, false);
-				createImg.execute();
+//				CreateImage createImg = new CreateImage(a.getText().toString(),
+//						hd_string, sizeInt, false);
+//				createImg.execute();
+	
+				String image = a.getText().toString();
+				if(!image.endsWith(".qcow2")){
+					image+=".qcow2";
+				}
+				createImg(templateImage,image,hd_string);
+
 
 			}
 		});
 		alertDialog.show();
 
+	}
+
+	protected boolean createImg(String templateImage, String destImage, String hd_string) {
+		// TODO Auto-generated method stub
+		
+		boolean fileCreated = FileInstaller.installFile(activity, templateImage, Const.machinedir + currMachine.machinename, "hdtemplates", destImage);
+		try {
+			sendHandlerMessage(handler, Const.IMG_CREATED, new String[] {
+					"image_name", "hd" }, new String[] { destImage, hd_string });
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return fileCreated;
 	}
 
 	private class CreateImage extends AsyncTask<Void, Void, Void> {
@@ -3531,8 +3554,9 @@ public class LimboActivity extends Activity {
 		// "pxa270-b0 (arm)", "pxa270-b1 (arm)", "pxa270-c0 (arm)",
 		// "pxa270-c5 (arm)", "any (arm)"
 		};
-		
-		ArrayList<String> arrList = new ArrayList<String>(Arrays.asList(arraySpinner));
+
+		ArrayList<String> arrList = new ArrayList<String>(
+				Arrays.asList(arraySpinner));
 
 		if (Const.enable_ARM) {
 			arrList.add("Default (arm)");
@@ -3540,7 +3564,7 @@ public class LimboActivity extends Activity {
 			arrList.add("arm946 (arm)");
 			arrList.add("arm1026 (arm)");
 		}
-		
+
 		cpuAdapter = new ArrayAdapter(this,
 				android.R.layout.simple_spinner_item, arrList);
 
@@ -3549,7 +3573,7 @@ public class LimboActivity extends Activity {
 		this.mCPU.setAdapter(cpuAdapter);
 
 		this.mCPU.invalidate();
-		
+
 	}
 
 	private void populateMachineType() {

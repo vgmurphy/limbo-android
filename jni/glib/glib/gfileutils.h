@@ -107,7 +107,7 @@ gint    g_mkstemp_full       (gchar        *tmpl,
 gint    g_file_open_tmp      (const gchar  *tmpl,
 			      gchar       **name_used,
 			      GError      **error);
-typedef gint64 goffset;
+
 char *g_format_size_for_display (goffset size);
 
 gchar *g_build_path     (const gchar *separator,

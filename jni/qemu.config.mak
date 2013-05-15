@@ -1,10 +1,9 @@
-include android-toolchain.mak
-
+include android-config.mak
 
 #x86 and ARM devices support
 #ARM is currently very slow
 #Possible Values=arm-softmmu,x86_64-softmmu
-TARGET_LIST = x86_64-softmmu
+QEMU_TARGET_LIST = x86_64-softmmu
 
 #use coroutine
 #ucontext is deprecated and also not avail in Bionic
@@ -28,11 +27,12 @@ CONFIG_EXTRA += --audio-drv-list=sdl --enable-mixemu
 #DISABLE TSC PENTIUM FEATURE
 #LIMBO_DISABLE_TSC=-DLIMBO_DISABLE_TSC
 
-ifeq ($(TARGET_ARCH), arm)
-    QEMU_TARGET_CPU = armv4b
+ifeq ($(APP_ABI), armeabi)
+    QEMU_HOST_CPU = armv4b
+else ifeq ($(APP_ABI), armeabi-v7a)
+    QEMU_HOST_CPU = armv4b
 else
-    QEMU_TARGET_CPU = i686
-    CONFIG_EXTRA = --disable-vnc-jpeg  --disable-vnc-png --audio-card-list= --audio-drv-list=
+    QEMU_HOST_CPU = i686   
 endif
 
 config:
@@ -43,7 +43,7 @@ config:
 
 	cd ./qemu	; \
 	./configure \
-	--target-list=$(TARGET_LIST) \
+	--target-list=$(QEMU_TARGET_LIST) \
 	--cpu=$(QEMU_TARGET_CPU) \
 	--disable-kvm --disable-curses \
 	--disable-vhost-net --disable-spice \

@@ -10,6 +10,5 @@ LOCAL_C_INCLUDES += $(LOCAL_PATH)/include
 LOCAL_SRC_FILES:= arp.c parprouted.c
 
 LOCAL_MODULE := parprouted
-LOCAL_ARM_MODE := $(ARM_MODE)
 
 include $(BUILD_EXECUTABLE)

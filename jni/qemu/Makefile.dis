@@ -2,8 +2,7 @@
 
 include ../config-host.mak
 include config.mak
-include ../../android-toolchain.mak
-include ../../android-device-config.mak
+include ../../android-config.mak
 include $(SRC_PATH)/rules.mak
 
 .PHONY: all

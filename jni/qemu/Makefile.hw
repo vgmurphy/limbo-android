@@ -2,8 +2,7 @@
 
 include ../config-host.mak
 include ../config-all-devices.mak
-include ../../android-toolchain.mak
-include ../../android-device-config.mak
+include ../../android-config.mak
 include config.mak
 include $(SRC_PATH)/rules.mak
 

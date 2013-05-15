@@ -94,17 +94,18 @@ public class FileInstaller {
                 }
                 for (int k = 0; k < subfiles.length; k++) {
                     Log.v("Installer", "File: " + files[i] + "/" + subfiles[k]);
-                    installFile(activity, files[i] + "/" + subfiles[k], Const.basefiledir, "roms");
+                    installFile(activity, files[i] + "/" + subfiles[k], Const.basefiledir, "roms", null);
                 }
             } else {
-                installFile(activity, files[i], Const.basefiledir, "roms");
+                installFile(activity, files[i], Const.basefiledir, "roms", null);
             }
         }
 //        InputStream is = am.open(srcFile);
 
     }
 
-    public static void installFile(Context activity, String srcFile, String destDir, String assetsDir) {
+    public static boolean installFile(Context activity, String srcFile, 
+    		String destDir, String assetsDir, String destFile) {
         try {
             AssetManager am = activity.getResources().getAssets(); // get the local asset manager
             InputStream is = am.open(assetsDir + "/" + srcFile); // open the input stream for reading
@@ -112,7 +113,10 @@ public class FileInstaller {
             if (!destDirF.exists()) {
                 destDirF.mkdir();
             }
-            OutputStream os = new FileOutputStream(destDir + "/" + srcFile);
+            
+            if(destFile==null)
+            	destFile=srcFile;
+            OutputStream os = new FileOutputStream(destDir + "/" + destFile);
             byte[] buf = new byte[8092];
             int n;
             while ((n = is.read(buf)) > 0) {
@@ -120,9 +124,10 @@ public class FileInstaller {
             }
             os.close();
             is.close();
+            return true;
         } catch (Exception ex) {
-            Log.e("Installer", "failed to install file: " + srcFile + ", Error:" + ex.getMessage());
+            Log.e("Installer", "failed to install file: " + destFile + ", Error:" + ex.getMessage());
+            return false;
         }
-
     }
 }

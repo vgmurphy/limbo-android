@@ -9,7 +9,7 @@ ARCH_CFLAGS += \
 #-mtune=arm7
 
 # Possible values: arm, thumb
-ARM_MODE=arm
+LOCAL_ARM_MODE=arm
 
 # Suppress some warnings
 ARCH_CFLAGS += -Wno-psabi

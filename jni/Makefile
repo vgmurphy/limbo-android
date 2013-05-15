@@ -1,24 +1,20 @@
 .PHONY: createdirs sdl qemu limbo
 
-include android-toolchain.mak
+LIMBO_JNI_ROOT := $(CURDIR)
 
-sdlbuild=cd .. && ndk-build V=1 TARGET_ARCH=arm
+include android-config.mak
+	
+sdlbuild=cd .. && ndk-build V=1 LIMBO_JNI_ROOT=$(LIMBO_JNI_ROOT)
 
-CREATE_OBJDIR=mkdir -p ../obj/local/$(TARGET_ARCH_ABI)/
-CREATE_LIBSDIR=mkdir -p ../libs/$(TARGET_ARCH_ABI)/
-INSTALL_LIBS=cp -f ../obj/local/$(TARGET_ARCH_ABI)/*.so ../libs/$(TARGET_ARCH_ABI)/
-RENAME_TUNCTL=mv -f ../libs/$(TARGET_ARCH_ABI)/tunctl ../libs/$(TARGET_ARCH_ABI)/libtunctl.so
-RENAME_PARPROUTED=mv -f ../libs/$(TARGET_ARCH_ABI)/parprouted ../libs/$(TARGET_ARCH_ABI)/libparprouted.so
+CREATE_OBJDIR=mkdir -p ../obj/local/$(APP_ABI)/
+CREATE_LIBSDIR=mkdir -p ../libs/$(APP_ABI)/
+DEL_LIBSDIR=rm -rf ../libs/armeabi ../libs/armeabi-v7a ../libs/x86 ../libs/mips   
+INSTALL_LIBS=cp -f ../obj/local/$(APP_ABI)/*.so ../libs/$(APP_ABI)/
+RENAME_TUNCTL=mv -f ../libs/$(APP_ABI)/tunctl ../libs/$(APP_ABI)/libtunctl.so
+RENAME_PARPROUTED=mv -f ../libs/$(APP_ABI)/parprouted ../libs/$(APP_ABI)/libparprouted.so
 
 ifneq ($(NDK_DEBUG),1)
-	STRIP_LIBS=$(STRIP) --strip-unneeded ../libs/$(TARGET_ARCH_ABI)/*
-endif
-
-ifeq ($(TARGET_ARCH),x86)
-	#TODO: Enable SDL, tunctl, parprouted for x86, for now we suppress
-	sdlbuild=
-	RENAME_TUNCTL=
-	RENAME_PARPROUTED=
+	STRIP_LIBS=$(STRIP) --strip-unneeded ../libs/$(APP_ABI)/*
 endif
 	
 all: createdirs sdl config qemu limbo
@@ -29,57 +25,44 @@ all: createdirs sdl config qemu limbo
 	
 createdirs:
 	$(CREATE_OBJDIR)
+	$(DEL_LIBSDIR)
 	$(CREATE_LIBSDIR)
 
 sdl:
 	$(sdlbuild)
 
-qemu:  sdl
-	$(MAKE) -f qemu.mak all V=1
+qemu: sdl config
+	$(MAKE) -f qemu.mak all V=1 LIMBO_JNI_ROOT=$(LIMBO_JNI_ROOT)
 	
-limbo: qemu sdl
-	$(MAKE) -f limbo.mak all V=1
+limbo: sdl config qemu
+	$(MAKE) -f limbo.mak all V=1 LIMBO_JNI_ROOT=$(LIMBO_JNI_ROOT)
 	
 config:
-	$(MAKE) -f qemu.config.mak V=1
+	$(MAKE) -f qemu.config.mak V=1 LIMBO_JNI_ROOT=$(LIMBO_JNI_ROOT)
 
-debug-arm:
-	$(MAKE) ultraclean
-	$(MAKE) config TARGET_ARCH=arm
-	$(MAKE) all TARGET_ARCH=arm NDK_DEBUG=1
+debug:
+	$(MAKE) ultraclean LIMBO_JNI_ROOT=$(LIMBO_JNI_ROOT)
+	$(MAKE) config LIMBO_JNI_ROOT=$(LIMBO_JNI_ROOT)
+	$(MAKE) all NDK_DEBUG=1 LIMBO_JNI_ROOT=$(LIMBO_JNI_ROOT)
 	
-debug-x86:
-	$(MAKE) ultraclean
-	$(MAKE) config TARGET_ARCH=x86
-	$(MAKE) all TARGET_ARCH=x86 NDK_DEBUG=1
-	
-release-arm:
-	$(MAKE) ultraclean
-	$(MAKE) config TARGET_ARCH=arm
-	$(MAKE) all TARGET_ARCH=arm
-	$(STRIP_LIBS) 
-	
-
-release-x86:
-	$(MAKE) ultraclean
-	$(MAKE) config TARGET_ARCH=x86
-	$(MAKE) all TARGET_ARCH=x86
-	$(STRIP_LIBS) 
-	
-release: release-x86 release-arm
+release:
+	$(MAKE) ultraclean LIMBO_JNI_ROOT=$(LIMBO_JNI_ROOT)
+	$(MAKE) config LIMBO_JNI_ROOT=$(LIMBO_JNI_ROOT)
+	$(MAKE) all LIMBO_JNI_ROOT=$(LIMBO_JNI_ROOT)
+	$(STRIP_LIBS)
 
 clean:
-	-cd .. && ndk-build clean
-	$(MAKE) -f qemu.mak clean V=1
-	$(MAKE) -f limbo.mak clean V=1
+	-cd .. && ndk-build clean LIMBO_JNI_ROOT=$(LIMBO_JNI_ROOT)
+	$(MAKE) -f qemu.mak clean V=1 LIMBO_JNI_ROOT=$(LIMBO_JNI_ROOT)
+	$(MAKE) -f limbo.mak clean V=1 LIMBO_JNI_ROOT=$(LIMBO_JNI_ROOT)
 
 veryclean:
-	$(MAKE) -f qemu.mak veryclean V=1
-	$(MAKE) -f limbo.mak veryclean V=1
+	$(MAKE) -f qemu.mak veryclean V=1 LIMBO_JNI_ROOT=$(LIMBO_JNI_ROOT)
+	$(MAKE) -f limbo.mak veryclean V=1 LIMBO_JNI_ROOT=$(LIMBO_JNI_ROOT)
 	-rm -rf ../obj/local/
 
 distclean: 
-	cd qemu && $(MAKE) distclean
+	cd qemu && $(MAKE) distclean LIMBO_JNI_ROOT=$(LIMBO_JNI_ROOT)
 
 ultraclean: distclean veryclean clean
 	-find . -name "*.d" -exec rm -rf {} \;
