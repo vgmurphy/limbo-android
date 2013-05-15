@@ -1,4 +1,3 @@
-
 ### CONFIGURATIONS
 ARCH_CFLAGS += \
 -std=gnu99 \

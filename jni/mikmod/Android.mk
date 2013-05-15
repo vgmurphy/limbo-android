@@ -63,4 +63,6 @@ LOCAL_SRC_FILES := \
 	posix/strstr.c
 	
 LOCAL_CFLAGS += $(ARCH_CFLAGS)
+LOCAL_ARM_MODE := $(ARM_MODE)
+
 include $(BUILD_SHARED_LIBRARY)

@@ -42,5 +42,8 @@ LOCAL_CFLAGS += \
         -DLIBDIR="\".\"" \
         -DLINK_SIZE=2
 
+LOCAL_CFLAGS += $(ARCH_CFLAGS)
+LOCAL_ARM_MODE := $(ARM_MODE)
+
 include $(BUILD_SHARED_LIBRARY)
 

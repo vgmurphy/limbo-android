@@ -1,32 +1,5 @@
-## OPTIONAL OPTIMIZATION FLAGS
-OPTIM = \
--ffloat-store \
--ffast-math \
--fno-rounding-math \
--fno-signaling-nans \
--fcx-limited-range \
--fno-math-errno \
--funsafe-math-optimizations \
--fassociative-math \
--freciprocal-math \
--fassociative-math \
--freciprocal-math \
--ffinite-math-only \
--fno-signed-zeros \
--fno-trapping-math \
--frounding-math \
--fsingle-precision-constant \
--fcx-limited-range \
--fcx-fortran-rules
-
-
 ### CONFIGURATIONS
 
-# 9. Utilizing VFP
-# This abi should try the hard float (FPU) on board but also keep compatibility
-#   with Android libraries (soft)
-# ANDROID NDK: Still SLOWWWWWWWWWWWWWWW
-# LINARO Android toolchain supports VFP
 ARCH_CFLAGS = \
 -std=gnu99 \
 -march=armv7-a \
@@ -36,7 +9,7 @@ ARCH_CFLAGS = \
 #-mtune=arm7
 
 # Possible values: arm, thumb
-LOCAL_ARM_MODE=arm
+ARM_MODE=arm
 
 # Suppress some warnings
 ARCH_CFLAGS += -Wno-psabi
@@ -85,7 +58,7 @@ ARCH_CFLAGS += -funsafe-math-optimizations
 #ARCH_CFLAGS += -funwind-tables 
 
 # SLows down
-ARCH_CFLAGS += -fstack-protector
+#ARCH_CFLAGS += -fstack-protector
 
 # ORIGINAL CFLAGS FROM ANDROID NDK
 #-D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__  \

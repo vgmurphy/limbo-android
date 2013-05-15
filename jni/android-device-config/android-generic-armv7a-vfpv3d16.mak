@@ -12,11 +12,11 @@ ARCH_CFLAGS = \
 -march=armv7-a \
 -mfloat-abi=softfp -mfpu=vfpv3-d16
 
-# No specific tuning
-#-mtune=arm7
+# Tuning
+-mtune=arm7
 
 # Possible values: arm, thumb
-LOCAL_ARM_MODE=arm
+ARM_MODE=arm
 
 # Suppress some warnings
 ARCH_CFLAGS += -Wno-psabi
@@ -74,7 +74,7 @@ ARCH_CFLAGS += -funsafe-math-optimizations
 #ARCH_CFLAGS += -funwind-tables 
 
 # SLows down
-ARCH_CFLAGS += -fstack-protector
+#ARCH_CFLAGS += -fstack-protector
 
 # ORIGINAL CFLAGS FROM ANDROID NDK
 #-D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__  \

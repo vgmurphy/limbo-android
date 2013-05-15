@@ -1,4 +1,3 @@
-
 ### CONFIGURATIONS
 ARCH_CFLAGS += \
 -std=gnu99 \
@@ -9,7 +8,7 @@ ARCH_CFLAGS += \
 #-mtune=arm7
 
 # Possible values: arm, thumb
-LOCAL_ARM_MODE=arm
+ARM_MODE=arm
 
 # Suppress some warnings
 ARCH_CFLAGS += -Wno-psabi
