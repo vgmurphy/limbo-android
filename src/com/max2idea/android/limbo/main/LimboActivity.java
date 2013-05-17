@@ -1086,6 +1086,15 @@ public class LimboActivity extends Activity {
 					.show();
 			return;
 		}
+		if(currMachine.snapshot_name!=null
+				&& currMachine.soundcard!=null
+				&& !currMachine.soundcard.toLowerCase().equals("none")
+				&& mUI.getSelectedItemPosition() != 1){
+			Toast.makeText(getApplicationContext(),
+					"Snapshot was saved with soundcard enabled please use User interface SDL only", Toast.LENGTH_LONG)
+					.show();
+			return;
+		}
 
 		if (currMachine != null
 				&& currMachine.cpu != null
