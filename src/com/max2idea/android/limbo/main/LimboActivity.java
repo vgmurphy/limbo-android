@@ -1087,6 +1087,7 @@ public class LimboActivity extends Activity {
 			return;
 		}
 		if(currMachine.snapshot_name!=null
+				&& currMachine.snapshot_name.toLowerCase().equals("none")
 				&& currMachine.soundcard!=null
 				&& !currMachine.soundcard.toLowerCase().equals("none")
 				&& mUI.getSelectedItemPosition() != 1){
