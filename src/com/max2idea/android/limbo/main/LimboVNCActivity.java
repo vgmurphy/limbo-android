@@ -68,13 +68,12 @@ public class LimboVNCActivity extends android.androidVNC.VncCanvasActivity {
 		if (SettingsManager.getOrientationReverse(this))
 			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
 
-		Toast toast = Toast.makeText(activity,
-				"2-Finger Tap for Right Click", Toast.LENGTH_LONG);
+		Toast toast = Toast.makeText(activity, "2-Finger Tap for Right Click",
+				Toast.LENGTH_LONG);
 		toast.setGravity(Gravity.TOP | Gravity.CENTER, 0, 0);
 		toast.show();
 		this.vncCanvas.setFocusableInTouchMode(true);
 		onMouse();
-		
 
 	}
 
@@ -142,18 +141,48 @@ public class LimboVNCActivity extends android.androidVNC.VncCanvasActivity {
 
 	}
 
+	String TAG = "LimboVNCActivity";
+
+	public void stopVM(boolean exit) {
+
+		new AlertDialog.Builder(this)
+				.setTitle("Shutdown VM")
+				.setMessage(
+						"To avoid any corrupt data make sure you "
+								+ "have already shutdown the Operating system from within the VM. Continue?")
+				.setPositiveButton("Yes",
+						new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog,
+									int which) {
+								if (LimboActivity.vmexecutor != null) {
+									LimboActivity.vmexecutor.stopvm(0);
+								} else if (activity.getParent() != null) {
+									activity.getParent().finish();
+								} else {
+									activity.finish();
+								}
+							}
+						})
+				.setNegativeButton("No", new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int which) {
+					}
+				}).show();
+	}
+
 	DrivesDialogBox drives = null;
-	
+
 	@Override
 	public boolean onOptionsItemSelected(final MenuItem item) {
 		super.onOptionsItemSelected(item);
 		if (item.getItemId() == this.KEYBOARD
 				|| item.getItemId() == R.id.itemKeyboard) {
 			this.onKeyboard();
+		} else if (item.getItemId() == R.id.itemShutdown) {
+			stopVM(false);
 		} else if (item.getItemId() == R.id.itemDrives) {
 			// Show up removable devices dialog
-			 drives = new DrivesDialogBox(activity, R.style.Transparent,this);
-			 drives.show();
+			drives = new DrivesDialogBox(activity, R.style.Transparent, this);
+			drives.show();
 		} else if (item.getItemId() == R.id.itemMonitor) {
 			if (this.qmpMode) {
 				this.onVNC();

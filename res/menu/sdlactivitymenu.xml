@@ -32,13 +32,13 @@
         android:title="@string/external_mouse">
     </item>
     <item
-        android:id="@+id/itemCtrlAltDel"
-        android:icon="@android:drawable/ic_menu_share"
-        android:title="@string/ctrl_alt_del"/>
-    <item
         android:id="@+id/itemCtrlC"
         android:icon="@android:drawable/ic_menu_share"
         android:title="@string/ctrl_c"/>
+    <item
+        android:id="@+id/itemCtrlAltDel"
+        android:icon="@android:drawable/ic_menu_share"
+        android:title="@string/ctrl_alt_del"/>
     <item
         android:id="@+id/itemShutdown"
         android:icon="@android:drawable/ic_menu_share"

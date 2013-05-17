@@ -27,13 +27,17 @@
         android:title="@string/monitor">
     </item>
     <item
+        android:id="@+id/itemCtrlC"
+        android:icon="@android:drawable/ic_menu_share"
+        android:title="@string/ctrl_c"/>
+    <item
         android:id="@+id/itemCtrlAltDel"
         android:icon="@android:drawable/ic_menu_share"
         android:title="@string/ctrl_alt_del"/>
     <item
-        android:id="@+id/itemCtrlC"
+        android:id="@+id/itemShutdown"
         android:icon="@android:drawable/ic_menu_share"
-        android:title="@string/ctrl_c"/>
+        android:title="@string/shutdown"/>
     <item
         android:id="@+id/itemSpecialKeys"
         android:icon="@android:drawable/ic_dialog_dialer"
