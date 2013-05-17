@@ -32,6 +32,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 import android.view.Display;
+import android.view.Gravity;
 import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -59,9 +60,6 @@ import com.max2idea.android.limbo.main.LimboVNCActivity;
 //import com.max2idea.android.limbo.main.R;
 import com.max2idea.android.limbo.main.R;
 import com.max2idea.android.limbo.main.SettingsManager;
-import com.max2idea.android.limbo.utils.FileUtils;
-import com.max2idea.android.limbo.utils.Machine;
-import com.max2idea.android.limbo.utils.MachineOpenHelper;
 import com.max2idea.android.limbo.utils.*;
 
 /**
@@ -1123,6 +1121,8 @@ public class SDLActivity extends Activity {
 
 		Toast toast = Toast.makeText(activity, "2-Finger Tap for Right Click",
 				Toast.LENGTH_LONG);
+		toast.setGravity(Gravity.TOP | Gravity.CENTER, 0, 0);
+		toast.show();
 	}
 
 	public SDLSurface getSDLSurface() {
