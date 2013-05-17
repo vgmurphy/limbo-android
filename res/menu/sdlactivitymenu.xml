@@ -13,9 +13,9 @@
         android:icon="@drawable/diskette"
         android:title="@string/save_state"/>
     <item
-        android:id="@+id/itemDevices"
+        android:id="@+id/itemDrives"
         android:icon="@drawable/spintop"
-        android:title="@string/devices">
+        android:title="@string/drives">
     </item>
     <item
         android:id="@+id/itemHelp"

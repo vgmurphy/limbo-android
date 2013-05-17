@@ -62,6 +62,7 @@ import com.max2idea.android.limbo.main.SettingsManager;
 import com.max2idea.android.limbo.utils.FileUtils;
 import com.max2idea.android.limbo.utils.Machine;
 import com.max2idea.android.limbo.utils.MachineOpenHelper;
+import com.max2idea.android.limbo.utils.*;
 
 /**
  * SDL Activity
@@ -138,16 +139,6 @@ public class SDLActivity extends Activity {
 	public static float height_mult = (float) 1.0;
 
 	private static Activity activity1;
-
-	public static Spinner mCD;
-	public static Spinner mFDA;
-	public static Spinner mFDB;
-	public static Button mOK;
-
-	public static boolean userPressedCDROM = true;
-	public static boolean userPressedFDA = true;
-	public static boolean userPressedFDB = true;
-	protected static boolean stretchToScreen = false;
 
 	public static void showTextInput(int x, int y, int w, int h) {
 		// Transfer the task to the main thread as a Runnable
@@ -247,424 +238,13 @@ public class SDLActivity extends Activity {
 				SettingsManager.setLastDir(this, currDir);
 			}
 			if (fileType != null && file != null) {
-				setDriveAttr(fileType, file, true);
+				DrivesDialogBox.setDriveAttr(fileType, file, true);
 			}
 
 		}
 
 		// Check if says open
 
-	}
-
-	class DialogBox extends Dialog {
-		public DialogBox(Context context, int theme) {
-			super(context, theme);
-			getWindow().setFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND,
-					WindowManager.LayoutParams.FLAG_DIM_BEHIND);
-			setContentView(R.layout.dev_dialog);
-			this.setTitle("Device Manager");
-			getWidgets();
-			setupListeners();
-			initUI();
-		}
-
-		@Override
-		public void onBackPressed() {
-			this.dismiss();
-		}
-
-		private void getWidgets() {
-			SDLActivity.mCD = (Spinner) findViewById(R.id.cdromimgval);
-			SDLActivity.mFDA = (Spinner) findViewById(R.id.floppyimgval);
-			SDLActivity.mFDB = (Spinner) findViewById(R.id.floppybimgval);
-			SDLActivity.mOK = (Button) findViewById(R.id.okButton);
-		}
-
-		private void setupListeners() {
-			SDLActivity.mOK.setOnClickListener(new View.OnClickListener() {
-				public void onClick(View v) {
-					dismiss();
-				}
-			});
-			SDLActivity.mCD
-					.setOnItemSelectedListener(new OnItemSelectedListener() {
-
-						public void onItemSelected(AdapterView<?> parentView,
-								View selectedItemView, int position, long id) {
-							String cd = (String) ((ArrayAdapter) SDLActivity.mCD
-									.getAdapter()).getItem(position);
-
-							if (SDLActivity.userPressedCDROM && position == 0) {
-								int ret = LimboActivity.machineDB.update(
-										LimboActivity.currMachine,
-										MachineOpenHelper.CDROM, null);
-								LimboActivity.currMachine.cd_iso_path = null;
-							} else if (SDLActivity.userPressedCDROM
-									&& position == 1) {
-								SDLActivity.browse("cd");
-							} else if (SDLActivity.userPressedCDROM
-									&& position > 1) {
-								int ret = LimboActivity.machineDB.update(
-										LimboActivity.currMachine,
-										MachineOpenHelper.CDROM, cd);
-								LimboActivity.currMachine.cd_iso_path = cd;
-								// TODO: If Machine is running eject and set
-								// floppy img
-							}
-							if (SDLActivity.userPressedCDROM
-									&& LimboActivity.vmexecutor != null
-									&& position > 1
-									&& !LimboActivity.vmexecutor.busy) {
-								LimboActivity.vmexecutor.change_dev("ide1-cd0",
-										LimboActivity.currMachine.cd_iso_path);
-							} else if (SDLActivity.userPressedCDROM
-									&& LimboActivity.vmexecutor != null
-									&& position == 0
-									&& !LimboActivity.vmexecutor.busy) {
-								LimboActivity.vmexecutor.change_dev("ide1-cd0",
-										null); // Eject
-							}
-							SDLActivity.userPressedCDROM = true;
-						}
-
-						public void onNothingSelected(AdapterView<?> parentView) {
-							// your code here
-							// Log.v(TAG, "Nothing selected");
-						}
-					});
-
-			SDLActivity.mFDA
-					.setOnItemSelectedListener(new OnItemSelectedListener() {
-
-						public void onItemSelected(AdapterView<?> parentView,
-								View selectedItemView, int position, long id) {
-							String fda = (String) ((ArrayAdapter) SDLActivity.mFDA
-									.getAdapter()).getItem(position);
-							if (SDLActivity.userPressedFDA && position == 0) {
-								int ret = LimboActivity.machineDB.update(
-										LimboActivity.currMachine,
-										MachineOpenHelper.FDA, null);
-								LimboActivity.currMachine.fda_img_path = null;
-							} else if (SDLActivity.userPressedFDA
-									&& position == 1) {
-								SDLActivity.browse("fda");
-							} else if (SDLActivity.userPressedFDA
-									&& position > 1) {
-								int ret = LimboActivity.machineDB.update(
-										LimboActivity.currMachine,
-										MachineOpenHelper.FDA, fda);
-								LimboActivity.currMachine.fda_img_path = fda;
-								// TODO: If Machine is running eject and set
-								// floppy img
-							}
-							if (SDLActivity.userPressedFDA
-									&& LimboActivity.vmexecutor != null
-									&& position > 1) {
-								LimboActivity.vmexecutor.change_dev("floppy0",
-										LimboActivity.currMachine.fda_img_path);
-							} else if (SDLActivity.userPressedFDA
-									&& LimboActivity.vmexecutor != null
-									&& position == 0) {
-								LimboActivity.vmexecutor.change_dev("floppy0",
-										null); // Eject
-							}
-
-							SDLActivity.userPressedFDA = true;
-						}
-
-						public void onNothingSelected(AdapterView<?> parentView) {
-							// your code here
-							// Log.v(TAG, "Nothing selected");
-						}
-					});
-
-			SDLActivity.mFDB
-					.setOnItemSelectedListener(new OnItemSelectedListener() {
-
-						public void onItemSelected(AdapterView<?> parentView,
-								View selectedItemView, int position, long id) {
-							String fdb = (String) ((ArrayAdapter) SDLActivity.mFDB
-									.getAdapter()).getItem(position);
-							if (SDLActivity.userPressedFDB && position == 0) {
-								int ret = LimboActivity.machineDB.update(
-										LimboActivity.currMachine,
-										MachineOpenHelper.FDB, null);
-								LimboActivity.currMachine.fdb_img_path = null;
-							} else if (SDLActivity.userPressedFDB
-									&& position == 1) {
-								SDLActivity.browse("fdb");
-							} else if (SDLActivity.userPressedFDB
-									&& position > 1) {
-								int ret = LimboActivity.machineDB.update(
-										LimboActivity.currMachine,
-										MachineOpenHelper.FDB, fdb);
-								LimboActivity.currMachine.fdb_img_path = fdb;
-								// TODO: If Machine is running eject and set
-								// floppy img
-							}
-							if (SDLActivity.userPressedFDB
-									&& LimboActivity.vmexecutor != null
-									&& position > 1) {
-								LimboActivity.vmexecutor.change_dev("floppy1",
-										LimboActivity.currMachine.fdb_img_path);
-							} else if (SDLActivity.userPressedFDB
-									&& LimboActivity.vmexecutor != null
-									&& position == 0) {
-								LimboActivity.vmexecutor.change_dev("floppy1",
-										null); // Eject
-							}
-							SDLActivity.userPressedFDB = true;
-						}
-
-						public void onNothingSelected(AdapterView<?> parentView) {
-							// your code here
-							// Log.v(TAG, "Nothing selected");
-						}
-					});
-
-		}
-
-		private void initUI() {
-			// Set spinners to values from currmachine
-			SDLActivity.populateCDRom("cd");
-			SDLActivity.populateFloppy("fda");
-			SDLActivity.populateFloppy("fdb");
-			setCDROM(LimboActivity.currMachine.cd_iso_path, false);
-			setFDA(LimboActivity.currMachine.fda_img_path, false);
-			setFDB(LimboActivity.currMachine.fdb_img_path, false);
-		}
-	}
-
-	// Set CDROM
-	private static void populateCDRom(String fileType) {
-		SDLActivity.userPressedCDROM = false;
-		// Add from History
-		ArrayList<String> oldCDs = LimboActivity.favDB.getFavURL(fileType);
-		int length = 0;
-		if (oldCDs == null || oldCDs.size() == 0) {
-			length = 0;
-		} else {
-			length = oldCDs.size();
-		}
-
-		ArrayList<String> arraySpinner = new ArrayList<String>();
-		arraySpinner.add("None");
-		arraySpinner.add("Open");
-		if (oldCDs != null) {
-			Iterator i = oldCDs.iterator();
-			while (i.hasNext()) {
-				String file = (String) i.next();
-				if (file != null) {
-					arraySpinner.add(file);
-				}
-			}
-		}
-		ArrayAdapter cdromAdapter = new ArrayAdapter(activity1,
-				android.R.layout.simple_spinner_item, arraySpinner);
-		cdromAdapter
-				.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		SDLActivity.mCD.setAdapter(cdromAdapter);
-		SDLActivity.mCD.invalidate();
-	}
-
-	// Set Hard Disk
-	private static void populateFloppy(String fileType) {
-		// Add from History
-		ArrayList<String> oldFDs = LimboActivity.favDB.getFavURL(fileType);
-		int length = 0;
-		if (oldFDs == null || oldFDs.size() == 0) {
-			length = 0;
-		} else {
-			length = oldFDs.size();
-		}
-
-		ArrayList<String> arraySpinner = new ArrayList<String>();
-		arraySpinner.add("None");
-		arraySpinner.add("Open");
-		if (oldFDs != null) {
-			Iterator i = oldFDs.iterator();
-			while (i.hasNext()) {
-				String file = (String) i.next();
-				if (file != null) {
-					arraySpinner.add(file);
-				}
-			}
-		}
-
-		if (fileType.equals("fda")) {
-			ArrayAdapter fdaAdapter = new ArrayAdapter(activity1,
-					android.R.layout.simple_spinner_item, arraySpinner);
-			fdaAdapter
-					.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-			SDLActivity.mFDA.setAdapter(fdaAdapter);
-			SDLActivity.mFDA.invalidate();
-		} else if (fileType.equals("fdb")) {
-			ArrayAdapter fdbAdapter = new ArrayAdapter(activity1,
-					android.R.layout.simple_spinner_item, arraySpinner);
-			fdbAdapter
-					.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-			SDLActivity.mFDB.setAdapter(fdbAdapter);
-			SDLActivity.mFDB.invalidate();
-		}
-	}
-
-	private static void setDriveAttr(String fileType, String file,
-			boolean userPressed) {
-		// TODO Auto-generated method stub
-		addDriveToList(file, fileType);
-		if (fileType != null && fileType.startsWith("cd") && file != null
-				&& !file.trim().equals("")) {
-			int ret = LimboActivity.machineDB.update(LimboActivity.currMachine,
-					MachineOpenHelper.CDROM, file);
-			if (((ArrayAdapter) SDLActivity.mCD.getAdapter()).getPosition(file) < 0) {
-				((ArrayAdapter) SDLActivity.mCD.getAdapter()).add(file);
-			}
-			setCDROM(file, userPressed);
-		} else if (fileType != null && fileType.startsWith("fd")
-				&& file != null && !file.trim().equals("")) {
-			if (fileType.startsWith("fda")) {
-				int ret = LimboActivity.machineDB.update(
-						LimboActivity.currMachine, MachineOpenHelper.FDA, file);
-				if (((ArrayAdapter) SDLActivity.mFDA.getAdapter())
-						.getPosition(file) < 0) {
-					((ArrayAdapter) SDLActivity.mFDA.getAdapter()).add(file);
-				}
-				setFDA(file, userPressed);
-			} else if (fileType.startsWith("fdb")) {
-				int ret = LimboActivity.machineDB.update(
-						LimboActivity.currMachine, MachineOpenHelper.FDB, file);
-				if (((ArrayAdapter) SDLActivity.mFDB.getAdapter())
-						.getPosition(file) < 0) {
-					((ArrayAdapter) SDLActivity.mFDB.getAdapter()).add(file);
-				}
-				setFDB(file, userPressed);
-			}
-		}
-
-		int res = SDLActivity.mCD.getSelectedItemPosition();
-		if (res == 1) {
-			SDLActivity.mCD.setSelection(0);
-		}
-
-		res = SDLActivity.mFDA.getSelectedItemPosition();
-		if (res == 1) {
-			SDLActivity.mFDA.setSelection(0);
-		}
-
-		res = SDLActivity.mFDB.getSelectedItemPosition();
-		if (res == 1) {
-			SDLActivity.mFDB.setSelection(0);
-
-		}
-
-	}
-
-	private static void setCDROM(String cdrom, boolean userPressed) {
-		SDLActivity.userPressedCDROM = userPressed;
-		LimboActivity.currMachine.cd_iso_path = cdrom;
-		// Log.v("DB", "UserPressed: " + userPressedCDROM + " CDROM=" + cdrom);
-		if (cdrom != null) {
-			int pos = ((ArrayAdapter) SDLActivity.mCD.getAdapter())
-					.getPosition(cdrom);
-			// Log.v("DB", "Got pos: " + pos + " for CDROM=" + cdrom);
-			if (pos > 1) {
-				mCD.setSelection(pos);
-			} else {
-				SDLActivity.mCD.setSelection(0);
-			}
-		} else {
-			mCD.setSelection(0);
-			// Log.v("CDROM", "reset userPressed = " + this.userPressedCDROM);
-		}
-	}
-
-	private static void setFDA(String fda, boolean userPressed) {
-		SDLActivity.userPressedFDA = userPressed;
-		LimboActivity.currMachine.fda_img_path = fda;
-		// Log.v("DB", "UserPressed: " + userPressedFDA + " FDA=" + fda);
-		if (fda != null) {
-			int pos = ((ArrayAdapter) SDLActivity.mFDA.getAdapter())
-					.getPosition(fda);
-			// Log.v("DB", "Got pos: " + pos + " for FDA=" + fda);
-			if (pos >= 0) {
-				SDLActivity.mFDA.setSelection(pos);
-			} else {
-				SDLActivity.mFDA.setSelection(0);
-			}
-		} else {
-			SDLActivity.mFDA.setSelection(0);
-			// Log.v("FDA", "reset userPressed = " + this.userPressedFDA);
-		}
-	}
-
-	private static void setFDB(String fdb, boolean userPressed) {
-		SDLActivity.userPressedFDB = userPressed;
-		LimboActivity.currMachine.fdb_img_path = fdb;
-		// Log.v("DB", "UserPressed: " + userPressedFDB + " FDB=" + fdb);
-		if (fdb != null) {
-			int pos = ((ArrayAdapter) SDLActivity.mFDA.getAdapter())
-					.getPosition(fdb);
-			// Log.v("DB", "Got pos: " + pos + " for FDB=" + fdb);
-			if (pos >= 0) {
-				SDLActivity.mFDB.setSelection(pos);
-			} else {
-				SDLActivity.mFDB.setSelection(0);
-			}
-		} else {
-			SDLActivity.mFDB.setSelection(0);
-			// Log.v("FDB", "reset userPressed = " + this.userPressedFDB);
-		}
-	}
-
-	private static void addDriveToList(String file, String type) {
-		// Check if exists
-		// Log.v(TAG, "Adding To list: " + type + ":" + file);
-		int res = LimboActivity.favDB.getFavUrlSeq(file, type);
-		if (res == -1) {
-			if (type.equals("cd")) {
-				SDLActivity.mCD.getAdapter().getCount();
-			} else if (type.equals("fda")) {
-				SDLActivity.mFDA.getAdapter().getCount();
-			} else if (type.equals("fdb")) {
-				SDLActivity.mFDB.getAdapter().getCount();
-			}
-			LimboActivity.favDB.insertFavURL(file, type);
-		}
-
-	}
-
-	public static void browse(String fileType) {
-		// Check if SD card is mounted
-		// Log.v(TAG, "Browsing: " + fileType);
-		String state = Environment.getExternalStorageState();
-		if (!Environment.MEDIA_MOUNTED.equals(state)) {
-			Toast.makeText(SDLActivity.activity1.getApplicationContext(),
-					"Error: SD card is not mounted", Toast.LENGTH_LONG).show();
-			return;
-		}
-
-		String dir = null;
-		// GET THE LAST ACCESSED DIR FROM THE REG
-		String lastDir = SettingsManager.getLastDir(activity1);
-		try {
-			Intent i = null;
-			i = getFileManIntent();
-			Bundle b = new Bundle();
-			b.putString("lastDir", lastDir);
-			b.putString("fileType", fileType);
-			i.putExtras(b);
-			// Log.v("**PASS** ", lastDir);
-			activity1.startActivityForResult(i, Const.FILEMAN_REQUEST_CODE);
-
-		} catch (Exception e) {
-			// Log.v(TAG, "Error while starting Filemanager: " +
-			// e.getMessage());
-		}
-	}
-
-	public static Intent getFileManIntent() {
-		return new Intent(SDLActivity.activity1,
-				com.max2idea.android.limbo.main.PFileManager.class);
 	}
 
 	public void setParams(Machine machine) {
@@ -1004,17 +584,18 @@ public class SDLActivity extends Activity {
 
 	}
 
+	public DrivesDialogBox drives = null;
+
 	@Override
 	public boolean onOptionsItemSelected(final MenuItem item) {
 		// Log.v("Limbo", "Inside Options Check");
 		super.onOptionsItemSelected(item);
-		if (item.getItemId() == R.id.itemDevices) {
+		if (item.getItemId() == R.id.itemDrives) {
 			// Show up removable devices dialog
-			DialogBox a = new DialogBox(activity1, R.style.Transparent);
-			a.show();
+			drives = new DrivesDialogBox(activity1, R.style.Transparent,this);
+			drives.show();
 		} else if (item.getItemId() == R.id.itemShutdown) {
 			stopVM(false);
-
 		} else if (item.getItemId() == R.id.itemMouse) {
 			promptMouse();
 		} else if (item.getItemId() == this.KEYBOARD
@@ -1498,7 +1079,8 @@ public class SDLActivity extends Activity {
 	// Audio
 	private static Thread mAudioThread;
 	private static AudioTrack mAudioTrack;
-	private static boolean fitToScreen = true; // Start with fitToScreen
+	private static boolean fitToScreen = false;
+	private static boolean stretchToScreen = true; // Start with fitToScreen
 
 	// Setup
 	protected void onCreate(Bundle savedInstanceState) {
@@ -1509,8 +1091,8 @@ public class SDLActivity extends Activity {
 		this.handler = commandHandler;
 		this.activity1 = this;
 
-		if (Const.enable_fullscreen ||
-				android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+		if (Const.enable_fullscreen
+				|| android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
 			requestWindowFeature(Window.FEATURE_NO_TITLE);
 		}
 
@@ -1521,7 +1103,7 @@ public class SDLActivity extends Activity {
 			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
 
 		if (LimboActivity.currMachine == null) {
-			Log.v("SDLAcivity","No VM selected!");
+			Log.v("SDLAcivity", "No VM selected!");
 		}
 
 		setParams(LimboActivity.currMachine);

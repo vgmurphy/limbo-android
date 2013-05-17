@@ -13,10 +13,9 @@
         android:icon="@drawable/diskette"
         android:title="@string/save_state"/>
     <item
-        android:id="@+id/itemDisconnect"
+        android:id="@+id/itemDrives"
         android:icon="@drawable/spintop"
-        android:title="@string/disconnect">
-    </item>
+        android:title="@string/drives"/>
     <item
         android:id="@+id/itemHelp"
         android:icon="@android:drawable/ic_menu_help"
@@ -103,6 +102,11 @@
                     android:title="@string/fit_to_screen"/>
             </group>
         </menu>
+    </item>
+    <item
+        android:id="@+id/itemDisconnect"
+        android:icon="@drawable/spintop"
+        android:title="@string/disconnect">
     </item>
 
 </menu>

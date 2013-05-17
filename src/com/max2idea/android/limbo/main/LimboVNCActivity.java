@@ -40,6 +40,8 @@ import android.widget.Toast;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.max2idea.android.limbo.utils.*;
+
 //import com.max2idea.android.limbo.main.R;
 import com.max2idea.android.limbo.main.R;
 
@@ -140,12 +142,18 @@ public class LimboVNCActivity extends android.androidVNC.VncCanvasActivity {
 
 	}
 
+	DrivesDialogBox drives = null;
+	
 	@Override
 	public boolean onOptionsItemSelected(final MenuItem item) {
 		super.onOptionsItemSelected(item);
 		if (item.getItemId() == this.KEYBOARD
 				|| item.getItemId() == R.id.itemKeyboard) {
 			this.onKeyboard();
+		} else if (item.getItemId() == R.id.itemDrives) {
+			// Show up removable devices dialog
+			 drives = new DrivesDialogBox(activity, R.style.Transparent,this);
+			 drives.show();
 		} else if (item.getItemId() == R.id.itemMonitor) {
 			if (this.qmpMode) {
 				this.onVNC();
