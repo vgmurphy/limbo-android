@@ -61,7 +61,8 @@ ARCH_CFLAGS += -funwind-tables
 ARCH_CFLAGS += -funswitch-loops
 
 # SLows down
-ARCH_CFLAGS += -fstack-protector
+#ARCH_CFLAGS += -fstack-protector
+ARCH_CFLAGS += -fno-stack-protector
 
 # ORIGINAL CFLAGS FROM ANDROID NDK
 #-D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__  \
