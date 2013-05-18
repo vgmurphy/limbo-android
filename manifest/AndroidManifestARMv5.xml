@@ -22,7 +22,7 @@
         android:icon="@drawable/limbo"
         android:label="Limbo"
         android:largeHeap="true" 
-        android:debuggable="true"
+        android:debuggable="false"
         >
         <activity
             android:name=".LimboActivity"

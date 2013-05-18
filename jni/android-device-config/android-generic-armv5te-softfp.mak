@@ -43,7 +43,7 @@ ARCH_CFLAGS += -ffunction-sections
 
 # Don't keep the frame pointer in a register for functions that don't need one
 # Anyway enabled for -O2
-#ARCH_CFLAGS += -fomit-frame-pointer 
+ARCH_CFLAGS += -fomit-frame-pointer 
 
 # prevent unwanted optimizations for Qemu
 ARCH_CFLAGS += -fno-strict-aliasing
@@ -56,10 +56,10 @@ ARCH_CFLAGS += -fforce-addr
 ARCH_CFLAGS += -ffast-math
 
 # anyway enabled by -O2
-#ARCH_CFLAGS += -foptimize-sibling-calls
+ARCH_CFLAGS += -foptimize-sibling-calls
 
 # Should not be limiting inline functions or this value should be very large
-#ARCH_CFLAGS += -finline-limit=64
+ARCH_CFLAGS += -finline-limit=3423
 
 # Not supported
 #ARCH_CFLAGS += -fforce-mem

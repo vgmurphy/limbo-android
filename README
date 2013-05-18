@@ -48,18 +48,26 @@ https://code.google.com/p/limbo-android/
     	** Make sure the *.so libraries are zipped in the final .apk
     	(Eclipse should do that automatically) 
     	
-    d. If you want to build the ARM Emulator update qemu.config.mak file:
+   	d. Build the debugging version:
+   		i. Modify debuggable flag in AndroidManifest.xml to true
+   		ii. Modify android-config.mak and point to a configuration 
+   			with no optimization: 
+   			ie android-generic-armv5te-softfp-noopt.mak
+   		ii. From the command line type:
+   			make NDK_DEBUG=1
+   			
+    e. If you want to build the ARM Emulator update qemu.config.mak file:
     TARGET_LIST = arm-softmmu
     
-    e. For ARMv7 phones:
+    f. For ARMv7 phones:
         i. Update android-config.mak and include file android-generic-armv7a-vfpv3d16.mak 
         ii. make
 
-    e. For x86 phones:
+    g. For x86 phones:
         i. Update android-config.mak and include file android-ndkr8-x86.mak 
         ii. make
 
-	f. Deploy to different package (Optional) 
+	h. Deploy to different package (Optional) 
         i. Rename all R references using eclipse 
         	Menu Bar => "Search" => "Replace"
         	ie:
@@ -69,6 +77,9 @@ https://code.google.com/p/limbo-android/
         	ie:
    			ln -s manifest/AndroidManifestARMv7.xml Androidmanifest.xml 
    
+    i. To clean up type:
+    	make ultraclean
+    	
 ===============================================================================
 5. Run
 	a. Recommend installing a full Qwerty keyboard for Android (ie Hacker's keyboard 
@@ -96,6 +107,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 ===============================================================================
 
-Copyright © 2012 Max Kastanas
+Copyright ï¿½ 2012 Max Kastanas
 
 Endofdoc
