@@ -26,7 +26,8 @@
 #define QEMU_MAIN_LOOP_H 1
 
 // TK SIGUSR1 is not working with Android Dalvik VM, so we're using SIGUSR2
-#define SIG_IPI SIGUSR2  
+// TK SIGUSR2 used by debugger choosing custom signal
+#define SIG_IPI SIGRTMIN+10
 
 /**
  * qemu_init_main_loop: Set up the process so that it can run the main loop.

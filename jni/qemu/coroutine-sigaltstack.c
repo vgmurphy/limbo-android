@@ -199,12 +199,12 @@ static Coroutine *coroutine_new(void)
      * later transfer control onto the signal stack.
      */
     sigemptyset(&sigs);
-    sigaddset(&sigs, SIGUSR2);
+    sigaddset(&sigs, SIGRTMIN+11);
     pthread_sigmask(SIG_BLOCK, &sigs, &osigs);
     sa.sa_handler = coroutine_trampoline;
     sigfillset(&sa.sa_mask);
     sa.sa_flags = SA_ONSTACK;
-    if (sigaction(SIGUSR2, &sa, &osa) != 0) {
+    if (sigaction(SIGRTMIN+11, &sa, &osa) != 0) {
         abort();
     }
 
@@ -226,9 +226,9 @@ static Coroutine *coroutine_new(void)
      * called.
      */
     coTS->tr_called = 0;
-    pthread_kill(pthread_self(), SIGUSR2);
+    pthread_kill(pthread_self(), SIGRTMIN+11);
     sigfillset(&sigs);
-    sigdelset(&sigs, SIGUSR2);
+    sigdelset(&sigs, SIGRTMIN+11);
     while (!coTS->tr_called) {
         sigsuspend(&sigs);
     }
@@ -251,7 +251,7 @@ static Coroutine *coroutine_new(void)
     /*
      * Restore the old SIGUSR2 signal handler and mask
      */
-    sigaction(SIGUSR2, &osa, NULL);
+    sigaction(SIGRTMIN+11, &osa, NULL);
     pthread_sigmask(SIG_SETMASK, &osigs, NULL);
 
     /*

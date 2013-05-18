@@ -88,7 +88,8 @@ static void progress_dummy_init(void)
     sigfillset(&action.sa_mask);
     action.sa_handler = sigusr_print;
     action.sa_flags = 0;
-    sigaction(SIGUSR2, &action, NULL); //TK: NOT WORKING WELL WITH ANDROID so using SIGUSR2
+    //MK Using custom signal
+    sigaction(SIGRTMIN+11, &action, NULL); //TK: NOT WORKING WELL WITH ANDROID so using SIGUSR2
 #endif
 
     state.print = progress_dummy_print;
