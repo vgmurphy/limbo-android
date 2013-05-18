@@ -1,88 +1,67 @@
-## OPTIONAL OPTIMIZATION FLAGS
-OPTIM = \
--ffloat-store \
--ffast-math \
--fno-rounding-math \
--fno-signaling-nans \
--fcx-limited-range \
--fno-math-errno \
--funsafe-math-optimizations \
--fassociative-math \
--freciprocal-math \
--fassociative-math \
--freciprocal-math \
--ffinite-math-only \
--fno-signed-zeros \
--fno-trapping-math \
--frounding-math \
--fsingle-precision-constant \
--fcx-limited-range \
--fcx-fortran-rules
+#NDK VERSION
+#NDK_TOOLCHAIN_VERSION := 4.4.3
+NDK_TOOLCHAIN_VERSION=4.6
+#NDK_TOOLCHAIN_VERSION=4.7
 
+#TARGET ARCH
+APP_ABI := armeabi
 
-### CONFIGURATIONS
-
-# 9. Utilizing VFP
-# This abi should try the hard float (FPU) on board but also keep compatibility
-#   with Android libraries (soft)
-# ANDROID NDK: Still SLOWWWWWWWWWWWWWWW
-# LINARO Android toolchain supports VFP
+### CONFIGURATION
 ARCH_CFLAGS = \
 -std=gnu99 \
--D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__  \
+-D__ARM_ARCH_5__ \
+-D__ARM_ARCH_5T__ \
+-D__ARM_ARCH_5E__ \
+-D__ARM_ARCH_5TE__  \
 -march=armv5te -mtune=xscale -msoft-float
 
+# No specific tuning
+#-mtune=arm7
+
 # Possible values: arm, thumb
-LOCAL_ARM_MODE=arm
+ARM_MODE=arm
 
 # Suppress some warnings
 ARCH_CFLAGS += -Wno-psabi
-ARCH_CFLAGS += -O0 -g
+
+# Optimization
+ANDROID_OPTIM_FLAGS = -O0
+ 
+ifeq ($(NDK_DEBUG),1)
+	ARCH_CFLAGS += -O0
+	ARCH_CFLAGS += -g 
+else
+	ARCH_CFLAGS += $(ANDROID_OPTIM_FLAGS)
+endif 
+
+#DEBUG
+ARCH_CFLAGS += -UNDEBUG	
 
 # Smaller code generation for shared libraries, usually faster
 # if doesn't work use -fPIC
 ARCH_CFLAGS += -fpic 
 
-# Reduce executable size
-#ARCH_CFLAGS += -ffunction-sections
-
-# Don't keep the frame pointer in a register for functions that don't need one
-# Anyway enabled for -O2
-#ARCH_CFLAGS += -fomit-frame-pointer 
+#Keeping - No stack pointers might be faster
+ARCH_CFLAGS += -fno-omit-frame-pointer 
 
 # prevent unwanted optimizations for Qemu
-#ARCH_CFLAGS += -fno-strict-aliasing
+ARCH_CFLAGS += -fno-strict-aliasing
 
-# Loop optimization might be safe
-#ARCH_CFLAGS += -fstrength-reduce 
-#ARCH_CFLAGS += -fforce-addr 
+ARCH_CFLAGS += -ffunction-sections 	
 
-# Faster math might not be safe
-#ARCH_CFLAGS += -ffast-math
-
-# anyway enabled by -O2
-#ARCH_CFLAGS += -foptimize-sibling-calls
+ARCH_CFLAGS += -no-canonical-prefixes
 
 # Should not be limiting inline functions or this value should be very large
-ARCH_CFLAGS += -finline-limit=20000
-
-# Not supported
-#ARCH_CFLAGS += -fforce-mem
-
-# Fast optimizations but maybe crashing apps?
-#ARCH_CFLAGS += -funsafe-math-optimizations 
-
-# Useful for IEEE non-stop floating
-#ARCH_CFLAGS += -fno-trapping-math
-
-# To suppress looking in stadnard includes for the toolchain
-#ARCH_CFLAGS += -nostdinc
+ARCH_CFLAGS += -finline-limit=300
 
 # for Debugging only
-#ARCH_CFLAGS += -funwind-tables 
+ARCH_CFLAGS += -funwind-tables 
+
+#Unswitch loops
+ARCH_CFLAGS += -funswitch-loops
 
 # SLows down
-# ARCH_CFLAGS += -fstack-protector
+ARCH_CFLAGS += -fstack-protector
 
 # ORIGINAL CFLAGS FROM ANDROID NDK
 #-D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__  \

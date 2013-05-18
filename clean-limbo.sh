@@ -1,0 +1,1 @@
+cd jni/ && make ultraclean

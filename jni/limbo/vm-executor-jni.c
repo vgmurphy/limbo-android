@@ -659,6 +659,10 @@ JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_start(
 	params += 2; //For -smp option
 	params += 2; //For -M option
 
+	//MK TESTING
+	//params +=2;
+	//MK OUT
+
 	if (strncmp(arch_str, "arm", 3) == 0) {
 		if (kernel_str != NULL && strcmp(kernel_str, "") != 0)
 			params += 2;
@@ -911,6 +915,14 @@ JNIEXPORT jstring JNICALL Java_com_max2idea_android_limbo_jni_VMExecutor_start(
 
 	strcpy(argv[param++], "-M");
 	strcpy(argv[param++], machine_type_str);
+
+
+	//MK TESTING
+	//Not working under User mode
+	//Redirect ports (SSH)
+//	strcpy(argv[param++], "-redir");
+//	strcpy(argv[param++], "5555::22");
+	//MK OUT
 
 	argv[param] = NULL;
 	int argc = params - 1;
