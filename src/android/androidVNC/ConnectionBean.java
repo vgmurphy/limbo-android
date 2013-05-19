@@ -37,7 +37,7 @@ public class ConnectionBean {
 		setPassword("");
 		setPort(5901);
 		setColorModel(COLORMODEL.C24bit.nameString());
-		setScaleMode(ScaleType.MATRIX);
+		setScaleMode(ScaleType.FIT_CENTER);
 		setInputMode(VncCanvasActivity.TOUCH_ZOOM_MODE);
 	}
 
