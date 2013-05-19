@@ -27,7 +27,7 @@ import android.os.Environment;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 
-public class SettingsManager extends PreferenceActivity {
+public class LimboSettingsManager extends PreferenceActivity {
 
     public static String getLastDir(Activity activity) {
         String lastDir = Const.basefiledir;

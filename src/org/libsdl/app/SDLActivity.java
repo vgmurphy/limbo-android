@@ -59,7 +59,7 @@ import com.max2idea.android.limbo.main.LimboActivity;
 import com.max2idea.android.limbo.main.LimboVNCActivity;
 //import com.max2idea.android.limbo.main.R;
 import com.max2idea.android.limbo.main.R;
-import com.max2idea.android.limbo.main.SettingsManager;
+import com.max2idea.android.limbo.main.LimboSettingsManager;
 import com.max2idea.android.limbo.utils.*;
 
 /**
@@ -222,7 +222,7 @@ public class SDLActivity extends Activity {
 		// Log.v(TAG, "RET CODE: " + resultCode);
 		if (resultCode == Const.FILEMAN_RETURN_CODE) {
 			// Read from activity
-			String currDir = SettingsManager.getLastDir(this);
+			String currDir = LimboSettingsManager.getLastDir(this);
 			String file = "";
 			String fileType = "";
 			Bundle b = data.getExtras();
@@ -233,7 +233,7 @@ public class SDLActivity extends Activity {
 			// Log.v(TAG, "Got File Type: " + fileType);
 			// Log.v(TAG, "Got New File: " + file);
 			if (currDir != null && !currDir.trim().equals("")) {
-				SettingsManager.setLastDir(this, currDir);
+				LimboSettingsManager.setLastDir(this, currDir);
 			}
 			if (fileType != null && file != null) {
 				DrivesDialogBox.setDriveAttr(fileType, file, true);
@@ -447,7 +447,7 @@ public class SDLActivity extends Activity {
 				 * 
 				 * if (ctx == EGL10.EGL_NO_CONTEXT) { Log.e("SDL",
 				 * "Couldn't create context"); return false; }
-				 * SDLActivity.mEGLContext = ctx;
+				 * LimboSDLActivity.mEGLContext = ctx;
 				 */
 				SDLActivity.mEGLDisplay = dpy;
 				SDLActivity.mEGLConfig = config;
@@ -468,7 +468,8 @@ public class SDLActivity extends Activity {
 		// so it doesn't crash
 		if (fitToScreen)
 			SDLActivity.setFitToScreen();
-
+		else if (stretchToScreen)
+			SDLActivity.setStretchToScreen();
 		return true;
 	}
 
@@ -522,8 +523,8 @@ public class SDLActivity extends Activity {
 	// EGL buffer flip
 	public static void flipEGL() {
 		try {
-			// SDLActivity.mSurface.setScaleX((float) 0.2);
-			// SDLActivity.mSurface.setScaleY((float) 0.2);
+			// LimboSDLActivity.mSurface.setScaleX((float) 0.2);
+			// LimboSDLActivity.mSurface.setScaleY((float) 0.2);
 			EGL10 egl = (EGL10) EGLContext.getEGL();
 
 			egl.eglWaitNative(EGL10.EGL_CORE_NATIVE_ENGINE, null);
@@ -765,7 +766,7 @@ public class SDLActivity extends Activity {
 				}).show();
 	}
 
-	private void setStretchToScreen() {
+	private static void setStretchToScreen() {
 		// TODO Auto-generated method stub
 
 		new Thread(new Runnable() {
@@ -1097,7 +1098,7 @@ public class SDLActivity extends Activity {
 		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
 				WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
-		if (SettingsManager.getOrientationReverse(this))
+		if (LimboSettingsManager.getOrientationReverse(this))
 			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
 
 		if (LimboActivity.currMachine == null) {
@@ -1205,6 +1206,8 @@ public class SDLActivity extends Activity {
 		Log.v("Resume", "Resuming -> Full Screeen");
 		if (SDLActivity.fitToScreen)
 			SDLActivity.setFitToScreen();
+		if (SDLActivity.stretchToScreen)
+			SDLActivity.setStretchToScreen();
 		else
 			LimboActivity.vmexecutor.toggleFullScreen();
 		// sendCtrlAtlKey(KeyEvent.KEYCODE_F);
@@ -1236,7 +1239,7 @@ public class SDLActivity extends Activity {
 			mSDLThread.start();
 		}
 		// else {
-		// SDLActivity.nativeResume();
+		// LimboSDLActivity.nativeResume();
 		// }
 	}
 
@@ -1454,7 +1457,7 @@ public class SDLActivity extends Activity {
 // class SDLMain implements Runnable {
 // public void run() {
 // // Runs SDL_main()
-// SDLActivity.nativeInit();
+// LimboSDLActivity.nativeInit();
 //
 // //Log.v("SDL", "SDL thread terminated");
 // }

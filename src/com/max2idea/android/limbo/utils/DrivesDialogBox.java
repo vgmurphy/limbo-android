@@ -23,7 +23,7 @@ import android.widget.AdapterView.OnItemSelectedListener;
 import com.max2idea.android.limbo.main.Const;
 import com.max2idea.android.limbo.main.LimboActivity;
 import com.max2idea.android.limbo.main.R;
-import com.max2idea.android.limbo.main.SettingsManager;
+import com.max2idea.android.limbo.main.LimboSettingsManager;
 
 public class DrivesDialogBox extends Dialog {
 	private static Activity activity;
@@ -428,7 +428,7 @@ public class DrivesDialogBox extends Dialog {
 
 		String dir = null;
 		// GET THE LAST ACCESSED DIR FROM THE REG
-		String lastDir = SettingsManager.getLastDir(activity);
+		String lastDir = LimboSettingsManager.getLastDir(activity);
 		try {
 			Intent i = null;
 			i = getFileManIntent();
@@ -447,7 +447,7 @@ public class DrivesDialogBox extends Dialog {
 	
 	public static Intent getFileManIntent() {
 		return new Intent(activity,
-				com.max2idea.android.limbo.main.PFileManager.class);
+				com.max2idea.android.limbo.main.LimboFileManager.class);
 	}
 
 }

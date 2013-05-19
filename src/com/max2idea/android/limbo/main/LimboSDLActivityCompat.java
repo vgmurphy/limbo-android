@@ -5,12 +5,12 @@ import org.libsdl.app.SDLSurface;
 
 import android.view.View;
 
-public class SDLActivityCompatibility extends SDLActivity 
+public class LimboSDLActivityCompat extends SDLActivity 
 {
 	@Override
 	public SDLSurface getSDLSurface() {
 		// TODO Auto-generated method stub
-		mSurface = new SDLSurfaceCompatibility(getApplication());
+		mSurface = new LimboSDLSurfaceCompat(getApplication());
 		
 		
 		return mSurface;

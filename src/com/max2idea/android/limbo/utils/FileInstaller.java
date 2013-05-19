@@ -18,7 +18,7 @@
  */
 package com.max2idea.android.limbo.utils;
 
-import com.max2idea.android.limbo.main.SettingsManager;
+import com.max2idea.android.limbo.main.LimboSettingsManager;
 import android.app.Activity;
 import android.content.Context;
 import android.content.res.AssetManager;

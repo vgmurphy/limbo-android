@@ -65,7 +65,7 @@ public class LimboVNCActivity extends android.androidVNC.VncCanvasActivity {
 	public void onCreate(Bundle b) {
 		super.onCreate(b);
 
-		if (SettingsManager.getOrientationReverse(this))
+		if (LimboSettingsManager.getOrientationReverse(this))
 			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
 
 		Toast toast = Toast.makeText(activity, "2-Finger Tap for Right Click",
@@ -231,6 +231,7 @@ public class LimboVNCActivity extends android.androidVNC.VncCanvasActivity {
 				connection.setFollowMouse(true);
 				mouseOn = true;
 			} else {
+				connection.setFollowMouse(false);
 				mouseOn = false;
 			}
 			showPanningState();

@@ -248,7 +248,7 @@ public class LimboActivity extends Activity {
 
 		OShandler = this.handler;
 
-		if (SettingsManager.getOrientationReverse(this))
+		if (LimboSettingsManager.getOrientationReverse(this))
 			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
 
 		if (Const.enable_fullscreen
@@ -1271,13 +1271,13 @@ public class LimboActivity extends Activity {
 		this.mDNS = (EditText) findViewById(R.id.dnsval);
 		this.mDNS.setFocusableInTouchMode(true);
 		this.mDNS.setFocusable(true);
-		this.mDNS.setText(SettingsManager.getDNSServer(activity));
+		this.mDNS.setText(LimboSettingsManager.getDNSServer(activity));
 
 		this.mAppend = (EditText) findViewById(R.id.appendval);
 		this.mAppend.setFocusableInTouchMode(true);
 		this.mAppend.setFocusable(true);
 		this.mAppend.setEnabled(false);
-		this.mAppend.setText(SettingsManager.getAppend(activity));
+		this.mAppend.setText(LimboSettingsManager.getAppend(activity));
 
 		this.mMachine = (Spinner) findViewById(R.id.machineval);
 
@@ -1313,19 +1313,19 @@ public class LimboActivity extends Activity {
 		this.mVNCAllowExternal = (CheckBox) findViewById(R.id.vncexternalval); // No
 																				// external
 		// connections
-		// mVNCAllowExternal.setChecked(SettingsManager.getVNCAllowExternal(activity));
+		// mVNCAllowExternal.setChecked(LimboSettingsManager.getVNCAllowExternal(activity));
 		mVNCAllowExternal.setChecked(false);
 		this.mPrio = (CheckBox) findViewById(R.id.prioval); //
-		mPrio.setChecked(SettingsManager.getPrio(activity));
+		mPrio.setChecked(LimboSettingsManager.getPrio(activity));
 
 		this.mReverseLandscape = (CheckBox) findViewById(R.id.reverselval); //
-		mReverseLandscape.setChecked(SettingsManager
+		mReverseLandscape.setChecked(LimboSettingsManager
 				.getOrientationReverse(activity));
 
 		this.mMultiAIO = (CheckBox) findViewById(R.id.enableMultiThreadval); // No
 																				// external
 																				// connections
-		mMultiAIO.setChecked(SettingsManager.getMultiAIO(activity));
+		mMultiAIO.setChecked(LimboSettingsManager.getMultiAIO(activity));
 
 		this.mSnapshot = (Spinner) findViewById(R.id.snapshotval);
 
@@ -1412,7 +1412,7 @@ public class LimboActivity extends Activity {
 						.getItem(position);
 				 Log.v(TAG, "Position " + position + " CPU = " + cpu
 				 + " userPressed = " + userPressedCPU);
-				// SettingsManager.setLastCPU(activity,cpu);
+				// LimboSettingsManager.setLastCPU(activity,cpu);
 				if (userPressedCPU) {
 					currMachine.cpu = cpu;
 					int ret = machineDB.update(currMachine,
@@ -1453,7 +1453,7 @@ public class LimboActivity extends Activity {
 						.getAdapter()).getItem(position);
 				// Log.v(TAG, "Position " + position + " CPU = " + cpu
 				// + " userPressed = " + userPressedCPU);
-				// SettingsManager.setLastCPU(activity,cpu);
+				// LimboSettingsManager.setLastCPU(activity,cpu);
 				if (userPressedMachineType) {
 					currMachine.machine_type = machineType;
 					int ret = machineDB.update(currMachine,
@@ -1481,10 +1481,10 @@ public class LimboActivity extends Activity {
 						.getItem(position);
 				// Log.v(TAG, "Position " + position + " CPU = " + cpu
 				// + " userPressed = " + userPressedCPU);
-				// SettingsManager.setLastCPU(activity,cpu);
+				// LimboSettingsManager.setLastCPU(activity,cpu);
 				if (userPressedUI) {
 					// save UI fav
-					SettingsManager.setUI(activity, ui);
+					LimboSettingsManager.setUI(activity, ui);
 
 				}
 				if (position == 0) {
@@ -1515,7 +1515,7 @@ public class LimboActivity extends Activity {
 						.getItem(position);
 				// Log.v(TAG, "Position " + position + " RAM = " + ram
 				// + " userPressed = " + userPressedRAM);
-				// SettingsManager.setLastCPU(activity,cpu);
+				// LimboSettingsManager.setLastCPU(activity,cpu);
 				if (userPressedCPUNum) {
 					currMachine.cpuNum = Integer.parseInt(cpuNum);
 					int ret = machineDB.update(currMachine,
@@ -1542,7 +1542,7 @@ public class LimboActivity extends Activity {
 						.getItem(position);
 				// Log.v(TAG, "Position " + position + " RAM = " + ram
 				// + " userPressed = " + userPressedRAM);
-				// SettingsManager.setLastCPU(activity,cpu);
+				// LimboSettingsManager.setLastCPU(activity,cpu);
 				if (userPressedRAM) {
 					currMachine.memory = Integer.parseInt(ram);
 					int ret = machineDB.update(currMachine,
@@ -1653,7 +1653,7 @@ public class LimboActivity extends Activity {
 						.getItem(position);
 				// Log.v(TAG, "Position " + position + " HDB = " + hdb
 				// + " userPressed = " + userPressedHDB);
-				// SettingsManager.setLastCPU(activity,cpu);
+				// LimboSettingsManager.setLastCPU(activity,cpu);
 				if (userPressedHDB && position == 0) {
 					int ret = machineDB.update(currMachine,
 							MachineOpenHelper.HDB, null);
@@ -1825,7 +1825,7 @@ public class LimboActivity extends Activity {
 						.getAdapter()).getItem(position);
 				// Log.v(TAG, "Position " + position + " bootDev = " + bootDev
 				// + " userPressed = " + userPressedBootDev);
-				// SettingsManager.setLastCPU(activity,cpu);
+				// LimboSettingsManager.setLastCPU(activity,cpu);
 				if (userPressedBootDev) {
 					int ret = machineDB.update(currMachine,
 							MachineOpenHelper.BOOT_CONFIG, bootDev);
@@ -1853,7 +1853,7 @@ public class LimboActivity extends Activity {
 						.getAdapter()).getItem(position);
 				// Log.v(TAG, "Position " + position + " netfcg = " + netfcg
 				// + " userPressed = " + userPressedNetCfg);
-				// SettingsManager.setLastCPU(activity,cpu);
+				// LimboSettingsManager.setLastCPU(activity,cpu);
 				if (userPressedNetCfg) {
 					int ret = machineDB.update(currMachine,
 							MachineOpenHelper.NET_CONFIG, netfcg);
@@ -1893,7 +1893,7 @@ public class LimboActivity extends Activity {
 						// Log.v(TAG, "Position " + position + " nicfcg = "
 						// + niccfg + " userPressed = "
 						// + userPressedNicCfg);
-						// SettingsManager.setLastCPU(activity,cpu);
+						// LimboSettingsManager.setLastCPU(activity,cpu);
 						if (position < 0) {
 							Toast.makeText(getApplicationContext(),
 									"Not a valid card, using ne2k_pci instead",
@@ -1929,7 +1929,7 @@ public class LimboActivity extends Activity {
 						.getAdapter()).getItem(position);
 				// Log.v(TAG, "Position " + position + " vgafcg = " + vgacfg
 				// + " userPressed = " + userPressedVGACfg);
-				// SettingsManager.setLastCPU(activity,cpu);
+				// LimboSettingsManager.setLastCPU(activity,cpu);
 				if (userPressedVGACfg) {
 					int ret = machineDB.update(currMachine,
 							MachineOpenHelper.VGA, vgacfg);
@@ -1959,7 +1959,7 @@ public class LimboActivity extends Activity {
 						// Log.v(TAG, "Position " + position + " sndfcg = "
 						// + sndcfg + " userPressed = "
 						// + userPressedSndCfg);
-						// SettingsManager.setLastCPU(activity,cpu);
+						// LimboSettingsManager.setLastCPU(activity,cpu);
 						if (userPressedSndCfg) {
 							int ret = machineDB.update(currMachine,
 									MachineOpenHelper.SOUNDCARD_CONFIG, sndcfg);
@@ -1987,7 +1987,7 @@ public class LimboActivity extends Activity {
 						.getAdapter()).getItem(position);
 				// Log.v(TAG, "Position " + position + " sndfcg = " + hdcfg
 				// + " userPressed = " + userPressedHDCfg);
-				// SettingsManager.setLastCPU(activity,cpu);
+				// LimboSettingsManager.setLastCPU(activity,cpu);
 				if (userPressedHDCfg) {
 					int ret = machineDB.update(currMachine,
 							MachineOpenHelper.HDCACHE_CONFIG, hdcfg);
@@ -2014,7 +2014,7 @@ public class LimboActivity extends Activity {
 
 				// Log.v(TAG, "ACPI checked: " + isChecked + " userPressed = " +
 				// userPressedACPI);
-				// SettingsManager.setLastCPU(activity,cpu);
+				// LimboSettingsManager.setLastCPU(activity,cpu);
 				if (userPressedACPI) {
 					int ret = machineDB.update(currMachine,
 							MachineOpenHelper.DISABLE_ACPI,
@@ -2038,7 +2038,7 @@ public class LimboActivity extends Activity {
 
 				// Log.v(TAG, "ACPI checked: " + isChecked + " userPressed = " +
 				// userPressedHPET);
-				// SettingsManager.setLastCPU(activity,cpu);
+				// LimboSettingsManager.setLastCPU(activity,cpu);
 				if (userPressedHPET) {
 					int ret = machineDB.update(currMachine,
 							MachineOpenHelper.DISABLE_HPET,
@@ -2059,7 +2059,7 @@ public class LimboActivity extends Activity {
 		mDNS.addTextChangedListener(new TextWatcher() {
 
 			public void afterTextChanged(Editable s) {
-				SettingsManager.setDNSServer(activity, mDNS.getText()
+				LimboSettingsManager.setDNSServer(activity, mDNS.getText()
 						.toString());
 			}
 
@@ -2077,7 +2077,7 @@ public class LimboActivity extends Activity {
 		mAppend.addTextChangedListener(new TextWatcher() {
 
 			public void afterTextChanged(Editable s) {
-				SettingsManager.setAppend(activity, mAppend.getText()
+				LimboSettingsManager.setAppend(activity, mAppend.getText()
 						.toString());
 			}
 
@@ -2103,7 +2103,7 @@ public class LimboActivity extends Activity {
 						} else {
 							vnc_passwd = null;
 							vnc_allow_external = 0;
-							// SettingsManager.setVNCAllowExternal(activity,
+							// LimboSettingsManager.setVNCAllowExternal(activity,
 							// false);
 						}
 
@@ -2122,7 +2122,7 @@ public class LimboActivity extends Activity {
 				if (isChecked) {
 					promptPrio(activity);
 				} else {
-					SettingsManager.setPrio(activity, false);
+					LimboSettingsManager.setPrio(activity, false);
 				}
 			}
 
@@ -2136,7 +2136,7 @@ public class LimboActivity extends Activity {
 				.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 					public void onCheckedChanged(CompoundButton viewButton,
 							boolean isChecked) {
-						SettingsManager.setOrientationReverse(activity,
+						LimboSettingsManager.setOrientationReverse(activity,
 								isChecked);
 					}
 
@@ -2153,7 +2153,7 @@ public class LimboActivity extends Activity {
 				if (isChecked) {
 					promptMultiAIO(activity);
 				} else {
-					SettingsManager.setMultiAIO(activity, false);
+					LimboSettingsManager.setMultiAIO(activity, false);
 				}
 
 			}
@@ -2220,7 +2220,7 @@ public class LimboActivity extends Activity {
 		// alertDialog.setMessage(body);
 		alertDialog.setButton("OK", new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int which) {
-				SettingsManager.setPrio(activity, true);
+				LimboSettingsManager.setPrio(activity, true);
 			}
 		});
 		alertDialog.setButton2("Cancel", new DialogInterface.OnClickListener() {
@@ -2297,14 +2297,14 @@ public class LimboActivity extends Activity {
 					vnc_passwd = null;
 					vnc_allow_external = 0;
 					mVNCAllowExternal.setChecked(false);
-					// SettingsManager.setVNCAllowExternal(activity, false);
+					// LimboSettingsManager.setVNCAllowExternal(activity, false);
 					return;
 				} else {
 					sendHandlerMessage(handler, Const.VNC_PASSWORD,
 							"vnc_passwd", "passwd");
 					vnc_passwd = a.getText().toString();
 					vnc_allow_external = 1;
-					// SettingsManager.setVNCAllowExternal(activity, true);
+					// LimboSettingsManager.setVNCAllowExternal(activity, true);
 				}
 
 			}
@@ -2314,7 +2314,7 @@ public class LimboActivity extends Activity {
 				vnc_passwd = null;
 				vnc_allow_external = 0;
 				mVNCAllowExternal.setChecked(false);
-				// SettingsManager.setVNCAllowExternal(activity, false);
+				// LimboSettingsManager.setVNCAllowExternal(activity, false);
 				return;
 			}
 		});
@@ -2322,7 +2322,7 @@ public class LimboActivity extends Activity {
 			@Override
 			public void onCancel(DialogInterface dialog) {
 				mVNCAllowExternal.setChecked(false);
-				// SettingsManager.setVNCAllowExternal(activity, false);
+				// LimboSettingsManager.setVNCAllowExternal(activity, false);
 				vnc_passwd = null;
 				vnc_allow_external = 0;
 			}
@@ -2353,14 +2353,14 @@ public class LimboActivity extends Activity {
 		alertDialog.setButton("Set", new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int which) {
 
-				SettingsManager.setMultiAIO(activity, true);
+				LimboSettingsManager.setMultiAIO(activity, true);
 
 			}
 		});
 		alertDialog.setButton2("Cancel", new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int which) {
 				mMultiAIO.setChecked(false);
-				SettingsManager.setMultiAIO(activity, false);
+				LimboSettingsManager.setMultiAIO(activity, false);
 				return;
 			}
 		});
@@ -2368,7 +2368,7 @@ public class LimboActivity extends Activity {
 			@Override
 			public void onCancel(DialogInterface dialog) {
 				mMultiAIO.setChecked(false);
-				SettingsManager.setMultiAIO(activity, false);
+				LimboSettingsManager.setMultiAIO(activity, false);
 			}
 		});
 		alertDialog.show();
@@ -2401,7 +2401,7 @@ public class LimboActivity extends Activity {
 		this.setVGA(currMachine.vga_type, false);
 		this.setHDCache(currMachine.hd_cache, false);
 		this.setSoundcard(currMachine.soundcard, false);
-		this.setUI(SettingsManager.getUI(activity), false);
+		this.setUI(LimboSettingsManager.getUI(activity), false);
 
 		this.userPressedACPI = false;
 		this.mACPI.setChecked(currMachine.disableacpi == 1 ? true : false);
@@ -2703,7 +2703,7 @@ public class LimboActivity extends Activity {
 		// Log.v(TAG, "RET CODE: " + resultCode);
 		if (resultCode == Const.FILEMAN_RETURN_CODE) {
 			// Read from activity
-			String currDir = SettingsManager.getLastDir(this);
+			String currDir = LimboSettingsManager.getLastDir(this);
 			String file = "";
 			String fileType = "";
 			Bundle b = data.getExtras();
@@ -2714,7 +2714,7 @@ public class LimboActivity extends Activity {
 			// Log.v(TAG, "Got File Type: " + fileType);
 			// Log.v(TAG, "Got New File: " + file);
 			if (currDir != null && !currDir.trim().equals("")) {
-				SettingsManager.setLastDir(this, currDir);
+				LimboSettingsManager.setLastDir(this, currDir);
 			}
 			if (fileType != null && file != null) {
 				setDriveAttr(fileType, file);
@@ -2893,9 +2893,9 @@ public class LimboActivity extends Activity {
 		Log.v("LimboSDL", "Starting SDL");
 		Intent intent = null;
 		if (android.os.Build.VERSION.SDK_INT == android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-			intent = new Intent(this, SDLActivityCompatibility.class);
+			intent = new Intent(this, LimboSDLActivityCompat.class);
 		} else {
-			intent = new Intent(this, SDLActivity.class);
+			intent = new Intent(this, LimboSDLActivity.class);
 		}
 		android.content.ContentValues values = new android.content.ContentValues();
 		startActivityForResult(intent, Const.SDL_REQUEST_CODE);
@@ -3877,7 +3877,7 @@ public class LimboActivity extends Activity {
 
 		String dir = null;
 		// GET THE LAST ACCESSED DIR FROM THE REG
-		String lastDir = SettingsManager.getLastDir(this);
+		String lastDir = LimboSettingsManager.getLastDir(this);
 		try {
 			Intent i = null;
 			i = getFileManIntent();
@@ -3896,7 +3896,7 @@ public class LimboActivity extends Activity {
 
 	public Intent getFileManIntent() {
 		return new Intent(LimboActivity.this,
-				com.max2idea.android.limbo.main.PFileManager.class);
+				com.max2idea.android.limbo.main.LimboFileManager.class);
 	}
 
 	public Intent getVNCIntent() {

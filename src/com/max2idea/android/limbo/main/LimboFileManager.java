@@ -25,6 +25,6 @@ import com.max2idea.android.limbo.utils.FileManager;
  *
  * @author dev
  */
-public class PFileManager extends FileManager{
+public class LimboFileManager extends FileManager{
 
 }

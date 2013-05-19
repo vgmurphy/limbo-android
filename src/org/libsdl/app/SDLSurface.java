@@ -72,21 +72,21 @@ public class SDLSurface extends GLSurfaceView implements
 				// x
 				// + "," + y + " P=" + p);
 
-				// if (x < (SDLActivity.width - SDLActivity.vm_width) / 2) {
+				// if (x < (LimboSDLActivity.width - LimboSDLActivity.vm_width) / 2) {
 				// return true;
-				// } else if (x > SDLActivity.width - (SDLActivity.width -
-				// SDLActivity.vm_width) / 2) {
+				// } else if (x > LimboSDLActivity.width - (LimboSDLActivity.width -
+				// LimboSDLActivity.vm_width) / 2) {
 				// return true;
 				// }
 				//
-				// if (y < (SDLActivity.height - SDLActivity.vm_height) / 2) {
+				// if (y < (LimboSDLActivity.height - LimboSDLActivity.vm_height) / 2) {
 				// return true;
-				// } else if (y > SDLActivity.height - (SDLActivity.height -
-				// SDLActivity.vm_height) / 2) {
+				// } else if (y > LimboSDLActivity.height - (LimboSDLActivity.height -
+				// LimboSDLActivity.vm_height) / 2) {
 				// return true;
 				// }
 				// TODO: Anything else we need to pass?
-				// SDLActivity.onNativeTouch(action, x, y, p);
+				// LimboSDLActivity.onNativeTouch(action, x, y, p);
 				// if(action == MotionEvent.ACTION_MOVE)
 				SDLActivity.singleClick(event, i);
 
@@ -179,7 +179,7 @@ public class SDLSurface extends GLSurfaceView implements
 	// Called when we lose the surface
 	public void surfaceDestroyed(SurfaceHolder holder) {
 		Log.v("SDL", "surfaceDestroyed()");
-		// SDLActivity.nativePause();
+		// LimboSDLActivity.nativePause();
 		enableSensor(Sensor.TYPE_ACCELEROMETER, false);
 	}
 
@@ -357,7 +357,7 @@ public class SDLSurface extends GLSurfaceView implements
 			float p = event.getPressure(0);
 
 			// TODO: Anything else we need to pass?
-			// SDLActivity.onNativeTouch(action, x, y, p);
+			// LimboSDLActivity.onNativeTouch(action, x, y, p);
 			if (mouseUp) {
 				old_x = x;
 				old_y = y;
@@ -376,7 +376,7 @@ public class SDLSurface extends GLSurfaceView implements
 		} else if (event.getAction() == event.ACTION_UP) {
 			SDLActivity.onNativeTouch(Const.SDL_MOUSE_LEFT, 0,
 					MotionEvent.ACTION_UP, 0, 0, 0);
-			// SDLActivity.onNativeTouch(Const.SDL_MOUSE_RIGHT, 0,
+			// LimboSDLActivity.onNativeTouch(Const.SDL_MOUSE_RIGHT, 0,
 			// MotionEvent.ACTION_UP, 0, 0, 0);
 			mouseUp = true;
 		}
