@@ -32,7 +32,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.http.HttpConnection;
-import org.libsdl.app.SDLActivity;
 
 import android.app.Activity;
 import android.app.AlertDialog;
