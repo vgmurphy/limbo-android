@@ -243,9 +243,9 @@ public class DrivesDialogBox extends Dialog {
 			}
 		}
 		ArrayAdapter cdromAdapter = new ArrayAdapter(activity,
-				android.R.layout.simple_spinner_item, arraySpinner);
+				R.layout.custom_spinner_item, arraySpinner);
 		cdromAdapter
-				.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+				.setDropDownViewResource(R.layout.custom_spinner_dropdown_item);
 		mCD.setAdapter(cdromAdapter);
 		mCD.invalidate();
 	}
@@ -276,16 +276,16 @@ public class DrivesDialogBox extends Dialog {
 
 		if (fileType.equals("fda")) {
 			ArrayAdapter fdaAdapter = new ArrayAdapter(activity,
-					android.R.layout.simple_spinner_item, arraySpinner);
+					R.layout.custom_spinner_item, arraySpinner);
 			fdaAdapter
-					.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+					.setDropDownViewResource(R.layout.custom_spinner_dropdown_item);
 			mFDA.setAdapter(fdaAdapter);
 			mFDA.invalidate();
 		} else if (fileType.equals("fdb")) {
 			ArrayAdapter fdbAdapter = new ArrayAdapter(activity,
-					android.R.layout.simple_spinner_item, arraySpinner);
+					R.layout.custom_spinner_item, arraySpinner);
 			fdbAdapter
-					.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+					.setDropDownViewResource(R.layout.custom_spinner_dropdown_item);
 			mFDB.setAdapter(fdbAdapter);
 			mFDB.invalidate();
 		}

@@ -1411,8 +1411,8 @@ public class LimboActivity extends Activity {
 
 				String cpu = (String) ((ArrayAdapter) mCPU.getAdapter())
 						.getItem(position);
-				// Log.v(TAG, "Position " + position + " CPU = " + cpu
-				// + " userPressed = " + userPressedCPU);
+				 Log.v(TAG, "Position " + position + " CPU = " + cpu
+				 + " userPressed = " + userPressedCPU);
 				// SettingsManager.setLastCPU(activity,cpu);
 				if (userPressedCPU) {
 					currMachine.cpu = cpu;
@@ -1431,14 +1431,16 @@ public class LimboActivity extends Activity {
 					}
 				}
 				userPressedCPU = true;
+				Log.v("setOnItemSelectedListener", "set userPressed = " + userPressedCPU);
 
 				// Log.v("CPU List", "reset userPressed = " + userPressedCPU);
 			}
 
 			public void onNothingSelected(AdapterView<?> parentView) {
 				// your code here
-				// Log.v(TAG, "Nothing selected");
+				 
 				userPressedCPU = true;
+				Log.v("setOnItemSelectedListener2", "set userPressed = " + userPressedCPU);
 				// Log.v("CPU none", "reset userPressed = " + userPressedCPU);
 			}
 		});
@@ -2377,7 +2379,7 @@ public class LimboActivity extends Activity {
 	private void loadMachine(String machine, String snapshot) {
 		// TODO Auto-generated method stub
 
-		// Log.v(TAG, "Loading attribs for machine: " + machine);
+		 Log.v(TAG, "Loading attribs for machine: " + machine +":"+snapshot);
 
 		// Load machine from DB
 		this.currMachine = machineDB.getMachine(machine, snapshot);
@@ -3242,14 +3244,14 @@ public class LimboActivity extends Activity {
 	// Set Hard Disk
 	private void setCPU(String cpu, boolean userPressed) {
 		this.userPressedCPU = userPressed;
-		// Log.v("DB", "UserPressed: " + userPressedCPU + " CPU=" + cpu);
+		 Log.v("setCPU", "UserPressed: " + userPressedCPU + " CPU=" + cpu);
 		if (cpu != null) {
 			int pos = cpuAdapter.getPosition(cpu);
 			// Log.v("DB", "Got pos: " + pos + " for CPU=" + cpu);
 			mCPU.setSelection(pos);
 		} else {
 			this.userPressedCPU = true;
-			// Log.v("CPU", "reset userPressed = " + this.userPressedCPU);
+			 Log.v("setCPU", "reset userPressed = " + this.userPressedCPU);
 		}
 	}
 
@@ -3542,6 +3544,7 @@ public class LimboActivity extends Activity {
 
 	private void populateCPUs() {
 		this.userPressedCPU = false;
+		Log.v("populateCPUs", "set userPressed = " + this.userPressedCPU);
 
 		String[] arraySpinner = {
 				// x86 32bit
@@ -3669,9 +3672,9 @@ public class LimboActivity extends Activity {
 		}
 
 		kernelAdapter = new ArrayAdapter(this,
-				android.R.layout.simple_spinner_item, arraySpinner);
+				R.layout.custom_spinner_item, arraySpinner);
 		kernelAdapter
-				.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+				.setDropDownViewResource(R.layout.custom_spinner_dropdown_item);
 		this.mKernel.setAdapter(kernelAdapter);
 		this.mKernel.invalidate();
 
@@ -3699,9 +3702,9 @@ public class LimboActivity extends Activity {
 		}
 
 		initrdAdapter = new ArrayAdapter(this,
-				android.R.layout.simple_spinner_item, arraySpinner);
+				R.layout.custom_spinner_item, arraySpinner);
 		initrdAdapter
-				.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+				.setDropDownViewResource(R.layout.custom_spinner_dropdown_item);
 		this.mInitrd.setAdapter(initrdAdapter);
 		this.mInitrd.invalidate();
 
@@ -3733,16 +3736,16 @@ public class LimboActivity extends Activity {
 		if (fileType.equals("hda")) {
 
 			hdaAdapter = new ArrayAdapter(this,
-					android.R.layout.simple_spinner_item, arraySpinner);
+					R.layout.custom_spinner_item, arraySpinner);
 			hdaAdapter
-					.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+					.setDropDownViewResource(R.layout.custom_spinner_dropdown_item);
 			this.mHDA.setAdapter(hdaAdapter);
 			this.mHDA.invalidate();
 		} else if (fileType.equals("hdb")) {
 			hdbAdapter = new ArrayAdapter(this,
-					android.R.layout.simple_spinner_item, arraySpinner);
+					R.layout.custom_spinner_item, arraySpinner);
 			hdbAdapter
-					.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+					.setDropDownViewResource(R.layout.custom_spinner_dropdown_item);
 			this.mHDB.setAdapter(hdbAdapter);
 			this.mHDB.invalidate();
 		}
@@ -3815,9 +3818,9 @@ public class LimboActivity extends Activity {
 			}
 		}
 		cdromAdapter = new ArrayAdapter(this,
-				android.R.layout.simple_spinner_item, arraySpinner);
+				R.layout.custom_spinner_item, arraySpinner);
 		cdromAdapter
-				.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+				.setDropDownViewResource(R.layout.custom_spinner_dropdown_item);
 		this.mCD.setAdapter(cdromAdapter);
 		this.mCD.invalidate();
 	}
@@ -3848,16 +3851,16 @@ public class LimboActivity extends Activity {
 
 		if (fileType.equals("fda")) {
 			fdaAdapter = new ArrayAdapter(this,
-					android.R.layout.simple_spinner_item, arraySpinner);
+					R.layout.custom_spinner_item, arraySpinner);
 			fdaAdapter
-					.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+					.setDropDownViewResource(R.layout.custom_spinner_dropdown_item);
 			this.mFDA.setAdapter(fdaAdapter);
 			this.mFDA.invalidate();
 		} else if (fileType.equals("fdb")) {
 			fdbAdapter = new ArrayAdapter(this,
-					android.R.layout.simple_spinner_item, arraySpinner);
+					R.layout.custom_spinner_item, arraySpinner);
 			fdbAdapter
-					.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+					.setDropDownViewResource(R.layout.custom_spinner_dropdown_item);
 			this.mFDB.setAdapter(fdbAdapter);
 			this.mFDB.invalidate();
 		}
