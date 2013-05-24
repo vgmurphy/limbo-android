@@ -22,7 +22,7 @@
         android:icon="@drawable/limbo"
         android:label="Limbo"
         android:largeHeap="true" 
-        android:debuggable="false"
+        android:debuggable="true"
         >
         <activity
             android:name=".LimboActivity"
@@ -37,8 +37,8 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".PFileManager"
-            class=".PFileManager"
+            android:name=".LimboFileManager"
+            class=".LimboFileManager"
             android:label="Choose a File" 
             android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
             >
@@ -53,7 +53,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".SDLActivityCompatibility"
+            android:name=".LimboSDLActivityCompat"
             class=".SDLActivityCompatibility"
             android:label="@string/app_name"
             android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
@@ -69,7 +69,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".SDLActivity"
+            android:name=".LimboSDLActivity"
             class=".SDLActivity"
             android:label="@string/app_name"
             android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
@@ -99,24 +99,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-        <activity
-            android:name="VncCanvasActivity"
-            android:screenOrientation="landscape"
-            android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|screenLayout|fontScale|uiMode|orientation|screenSize|smallestScreenSize"
-            android:windowSoftInputMode="adjustPan" >
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" >
-                </action>
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-
-                <data android:scheme="vnc" />
-            </intent-filter>
-        </activity>
-        
+                
         <activity android:name="com.mopub.mobileads.MoPubActivity"
                   android:configChanges="keyboardHidden|orientation"/>
         <activity android:name="com.mopub.mobileads.MraidActivity"
