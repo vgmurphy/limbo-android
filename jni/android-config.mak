@@ -8,10 +8,10 @@ NDK_PLATFORM = platforms/android-14
 # ANDROID DEVICE CONFIGURATION
 
 # ARMv5 Generic DEBUG
-include $(LIMBO_JNI_ROOT)/android-device-config/android-generic-armv5te-softfp-noopt.mak
+#include $(LIMBO_JNI_ROOT)/android-device-config/android-generic-armv5te-softfp-noopt.mak
 
 # ARMv5 Generic
-#include $(LIMBO_JNI_ROOT)/android-device-config/android-generic-armv5te-softfp.mak
+include $(LIMBO_JNI_ROOT)/android-device-config/android-generic-armv5te-softfp.mak
 
 # ARMv7 Generic
 #include $(LIMBO_JNI_ROOT)/android-device-config/android-generic-armv7a-vfpv3d16.mak

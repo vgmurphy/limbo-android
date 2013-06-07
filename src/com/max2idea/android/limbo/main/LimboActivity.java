@@ -3555,7 +3555,8 @@ public class LimboActivity extends Activity {
 				"core2duo (64Bit)", "kvm64 (64Bit)"
 
 		// arm
-		// , "Default (arm)", "arm926 (arm)", "arm946 (arm)",
+		 , "Default (arm)", "arm926 (arm)", "arm946 (arm)"
+		//,
 		// "arm1026 (arm)",
 		// "arm1136 (arm)", "arm1136-r2 (arm)", "arm1176 (arm)",
 		// "arm11mpcore (arm)", "cortex-m3 (arm)", "cortex-a8 (arm)",

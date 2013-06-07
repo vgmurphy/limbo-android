@@ -3,7 +3,7 @@ include android-config.mak
 #x86 and ARM devices support
 #ARM is currently very slow
 #Possible Values=arm-softmmu,x86_64-softmmu
-QEMU_TARGET_LIST = x86_64-softmmu
+QEMU_TARGET_LIST = arm-softmmu,x86_64-softmmu
 
 #use coroutine
 #ucontext is deprecated and also not avail in Bionic

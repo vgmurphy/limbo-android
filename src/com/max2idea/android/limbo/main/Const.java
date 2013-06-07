@@ -40,7 +40,7 @@ public class Const {
 	public static boolean enable_SDL = true;
 	public static boolean enable_sound = true;
 	public static boolean enableAds = true;
-	public static boolean enable_ARM = false;
+	public static boolean enable_ARM = true;
 	public static boolean enable_fullscreen = true;
 	
 	
