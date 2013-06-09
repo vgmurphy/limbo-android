@@ -727,7 +727,8 @@ public class LimboActivity extends Activity {
 		// if (Const.enable_SDL)
 		// this.mUI.setEnabled(flag);
 
-		// this.mHDCacheConfig.setEnabled(flag); // Disabled for now
+		if(Const.enableCache)
+		 this.mHDCacheConfig.setEnabled(flag); // Disabled for now
 
 		this.mACPI.setEnabled(flag); // Disabled for now
 
@@ -1016,7 +1017,8 @@ public class LimboActivity extends Activity {
 		if (Const.enable_SDL)
 			this.mUI.setEnabled(flag);
 
-		// this.mHDCacheConfig.setEnabled(b);
+		if(Const.enableCache)
+		 this.mHDCacheConfig.setEnabled(flag);
 
 		this.mACPI.setEnabled(flag);
 		this.mHPET.setEnabled(flag);
@@ -1086,12 +1088,13 @@ public class LimboActivity extends Activity {
 			return;
 		}
 		if(currMachine.snapshot_name!=null
-				&& currMachine.snapshot_name.toLowerCase().equals("none")
+				&& !currMachine.snapshot_name.toLowerCase().equals("none")
+				&& !currMachine.snapshot_name.toLowerCase().equals("")
 				&& currMachine.soundcard!=null
 				&& !currMachine.soundcard.toLowerCase().equals("none")
 				&& mUI.getSelectedItemPosition() != 1){
 			Toast.makeText(getApplicationContext(),
-					"Snapshot was saved with soundcard enabled please use User interface SDL only", Toast.LENGTH_LONG)
+					"Snapshot was saved with soundcard enabled please use SDL \"User Interface\"", Toast.LENGTH_LONG)
 					.show();
 			return;
 		}
