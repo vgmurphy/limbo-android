@@ -1078,8 +1078,8 @@ public class SDLActivity extends Activity {
 	// Audio
 	private static Thread mAudioThread;
 	private static AudioTrack mAudioTrack;
-	private static boolean fitToScreen = false;
-	private static boolean stretchToScreen = true; // Start with fitToScreen
+	private static boolean fitToScreen = Const.enable_qemu_fullScreen;
+	private static boolean stretchToScreen = false; // Start with fitToScreen
 
 	// Setup
 	protected void onCreate(Bundle savedInstanceState) {

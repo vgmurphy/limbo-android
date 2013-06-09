@@ -12,6 +12,8 @@ import android.widget.TextView;
 
 import java.lang.Comparable;
 
+import com.max2idea.android.limbo.main.Const;
+
 /**
  * @author Michael A. MacDonald
  * 
@@ -21,10 +23,10 @@ public class ConnectionBean {
 	private String address = "localhost";
 	private String password = "";
 	private int port = 5901;
-	private String colorModel = COLORMODEL.C64.nameString() ;
+	private String colorModel = COLORMODEL.C64.nameString();
 	private String InputMode = VncCanvasActivity.TOUCH_ZOOM_MODE;
 	private String scaleMode = "";
-	private String nickname ="limbo";
+	private String nickname = "limbo";
 	private long forceFull = 0;
 	private boolean useLocalCursor = false;
 	private boolean followMouse = true;
@@ -37,14 +39,17 @@ public class ConnectionBean {
 		setPassword("");
 		setPort(5901);
 		setColorModel(COLORMODEL.C24bit.nameString());
-		setScaleMode(ScaleType.FIT_CENTER);
+		if (Const.enable_qemu_fullScreen)
+			setScaleMode(ScaleType.FIT_CENTER);
+		else
+			setScaleMode(ScaleType.CENTER);
 		setInputMode(VncCanvasActivity.TOUCH_ZOOM_MODE);
 	}
 
 	private void setUserName(String string) {
 		// TODO Auto-generated method stub
 		this.userName = string;
-		
+
 	}
 
 	public void setInputMode(String touchZoomMode) {
@@ -79,11 +84,10 @@ public class ConnectionBean {
 		return 0;
 	}
 
-	 ScaleType getScaleMode()
-	 {
-	 return ScaleType.valueOf(getScaleModeAsString());
-	 }
-	
+	ScaleType getScaleMode() {
+		return ScaleType.valueOf(getScaleModeAsString());
+	}
+
 	private String getScaleModeAsString() {
 		// TODO Auto-generated method stub
 		return scaleMode;
@@ -157,7 +161,7 @@ public class ConnectionBean {
 	public void setFollowMouse(boolean b) {
 		// TODO Auto-generated method stub
 		this.followMouse = b;
-		
+
 	}
 
 	public boolean getFollowMouse() {
@@ -172,8 +176,8 @@ public class ConnectionBean {
 
 	public void setConnectionId(long get_Id) {
 		// TODO Auto-generated method stub
-		this.id  = get_Id;
-		
+		this.id = get_Id;
+
 	}
 
 	public boolean getFollowPan() {

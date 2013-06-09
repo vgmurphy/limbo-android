@@ -83,11 +83,13 @@ public class Const {
     public static final int VM_EXPORT = 1019;
     public static final int VM_IMPORT = 1020;
     public static final int UI_RESET = 1021;
+	public static final boolean enableCache = true;
     
     
 	public static String dnsServer = "8.8.8.8";
 	public static String ui = "VNC";
 	public static String append = "root=/dev/sda1";
+	public static boolean enable_qemu_fullScreen = false;
 	
     
     
