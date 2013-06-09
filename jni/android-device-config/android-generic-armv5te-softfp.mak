@@ -76,7 +76,7 @@ ARCH_CFLAGS += -funsafe-math-optimizations
 # for Debugging only
 #ARCH_CFLAGS += -funwind-tables 
 
-# SLows down
+# Stack protector sloows down so disabling
 ARCH_CFLAGS += -fno-stack-protector
 
 # ORIGINAL CFLAGS FROM ANDROID NDK
