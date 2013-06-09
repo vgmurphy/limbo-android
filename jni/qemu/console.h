@@ -20,6 +20,9 @@
 
 /* in ms */
 #define GUI_REFRESH_INTERVAL 30
+//MK faster refresh rates provide smoother UI experience but slow down emulation
+#define GUI_REFRESH_INTERVAL 20
+
 
 typedef void QEMUPutKBDEvent(void *opaque, int keycode);
 typedef void QEMUPutLEDEvent(void *opaque, int ledstate);
