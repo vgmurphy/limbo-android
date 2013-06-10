@@ -3,7 +3,7 @@ include android-config.mak
 #x86 and ARM devices support
 #ARM is currently very slow
 #Possible Values=arm-softmmu,x86_64-softmmu
-QEMU_TARGET_LIST = arm-softmmu,x86_64-softmmu
+QEMU_TARGET_LIST = x86_64-softmmu
 
 #use coroutine
 #ucontext is deprecated and also not avail in Bionic
@@ -44,7 +44,7 @@ config:
 	cd ./qemu	; \
 	./configure \
 	--target-list=$(QEMU_TARGET_LIST) \
-	--cpu=$(QEMU_TARGET_CPU) \
+	--cpu=$(QEMU_HOST_CPU) \
 	--disable-kvm --disable-curses \
 	--disable-vhost-net --disable-spice \
 	--disable-smartcard-nss --disable-uuid \
