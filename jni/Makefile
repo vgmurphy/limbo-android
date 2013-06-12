@@ -20,7 +20,7 @@ RENAME_PARPROUTED=mv -f $(NDK_PROJECT_PATH)/libs/$(APP_ABI)/parprouted \
 	$(NDK_PROJECT_PATH)/libs/$(APP_ABI)/libparprouted.so
 
 ifneq ($(NDK_DEBUG),1)
-	STRIP_LIBS=$(STRIP) --strip-unneeded $(NDK_PROJECT_PATH)/libs/$(APP_ABI)/*
+	STRIP_LIBS=$(STRIP) --strip-unneeded $(NDK_PROJECT_PATH)/libs/$(APP_ABI)/*.so
 endif
 	
 all: createdirs sdl config qemu limbo
