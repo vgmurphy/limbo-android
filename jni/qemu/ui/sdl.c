@@ -970,22 +970,26 @@ static void handle_activation(DisplayState *ds, SDL_Event *ev)
     }
 #endif
     if (!gui_grab
-//    		&& ev->active.gain
+    		&& ev->active.gain
     		&& is_graphic_console() &&
         (kbd_mouse_is_absolute() || absolute_enabled)) {
         absolute_mouse_grab();
     }
-//    if (ev->active.state & SDL_APPACTIVE) {
-//        if (ev->active.gain) {
+    if (ev->active.state & SDL_APPACTIVE) {
+        if (ev->active.gain) {
             /* Back to default interval */
+        	printf("Active Event, gui_timer_interval=0");
             dcl->gui_timer_interval = 0;
             dcl->idle = 0;
-//        } else {
-//            /* Sleeping interval */
-//            dcl->gui_timer_interval = 500;
-//            dcl->idle = 1;
-//        }
-//    }
+        } else {
+            /* Sleeping interval */
+        	printf("Idle, gui_timer_interval=500");
+            dcl->gui_timer_interval = 500;
+            dcl->idle = 1;
+        }
+    }else {
+    	printf("App not active dcl->gui_timer_interval=%d", dcl->gui_timer_interval);
+    }
 }
 
 static void sdl_refresh(DisplayState *ds)
@@ -1026,10 +1030,11 @@ static void sdl_refresh(DisplayState *ds)
             handle_mousebutton(ds, ev);
             break;
         case SDL_ACTIVEEVENT:
+//        	printf("SDL_ACTIVEEVENT");
             handle_activation(ds, ev);
             break;
         case SDL_VIDEORESIZE:
-//            sdl_scale(ds, 1000, 700);
+            sdl_scale(ds, ev->resize.w, ev->resize.h);
             vga_hw_invalidate();
             vga_hw_update();
             break;
