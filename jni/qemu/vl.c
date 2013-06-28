@@ -1190,7 +1190,11 @@ QEMUMachine *find_default_machine(void) {
 /* main execution loop */
 
 static void gui_update(void *opaque) {
+#ifdef __ANDROID__
     uint64_t interval = GUI_REFRESH_INTERVAL;
+#else
+    uint64_t interval = GUI_REFRESH_INTERVAL;
+#endif
     DisplayState *ds = opaque;
     DisplayChangeListener *dcl = ds->listeners;
 
@@ -1198,10 +1202,13 @@ static void gui_update(void *opaque) {
 
     while (dcl != NULL) {
         if (dcl->gui_timer_interval &&
-                dcl->gui_timer_interval < interval)
-            interval = dcl->gui_timer_interval;
+                dcl->gui_timer_interval < interval) {
+      // 	 LOGV("Changing interval from: %lld to: %lld", interval, dcl->gui_timer_interval);
+        	interval = dcl->gui_timer_interval;
+        }
         dcl = dcl->next;
     }
+    //LOGV("qemu_mod_timer: mod to: %lld", (interval + qemu_get_clock_ms(rt_clock)));
     qemu_mod_timer(ds->gui_timer, interval + qemu_get_clock_ms(rt_clock));
 }
 
